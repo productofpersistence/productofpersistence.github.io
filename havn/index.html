@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Havn, démo en ligne · Product of Persistence</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 42'%3E%3Cpath d='M9 25 A15 13 0 0 0 39 25' fill='none' stroke='%2323201C' stroke-width='4.5' stroke-linecap='round'/%3E%3Ccircle cx='24' cy='16' r='7.5' fill='%23C06A4A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4EFE7; --ink:#23201C; --mut:#7c756a; --acc:#C06A4A; --acc2:#4E7C5A; --red:#B0553F;
+    --card:#FFFFFF; --line:#E7DFD1; --soft:#FBF8F2;
+    --shadow:0 1px 2px rgba(35,32,28,.04),0 18px 40px -26px rgba(35,32,28,.22);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:linear-gradient(180deg,#F7F2EA 0%,#F4EFE7 40%) fixed,var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  .wrap{max-width:920px;margin:0 auto;padding:34px 20px 90px;}
+  header.top{text-align:center;margin-bottom:10px;}
+  .brand{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--acc);font-weight:700;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:42px;margin:8px 0 4px;letter-spacing:5px;padding-left:5px;}
+  .sub{color:var(--mut);font-size:15px;}
+  .tabs{display:flex;gap:8px;justify-content:center;margin:24px 0 6px;flex-wrap:wrap;}
+  .tab{padding:9px 18px;border:1px solid var(--line);background:var(--soft);border-radius:999px;cursor:pointer;font-weight:600;font-size:14px;color:var(--mut);transition:.18s ease;}
+  .tab:hover{border-color:var(--acc);color:var(--acc);}
+  .tab.active{background:var(--ink);color:var(--bg);border-color:var(--ink);box-shadow:0 8px 18px -9px rgba(35,32,28,.55);}
+  .tab.active:hover{color:var(--bg);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:16px 0;box-shadow:var(--shadow);}
+  .card h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0 0 4px;}
+  .card .hint{color:var(--mut);font-size:13.5px;margin:0 0 14px;}
+  .row{display:grid;grid-template-columns:1fr 130px 150px 34px;gap:10px;align-items:center;margin-bottom:8px;}
+  .row.head{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  .row .f{display:contents;}
+  .row .cap{display:none;}
+  input,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;background:#fff;color:var(--ink);transition:box-shadow .15s ease,border-color .15s ease;}
+  input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(192,106,74,.16);}
+  .num{text-align:right;}
+  .del{border:none;background:none;color:var(--mut);font-size:18px;cursor:pointer;border-radius:8px;transition:.15s ease;}
+  .del:hover{color:var(--red);background:rgba(176,85,63,.08);}
+  .acts{display:flex;gap:1px;justify-content:flex-end;align-items:center;}
+  .acts button{border:none;background:none;cursor:pointer;font-size:15px;line-height:1;padding:5px 6px;border-radius:7px;transition:.15s ease;}
+  .acts .mv{color:#c59a86;}
+  .acts .mv:hover{color:var(--acc);background:rgba(192,106,74,.11);}
+  .acts .del2{color:#c2a597;}
+  .acts .del2:hover{color:var(--red);background:rgba(176,85,63,.10);}
+  .acts .mv:disabled{color:#d9cec0;cursor:default;}
+  .acts .mv:disabled:hover{background:none;}
+  .subrow{display:grid;grid-template-columns:14px 1fr 96px 92px 78px;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .subrow .snm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .subrow .styp{color:var(--mut);}
+  .subrow .smo{text-align:right;font-weight:600;white-space:nowrap;}
+  .subrow .syr{text-align:right;color:var(--mut);white-space:nowrap;}
+  .tgtrow{display:grid;grid-template-columns:1fr 88px 88px 78px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .tgtrow .tnum{text-align:center;white-space:nowrap;}
+  .tgtrow .tgap{text-align:right;font-weight:600;white-space:nowrap;}
+  .tgthead{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
+  .tgthead .tnum,.tgthead .tgap{font-weight:600;}
+  .add{margin-top:6px;background:none;border:1px dashed var(--acc);color:var(--acc);padding:9px 14px;border-radius:9px;cursor:pointer;font-weight:600;transition:.18s ease;}
+  .add:hover{background:var(--soft);border-style:solid;}
+  .btn{background:var(--acc);color:#fff;border:none;padding:11px 18px;border-radius:10px;font-weight:700;cursor:pointer;transition:.18s ease;box-shadow:0 8px 18px -10px rgba(192,106,74,.75);}
+  .btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;}
+  .kpi .box{flex:1;min-width:150px;background:linear-gradient(180deg,#FFFFFF,var(--soft));border:1px solid var(--line);border-radius:14px;padding:15px 17px;}
+  .kpi .lab{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);}
+  .kpi .val{font-family:'Fraunces',serif;font-size:28px;font-weight:600;margin-top:3px;}
+  .val.good{color:var(--acc2);} .val.bad{color:var(--red);}
+  .tile{flex:1;min-width:210px;background:linear-gradient(180deg,#FFFFFF,var(--soft));border:1px solid var(--line);border-radius:14px;padding:15px 17px;cursor:pointer;transition:.18s ease;}
+  .tile:hover{transform:translateY(-2px);box-shadow:0 14px 26px -16px rgba(35,32,28,.32);border-color:var(--acc);}
+  .tile.warn{border-color:var(--red);}
+  .tile .tlab{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);}
+  .tile .tval{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin-top:3px;}
+  .tile .tsub{font-size:12.5px;color:var(--mut);margin-top:2px;}
+  .barwrap{margin-top:14px;}
+  .bar{height:16px;border-radius:8px;background:#eee;overflow:hidden;display:flex;}
+  .seg{height:100%;}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:8px;}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+  .hidden{display:none;}
+  .note{background:var(--soft);border-left:3px solid var(--acc);padding:12px 15px;border-radius:8px;color:#5a544b;font-size:14px;margin-top:12px;}
+  .note b{color:var(--ink);}
+  .guide{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .gcard{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:13px 15px;font-size:13.5px;color:#5a544b;transition:.15s;}
+  .gcard.on{border-color:var(--acc);background:#fff;box-shadow:0 2px 10px rgba(192,106,74,.12);}
+  .gcard .gt{font-family:'Fraunces',serif;font-size:16px;color:var(--ink);margin-bottom:4px;font-weight:600;}
+  .gcard .gt small{font-family:'Inter';font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--acc);}
+  .gcompare{grid-column:1/3;background:#23201C;color:#F4EFE7;border-radius:10px;padding:13px 16px;font-size:14px;line-height:1.55;}
+  .gcompare b{color:#E8C9A0;}
+  .grip{cursor:grab;color:#c3b9a8;user-select:none;text-align:center;font-size:15px;line-height:38px;}
+  .grip:active{cursor:grabbing;}
+  .row.dragover{outline:2px dashed var(--acc);outline-offset:2px;border-radius:8px;}
+  .row.dragging{opacity:.4;}
+  details.explain{margin-top:14px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:0 15px;}
+  details.explain summary{cursor:pointer;padding:12px 0;font-weight:600;font-size:14px;color:var(--acc);list-style:none;}
+  details.explain summary::-webkit-details-marker{display:none;}
+  details.explain summary::before{content:'+ ';font-weight:700;}
+  details.explain[open] summary::before{content:'– ';}
+  details.explain .body{padding:2px 0 15px;font-size:13.5px;color:#5a544b;line-height:1.6;}
+  details.explain .body b{color:var(--ink);}
+  details.explain .cat3{margin:10px 0;padding-left:12px;border-left:3px solid var(--line);}
+  .rulebox{display:flex;gap:10px 16px;flex-wrap:wrap;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--mut);}
+  .rulebox .rulelab{font-weight:700;color:var(--ink);}
+  .rulebox select{width:auto;padding:6px 9px;font-size:13px;}
+  .tgtwrap{display:inline-flex;align-items:center;gap:5px;}
+  .tgt{width:54px;padding:5px 6px;text-align:center;}
+  .freq{padding:8px 5px;font-size:13px;}
+  .amortwrap{max-height:380px;overflow:auto;border:1px solid var(--line);border-radius:10px;}
+  table.amort{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.amort th,table.amort td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:right;white-space:nowrap;}
+  table.amort th{background:var(--soft);font-weight:600;position:sticky;top:0;color:var(--ink);}
+  table.amort td:first-child,table.amort th:first-child{text-align:left;}
+  .btn.doux{background:#fff;color:var(--acc);border:1px solid var(--acc);box-shadow:none;font-weight:600;}
+  .btn.doux:hover{background:var(--soft);}
+  .btn.discret{background:#fff;color:var(--mut);border:1px solid var(--line);box-shadow:none;font-weight:600;}
+  .btn.discret:hover{color:var(--red);border-color:var(--red);}
+  .ruban{background:var(--ink);color:#F4EFE7;font-size:11.5px;line-height:1.55;text-align:center;padding:9px 18px;letter-spacing:.2px;}
+  .barre-outils{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+  .barre-outils .btn{font-size:13px;padding:9px 15px;}
+  .bandeau-demo{display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap;justify-content:space-between;background:#FBEFE8;border:1px solid #E9C6B4;border-left:4px solid var(--acc);border-radius:12px;padding:12px 16px;margin:20px 0 0;font-size:13.5px;color:#5a544b;}
+  .bandeau-demo .actions{display:flex;gap:8px;align-items:center;flex:none;}
+  .bandeau-demo .ferme{border:none;background:none;color:var(--mut);font-size:17px;cursor:pointer;padding:2px 8px;border-radius:8px;line-height:1;}
+  .bandeau-demo .ferme:hover{color:var(--red);background:rgba(176,85,63,.08);}
+  .vide{text-align:center;color:var(--mut);background:var(--soft);border:1px dashed var(--line);border-radius:12px;padding:20px 18px;font-size:13.5px;}
+  .vide .grand{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .vide p{margin:0 auto 12px;max-width:540px;}
+  .vide p:last-child{margin-bottom:0;}
+  .demo-haut{position:sticky;top:0;z-index:50;background:#23201C;color:#F4EFE7;padding:11px 18px;
+    display:flex;gap:10px 18px;align-items:center;justify-content:center;flex-wrap:wrap;
+    font-size:13px;line-height:1.45;box-shadow:0 6px 18px -12px rgba(0,0,0,.6);}
+  .demo-haut b{color:#F0B49A;}
+  .demo-haut a{background:#C06A4A;color:#fff;text-decoration:none;font-weight:700;
+    padding:8px 15px;border-radius:9px;white-space:nowrap;font-size:13px;}
+  .demo-haut a:hover{filter:brightness(1.07);}
+  @media(max-width:600px){.demo-haut{font-size:12px;padding:10px 12px;}}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:30px;letter-spacing:1px;}
+  @media(max-width:600px){
+    .wrap{padding:20px 12px 64px;}
+    h1{font-size:33px;}
+    .tabs{gap:6px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;margin:18px 0 6px;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    .tabs::-webkit-scrollbar{display:none;}
+    .tab{flex:0 0 auto;padding:8px 14px;font-size:13px;}
+    .card{padding:16px 15px;border-radius:14px;}
+    .card h2{font-size:19px;}
+    .kpi{gap:9px;}
+    .kpi .box{flex:1 1 calc(50% - 5px);min-width:0;}
+    .kpi .val{font-size:23px;}
+    .guide{grid-template-columns:1fr;}.gcompare{grid-column:1;}
+    .row.head{display:none;}
+    .row{display:flex !important;flex-wrap:wrap;gap:9px 10px;grid-template-columns:none !important;align-items:flex-end;padding:13px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);margin-bottom:10px;}
+    .row .f{display:flex;flex-direction:column;gap:3px;flex:1 1 calc(50% - 5px);}
+    .row .f.full{flex:1 1 100%;}
+    .row .cap{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--mut);}
+    .row .num{text-align:left;}
+    .row .grip{display:none;}
+    .row .del{flex:0 0 auto;margin-left:auto;align-self:center;font-size:20px;}
+    .row .acts{flex:1 1 100%;justify-content:flex-end;gap:2px;margin-top:5px;padding-top:9px;border-top:1px dashed var(--line);}
+    .row .acts button{font-size:19px;padding:8px 13px;}
+    .subrow{grid-template-columns:12px 1fr auto;gap:8px;}
+    .subrow .styp,.subrow .syr{display:none;}
+    .tgtrow{grid-template-columns:1fr 64px 64px 58px;gap:6px;font-size:12.5px;}
+    .row .amonth{flex:1 1 100%;font-weight:700;font-size:15px;text-transform:capitalize;}
+    .row .areset{flex:0 0 auto;margin-left:auto;}
+    #dGrid .tile{min-width:0;flex:1 1 100%;}
+    .ruban{font-size:10.5px;padding:8px 12px;}
+    .barre-outils{gap:6px;}
+    .barre-outils .btn{font-size:12.5px;padding:9px 12px;flex:1 1 calc(50% - 3px);}
+    .bandeau-demo{font-size:13px;padding:12px 13px;}
+    .bandeau-demo .actions{flex:1 1 100%;justify-content:flex-end;}
+  }
+</style>
+</head>
+<body>
+<div class="demo-haut">
+  <span><b>Tu essaies la démo en ligne.</b> Toutes les fonctions marchent, mais rien n'est enregistré :
+  si tu recharges la page, l'exemple revient. La version achetée est un fichier à toi, qui garde tes
+  chiffres sur ton appareil, hors ligne.</span>
+  <a href="https://www.etsy.com/fr/shop/ProductofPersistence" target="_blank" rel="noopener">Voir le produit</a>
+</div>
+<div class="ruban">HAVN &middot; ton budget privé : tout reste sur ton appareil, rien n'est envoyé sur internet &middot; les montants s'affichent à l'euro près, les calculs gardent les centimes &middot; outil d'aide au pilotage, les calculs sont indicatifs et ne remplacent pas les documents de ta banque</div>
+<div class="wrap" spellcheck="false">
+  <header class="top">
+    <div class="brand">Product of Persistence</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:13px;margin-top:6px;">
+      <svg viewBox="0 0 48 42" width="46" height="40" aria-hidden="true"><path d="M9 25 A15 13 0 0 0 39 25" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><circle cx="24" cy="16" r="7.5" fill="var(--acc)"/></svg>
+      <h1 style="margin:0;">HAVN</h1>
+    </div>
+    <div class="sub">Ton budget, tes crédits, ton épargne. En privé, sans abonnement, sans connexion bancaire.</div>
+    <div class="barre-outils">
+      <button class="btn" onclick="sauvegarder()" title="Télécharger une copie de secours de tes données">Sauvegarder</button>
+      <button class="btn doux" onclick="demanderRestauration()" title="Recharger une sauvegarde">Restaurer</button>
+      <button class="btn doux" onclick="chargerExemple()" title="Charger le budget d'exemple pour explorer l'outil rempli">Explorer avec l'exemple</button>
+      <button class="btn discret" onclick="repartirDeZero()" title="Tout effacer et repartir d'une page vierge">Repartir de zéro</button>
+      <input type="file" id="fichierImport" accept="application/json" style="display:none" onchange="importData(this)">
+    </div>
+  </header>
+  <div id="bandeauDemo" class="bandeau-demo" style="display:none;"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="dash">Tableau de bord</div>
+    <div class="tab" data-tab="budget">1 · Budget du mois</div>
+    <div class="tab" data-tab="dettes">2 · Mes crédits</div>
+    <div class="tab" data-tab="subs">3 · Abonnements</div>
+    <div class="tab" data-tab="prov">4 · Provisions</div>
+    <div class="tab" data-tab="epargne">5 · Objectif d'épargne</div>
+    <div class="tab" data-tab="annuel">6 · Suivi annuel</div>
+    <div class="tab" data-tab="wealth">7 · Patrimoine</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section id="dash">
+    <div class="card">
+      <h2>Ta situation en un coup d'œil</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Revenus / mois</div><div class="val" id="dInc">0 €</div></div>
+        <div class="box"><div class="lab">Dépenses / mois</div><div class="val" id="dExp">0 €</div></div>
+        <div class="box"><div class="lab">Reste / mois</div><div class="val" id="dLeft">0 €</div></div>
+        <div class="box"><div class="lab">Épargne / mois</div><div class="val" id="dSav">0 €</div></div>
+      </div>
+      <div class="note" id="dHealth"></div>
+    </div>
+    <div class="card">
+      <h2>Tes postes clés</h2>
+      <p class="hint">Un résumé de chaque onglet. Clique sur une tuile pour aller au détail.</p>
+      <div id="dGrid"></div>
+    </div>
+  </section>
+
+  <!-- BUDGET -->
+  <section id="budget" class="hidden">
+    <div class="card">
+      <h2>Tes revenus</h2>
+      <p class="hint">Ajoute tes entrées d'argent et leur fréquence. Tout est ramené au mois automatiquement.</p>
+      <div id="incomeList"></div>
+      <button class="add" id="addIncome">+ Ajouter un revenu</button>
+    </div>
+
+    <div class="card">
+      <h2>Tes dépenses</h2>
+      <p class="hint">Un crédit pour un bien essentiel (logement, voiture pour le travail) est un <b>Besoin</b>. La catégorie <b>Dette</b>, c'est le remboursement d'un <b>crédit conso</b> : un crédit pris pour un achat non essentiel (télé, meubles, électroménager…). La colonne Fréquence convertit tout en mensuel (courses par semaine, assurance par an…).</p>
+      <div id="expenseList"></div>
+      <button class="add" id="addExpense">+ Ajouter une dépense</button>
+      <button class="add" onclick="imprimerBudget()" style="border-style:solid;margin-left:8px;">Imprimer / PDF de mon budget</button>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13.5px;cursor:pointer;color:var(--ink);"><input type="checkbox" id="autofill" style="width:auto;" onchange="S.autofill=this.checked;save();recalc()"> Remplir mon budget automatiquement depuis mes onglets Crédits et Abonnements</label>
+      <div id="autoBox"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ton résumé</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Revenus</div><div class="val" id="kIncome">0 €</div></div>
+        <div class="box"><div class="lab">Dépenses</div><div class="val" id="kExpense">0 €</div></div>
+        <div class="box"><div class="lab">Reste à la fin du mois</div><div class="val" id="kLeft">0 €</div></div>
+      </div>
+      <div class="barwrap">
+        <div class="rulebox">
+          <span class="rulelab">Ta règle cible</span>
+          <select id="rulePreset" onchange="setPreset(this.value)">
+            <option value="50/30/20">50 / 30 / 20 · Classique</option>
+            <option value="50/20/30">50 / 20 / 30 · Épargne musclée</option>
+            <option value="60/30/10">60 / 30 / 10 · Revenus serrés</option>
+            <option value="perso">Personnalisée</option>
+          </select>
+          <span class="tgtwrap">Besoins <input id="tgtNeed" type="number" class="tgt" oninput="ruleEdited()">%</span>
+          <span class="tgtwrap">Envies <input id="tgtWant" type="number" class="tgt" oninput="ruleEdited()">%</span>
+          <span class="tgtwrap">Épargne+Dette <input id="tgtSave" type="number" class="tgt" oninput="ruleEdited()">%</span>
+        </div>
+        <div style="font-weight:600;margin:14px 0 8px;">Où va ton argent ce mois-ci</div>
+        <div class="bar" id="ratioBar"></div>
+        <div class="legend">
+          <span><span class="dot" style="background:#4E7C5A"></span>Besoins <b id="pNeed">0%</b></span>
+          <span><span class="dot" style="background:#C06A4A"></span>Envies <b id="pWant">0%</b></span>
+          <span><span class="dot" style="background:#8a7fb0"></span>Épargne <b id="pSave">0%</b></span>
+          <span><span class="dot" style="background:#3E7C8C"></span>Dette <b id="pDebt">0%</b></span>
+          <span><span class="dot" style="background:#d9d2c4"></span>Non affecté <b id="pFree">0%</b></span>
+        </div>
+        <div class="note" id="ratioNote"></div>
+        <div style="font-weight:600;margin:18px 0 10px;">Répartition de tes dépenses</div>
+        <div id="donutBox" style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;"></div>
+        <div id="targetBox"></div>
+        <details class="explain">
+          <summary>Petit guide : répartir ton budget, classer tes dépenses, cadrer tes dettes</summary>
+          <div class="body">
+            Une méthode simple pour équilibrer un budget, popularisée par Elizabeth Warren (professeure à Harvard, puis sénatrice américaine) dans son livre <i>All Your Worth</i> (2005). L'idée : répartir tes revenus après impôts en grandes parts claires, sans avoir à surveiller chaque euro.
+            <div class="cat3"><b>50% Besoins.</b> Ce que tu <b>dois</b> payer pour vivre et travailler : loyer, courses, énergie, eau, transport, assurances, et les crédits d'un bien essentiel (ton logement, ta voiture pour le travail). <b>Si tes besoins dépassent 50%, c'est très courant</b> (loyer élevé, crédit, impôts) : ce n'est pas un défaut, ajuste ta règle cible et vise plutôt à augmenter tes revenus.</div>
+            <div class="cat3"><b>30% Envies.</b> Ce qui rend la vie agréable mais dont tu pourrais te passer, payé cash : restos, sorties, streaming, shopping plaisir, loisirs, vacances.</div>
+            <div class="cat3"><b>20% Avenir = Épargne + Dette.</b> La règle réunit ici deux choses qui construisent ton patrimoine : ce que tu <b>épargnes</b> et ce que tu <b>rembourses</b> sur tes crédits conso. C'est pour ça que la Dette apparaît juste à côté de l'Épargne, pas ailleurs. Sans dette, ces 20% vont entièrement à ton épargne. <b>Note : ton épargne n'est pas vraiment une dépense</b>, c'est « te payer toi-même en premier ». On la liste avec le reste pour que chaque euro ait un rôle, mais cet argent reste le tien.</div>
+            <div class="cat3"><b>Et le crédit conso là-dedans ?</b> Un crédit pris pour un achat non essentiel (télé, meubles…) se rembourse <b>en priorité</b> sur cette part, avant d'épargner : il te coûte plus cher en intérêts que ton épargne ne te rapporte. Objectif : le ramener à zéro, puis basculer tout en épargne.</div>
+            <b>« Et un crédit, c'est un Besoin ou une Dette ? »</b> Ça dépend de <b>pourquoi</b> tu l'as pris. Pour un bien dont tu as besoin pour vivre ou travailler (logement, voiture) : sa mensualité est un <b>Besoin</b>, comme un loyer. Pour un achat non essentiel (une télé) : c'est une <b>Dette</b>. La voir à part te montre quelle part de ton salaire paie encore des achats passés.
+            <br><br><b>Combien épargner, et combien de dette au maximum ?</b> La règle vise <b>~20%</b> pour ton avenir (épargne + remboursement de dettes réunis). Elle ne fixe <b>aucun plafond de dette</b> : ce n'est pas son rôle. Un autre repère courant conseille de garder tes remboursements de crédits conso <b>sous ~10 à 15%</b> de tes revenus. Et les banques, elles, refusent en général un nouveau crédit si l'ensemble de tes mensualités de crédits (immo compris) dépasse <b>~33 à 35%</b> de tes revenus : c'est le fameux « taux d'endettement ». Au-delà de ces repères, la dette pèse trop et devient la priorité n°1 à réduire.
+            <br><br><b>Le test pour classer en 3 secondes :</b> « Si je ne le paie pas ce mois-ci, est-ce que ça casse ma vie, mon logement, ma capacité à manger ou à bosser ? » Si oui, c'est un Besoin. Si c'est un plaisir ou du confort payé cash, c'est une Envie. Ce que tu mets de côté, c'est l'Épargne. Ce que tu rembourses sur un crédit conso, c'est la Dette.
+            <br><br>Le 50/30/20 n'est qu'un repère, pas une loi, et ce n'est pas la seule règle. Tu peux d'ailleurs changer ta règle cible juste au-dessus du graphique (presets connus ou tes propres pourcentages). L'important, c'est un équilibre tenable dans la durée, pas un chiffre parfait.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- EPARGNE -->
+  <section id="epargne" class="hidden">
+    <div class="card">
+      <h2>Ton objectif d'épargne</h2>
+      <p class="hint">Fixe un objectif, l'outil te dit si tu peux l'atteindre et en combien de temps.</p>
+      <div class="row" style="grid-template-columns:1fr 160px;"><span>Montant à atteindre (€)</span><input id="goalAmount" class="num" type="number" placeholder="5000" oninput="calcGoal()"></div>
+      <div class="row" style="grid-template-columns:1fr 160px;"><span>Déjà épargné (€)</span><input id="goalHave" class="num" type="number" placeholder="500" oninput="calcGoal()"></div>
+      <div class="row" style="grid-template-columns:1fr 96px 116px;"><span>Dans combien de temps ?</span><input id="goalDur" class="num" type="number" placeholder="10" oninput="calcGoal()"><select id="goalUnit" onchange="calcGoal()"><option value="month">Mois</option><option value="year">Années</option></select></div>
+      <div class="row" style="grid-template-columns:1fr 160px;"><span>Taux d'intérêt annuel de ton épargne (%) <span style="color:var(--mut);font-size:12px;">ex. 2 à 4% selon ton placement (livret, épargne rémunérée…), 0 si ton argent ne rapporte rien</span></span><input id="goalRate" class="num" type="number" placeholder="3" oninput="calcGoal()"></div>
+      <div class="kpi" style="margin-top:12px;">
+        <div class="box"><div class="lab">À mettre de côté / mois</div><div class="val" id="gNeeded">0 €</div></div>
+        <div class="box"><div class="lab">Ton reste mensuel actuel</div><div class="val" id="gLeft">0 €</div></div>
+      </div>
+      <div class="note" id="goalNote">Renseigne ton objectif pour voir le plan.</div>
+      <div id="goalChartTitle" style="font-weight:600;margin:18px 0 6px;display:none;">Ta progression vers l'objectif</div>
+      <div id="goalChart"></div>
+    </div>
+  </section>
+
+  <!-- CREDITS -->
+  <section id="dettes" class="hidden">
+    <div class="card">
+      <h2>Tes crédits</h2>
+      <p class="hint">Saisis ce qui est écrit sur ton contrat : capital emprunté, taux annuel, durée, date de début, et l'assurance mensuelle si tu en as une. L'outil calcule ta mensualité, ton capital restant dû et ton échéancier.</p>
+      <div id="debtList"></div>
+      <button class="add" id="addDebt">+ Ajouter un crédit</button>
+    </div>
+    <div class="card">
+      <h2>Vue d'ensemble</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Capital restant dû</div><div class="val" id="cTotal">0 €</div></div>
+        <div class="box"><div class="lab">Mensualités totales</div><div class="val" id="cMens">0 €</div></div>
+        <div class="box"><div class="lab">Intérêts restants</div><div class="val" id="cInt">0 €</div></div>
+        <div class="box"><div class="lab">Taux d'endettement</div><div class="val" id="cRatio">– %</div></div>
+      </div>
+      <div class="note" id="cNote"></div>
+      <div id="creditDetails" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <h2>Tableau d'amortissement</h2>
+      <p class="hint">L'échéancier complet, mois par mois : mensualité, part d'intérêts, capital remboursé et capital restant. Imprime-le, enregistre-le en PDF, ou ouvre-le dans Excel pour le comparer à celui de ta banque.</p>
+      <div style="font-size:13px;color:var(--mut);margin-bottom:6px;">Crédits à inclure (coche pour consolider l'échéancier) :</div>
+      <div id="amortPicker" style="margin-bottom:10px;"></div>
+      <div style="margin-bottom:12px;"><button class="btn" onclick="printAmort()">Imprimer / PDF de la sélection</button>
+      <button class="btn doux" onclick="csvAmort()" style="margin-left:8px;" title="Ouvrir l'échéancier dans Excel ou Google Sheets">Exporter l'échéancier en CSV</button></div>
+      <div class="amortwrap"><div id="amortTable"></div></div>
+    </div>
+  </section>
+
+  <!-- VUE ANNUELLE -->
+  <section id="annuel" class="hidden">
+    <div class="card">
+      <h2>Ta projection sur 12 mois</h2>
+      <div style="display:flex;align-items:center;gap:14px;margin:8px 0 12px;">
+        <button class="btn" style="background:var(--soft);color:var(--ink);border:1px solid var(--line);padding:6px 14px;" onclick="changeYear(-1)">◀</button>
+        <span style="font-family:'Fraunces',serif;font-size:26px;font-weight:600;min-width:80px;text-align:center;" id="annualYear">2026</span>
+        <button class="btn" style="background:var(--soft);color:var(--ink);border:1px solid var(--line);padding:6px 14px;" onclick="changeYear(1)">▶</button>
+      </div>
+      <p class="hint">Calculée à partir de ton budget actuel, en supposant qu'il reste stable. Une photo de ton année si tu tiens le cap.</p>
+      <div class="kpi">
+        <div class="box"><div class="lab">Revenus / an</div><div class="val" id="aInc">0 €</div></div>
+        <div class="box"><div class="lab">Dépenses / an</div><div class="val" id="aExp">0 €</div></div>
+        <div class="box"><div class="lab">Épargne / an</div><div class="val" id="aSav">0 €</div></div>
+      </div>
+      <div class="note" id="annualNote"></div>
+      <div style="font-weight:600;margin:18px 0 6px;">Ton épargne cumulée mois après mois</div>
+      <div id="annualChart"></div>
+    </div>
+    <div class="card">
+      <h2>Suivi mois par mois</h2>
+      <p class="hint">Définis ton épargne volontaire (le montant que tu décides de mettre de côté chaque mois). Les mois sont pré-remplis avec (en gris). Au fil des mois, remplace par ton épargne réelle : le cumul et les totaux se recalculent. Reviens chaque mois mettre à jour.</p>
+      <div class="row" style="grid-template-columns:1fr 140px 190px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px;"><span><b>Épargne volontaire / mois</b> <span style="color:var(--mut);font-size:12px;">le montant que tu décides de mettre de côté. Par défaut, l'outil reprend l'épargne définie dans l'onglet « 1 · Budget du mois ». Tu peux la remplacer ici.</span></span><input id="annualPlan" class="num" type="number" placeholder="0" oninput="setPlan(this.value)"><button class="add" style="margin:0;" onclick="resetPlan()">↺ Reprendre l'épargne du budget</button></div>
+      <div class="row" style="grid-template-columns:1fr 140px 190px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><span><b>Solde de départ</b> <span style="color:var(--mut);font-size:12px;">ce que tu avais déjà épargné avant cette année</span></span><input id="annualOpening" class="num" type="number" placeholder="0" oninput="setOpening(this.value)"><button class="add" style="margin:0;" onclick="carryPrev()">↩ Reprendre l'an dernier</button></div>
+      <div class="row head" style="grid-template-columns:1fr 140px 140px 40px;"><span>Mois</span><span class="num">Épargne du mois</span><span class="num">Cumul</span><span></span></div>
+      <div id="annualList"></div>
+      <div class="kpi" style="margin-top:14px;">
+        <div class="box"><div class="lab">Épargné cette année</div><div class="val" id="aTotal">0 €</div></div>
+        <div class="box"><div class="lab">Moyenne / mois</div><div class="val" id="aAvg">0 €</div></div>
+        <div class="box"><div class="lab">Meilleur mois</div><div class="val" id="aBest" style="font-size:17px;">–</div></div>
+        <div class="box"><div class="lab">Cumul fin d'année</div><div class="val" id="aEnd">0 €</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROVISIONS -->
+  <section id="prov" class="hidden">
+    <div class="card">
+      <h2>Tes enveloppes de provision</h2>
+      <p class="hint">Anticipe les grosses dépenses qui ne tombent pas chaque mois : vacances, Noël, impôts, révision voiture, franchise, dentiste… Pour chacune, indique le montant visé, la date, et ce que tu as déjà mis. L'outil calcule combien mettre de côté chaque mois pour être prêt à temps.</p>
+      <div id="provList"></div>
+      <button class="add" id="addProv">+ Ajouter une enveloppe</button>
+    </div>
+    <div class="card">
+      <h2>Vue d'ensemble</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">À provisionner / mois</div><div class="val" id="pMonthly">0 €</div></div>
+        <div class="box"><div class="lab">Objectif total</div><div class="val" id="pTarget">0 €</div></div>
+        <div class="box"><div class="lab">Déjà provisionné</div><div class="val" id="pSaved">0 €</div></div>
+      </div>
+      <div class="note" id="provNote"></div>
+      <div id="provDetails" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <!-- ABONNEMENTS -->
+  <section id="subs" class="hidden">
+    <div class="card">
+      <h2>Tes abonnements et factures récurrentes</h2>
+      <p class="hint">Liste tout ce que tu paies régulièrement : streaming, mobile, salle de sport, assurances, électricité… Choisis « Abonnement » (que tu pourrais couper) ou « Facture » (nécessaire). L'outil calcule ton total et met en avant ce que tu pourrais alléger.</p>
+      <div id="subsList"></div>
+      <button class="add" id="addSub">+ Ajouter</button>
+    </div>
+    <div class="card">
+      <h2>Vue d'ensemble</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Total / mois</div><div class="val" id="sMonthly">0 €</div></div>
+        <div class="box"><div class="lab">Total / an</div><div class="val" id="sYearly">0 €</div></div>
+        <div class="box"><div class="lab">Abonnements à couper ?</div><div class="val" id="sCut">0 €</div></div>
+      </div>
+      <div class="note" id="subsNote"></div>
+      <div id="subsDetails" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <!-- PATRIMOINE -->
+  <section id="wealth" class="hidden">
+    <div class="card">
+      <h2>Tes actifs</h2>
+      <p class="hint">Tout ce que tu possèdes et qui a une valeur : épargne, placements, immobilier, voiture, compte courant… Ce que tu pourrais transformer en argent.</p>
+      <div id="assetList"></div>
+      <button class="add" id="addAsset">+ Ajouter un actif</button>
+    </div>
+    <div class="card">
+      <h2>Tes dettes</h2>
+      <p class="hint">Ce que tu dois. Le capital restant de tes crédits est repris automatiquement depuis l'onglet Crédits. Ajoute ici tes autres dettes (découvert, prêt familial…).</p>
+      <div id="wealthCredits"></div>
+      <div id="wdebtList"></div>
+      <button class="add" id="addWdebt">+ Ajouter une dette</button>
+    </div>
+    <div class="card">
+      <h2>Ton patrimoine net</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Total actifs</div><div class="val" id="wAssets">0 €</div></div>
+        <div class="box"><div class="lab">Total dettes</div><div class="val" id="wDebts">0 €</div></div>
+        <div class="box"><div class="lab">Patrimoine net</div><div class="val" id="wNet">0 €</div></div>
+      </div>
+      <div class="note" id="wNote"></div>
+      <div style="margin:14px 0;"><button class="btn" onclick="saveWealthSnapshot()">Enregistrer la valeur d'aujourd'hui</button></div>
+      <div id="wealthChartTitle" style="font-weight:600;margin:8px 0 6px;display:none;">L'évolution de ton patrimoine</div>
+      <div id="wealthChart"></div>
+    </div>
+  </section>
+
+  <div class="barre-outils" style="margin-top:26px;">
+    <button class="btn" onclick="sauvegarder()">Sauvegarder</button>
+    <button class="btn doux" onclick="demanderRestauration()">Restaurer</button>
+    <button class="btn doux" onclick="chargerExemple()">Explorer avec l'exemple</button>
+    <button class="btn discret" onclick="repartirDeZero()">Repartir de zéro</button>
+  </div>
+  <div style="text-align:center;color:var(--mut);font-size:12.5px;margin-top:10px;max-width:620px;margin-left:auto;margin-right:auto;">Tes données sont enregistrées automatiquement sur cet appareil, tu les retrouves en revenant sur la page. Pense au bouton &laquo;&nbsp;Sauvegarder&nbsp;&raquo; pour garder une copie de secours ou passer sur un autre appareil. &laquo;&nbsp;Explorer avec l'exemple&nbsp;&raquo; et &laquo;&nbsp;Repartir de zéro&nbsp;&raquo; se font dans les deux sens, autant de fois que tu veux.</div>
+  <div class="foot">PRODUCT OF PERSISTENCE · Démo en ligne. La version achetée est un fichier qui fonctionne hors ligne et garde tes chiffres chez toi.</div>
+  <div style="text-align:center;color:var(--mut);font-size:11.5px;margin-top:8px;max-width:620px;margin-left:auto;margin-right:auto;line-height:1.5;">Havn est un outil d'aide au pilotage de ton budget. Les mensualités, intérêts, tableaux d'amortissement et projections affichés sont indicatifs : ils dépendent des chiffres que tu saisis et ne remplacent ni ton contrat de prêt, ni les documents officiels de ta banque, ni l'avis d'un professionnel.</div>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+/* échappement : un libellé saisi par l'utilisateur ne doit jamais casser l'affichage */
+const ech=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* écran vide pédagogique, reprend le principe de Régie */
+function videHTML(titre,texte,boutons){ return `<div class="vide">${titre?`<div class="grand">${titre}</div>`:''}<p>${texte}</p>${boutons||''}</div>`; }
+const euro=n=>(isFinite(n)?Math.round(n):0).toLocaleString('fr-FR')+' €';
+/* conversion vers un montant mensuel selon la fréquence */
+const toMon=(a,f)=> f==='week'? a*52/12 : (f==='year'? a/12 : a);
+const monAmt=x=>toMon(+x.a||0, x.f||'month');
+const freqOpts=f=>`<option value="week"${f==='week'?' selected':''}>Semaine</option><option value="month"${(f||'month')==='month'?' selected':''}>Mois</option><option value="year"${f==='year'?' selected':''}>An</option>`;
+
+/* ---- graphiques SVG (aucune dépendance) ---- */
+function donutSVG(data,total,centerTop,centerBot){
+  const size=168,thick=32,r=(size-thick)/2,cx=size/2,cy=size/2,circ=2*Math.PI*r;
+  let off=0,segs='';
+  data.forEach(d=>{ if(d.value<=0) return; const len=d.value/(total||1)*circ;
+    segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.color}" stroke-width="${thick}" stroke-dasharray="${len.toFixed(2)} ${(circ-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    off+=len; });
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#eee" stroke-width="${thick}"/>${segs}<text x="${cx}" y="${cy-2}" text-anchor="middle" font-family="Fraunces,serif" font-size="24" font-weight="600" fill="#23201C">${centerTop}</text><text x="${cx}" y="${cy+17}" text-anchor="middle" font-family="Inter" font-size="11" fill="#7c756a">${centerBot||''}</text></svg>`;
+}
+function chartSVG(opts){
+  const w=580,h=190,padL=54,padR=16,padT=14,padB=28;
+  const series=(opts.series||[]).filter(s=>s.data&&s.data.length);
+  if(!series.length || Math.max(...series.map(s=>s.data.length))<2) return '';
+  const nmax=Math.max(...series.map(s=>s.data.length)), lastX=nmax-1;
+  let maxY=opts.goal||0; series.forEach(s=>s.data.forEach(v=>{if(v>maxY)maxY=v;})); maxY=maxY||1;
+  const niceStep=v=>{const p=Math.pow(10,Math.floor(Math.log10(v||1)));const u=v/p;return (u<=1?1:u<=2?2:u<=5?5:10)*p;};
+  const step=niceStep(maxY/4)||1; maxY=Math.ceil(maxY/step)*step;
+  const X=i=> padL+(lastX?i/lastX:0)*(w-padL-padR);
+  const Y=v=> (h-padB)-(v/maxY)*(h-padB-padT);
+  let grid=''; for(let v=0; v<=maxY+0.001; v+=step){ const y=Y(v).toFixed(1); grid+=`<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#ece5d8" stroke-width="1"/><text x="${padL-6}" y="${(+y+3).toFixed(1)}" text-anchor="end" font-family="Inter" font-size="10" fill="#9a9186">${opts.money?euro(v):Math.round(v)}</text>`; }
+  const tstep = lastX<=6?1:Math.ceil(lastX/6); const ticks=[]; for(let i=0;i<=lastX;i+=tstep) ticks.push(i); if(ticks[ticks.length-1]!==lastX) ticks.push(lastX);
+  let xax=''; ticks.forEach(i=>{ const x=X(i).toFixed(1); const lab= i===0?'0':(i%12===0?`${i/12} an${i/12>1?'s':''}`:`${i} m`); xax+=`<line x1="${x}" y1="${padT}" x2="${x}" y2="${h-padB}" stroke="#f4efe4" stroke-width="1"/><text x="${x}" y="${h-padB+15}" text-anchor="middle" font-family="Inter" font-size="10" fill="#9a9186">${lab}</text>`; });
+  let paths=''; series.forEach(s=>{
+    let d=''; s.data.forEach((v,i)=>{ d+=(i===0?'M':'L')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' '; });
+    if(s.fill){ paths+=`<path d="${d}L${X(s.data.length-1).toFixed(1)} ${(h-padB).toFixed(1)} L${X(0).toFixed(1)} ${(h-padB).toFixed(1)} Z" fill="${s.fill}"/>`; }
+    paths+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"${s.dash?` stroke-dasharray="${s.dash}"`:''}/>`;
+  });
+  let goal=''; if(opts.goal){ const gy=Y(opts.goal); goal=`<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${w-padR}" y2="${gy.toFixed(1)}" stroke="${opts.goalColor||'#C06A4A'}" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${w-padR}" y="${(gy-5).toFixed(1)}" text-anchor="end" font-family="Inter" font-size="10.5" fill="${opts.goalColor||'#C06A4A'}">${opts.goalLabel||''}</text>`; }
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="auto" style="max-width:${w}px;display:block;">${grid}${xax}${paths}${goal}</svg>`;
+}
+function htmlLeg(items){ return `<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:#5a544b;margin-top:6px;">`+items.map(it=>`<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:16px;height:0;border-top:3px ${it.dash?'dashed':'solid'} ${it.color};display:inline-block;"></span>${it.label}</span>`).join('')+`</div>`; }
+/* ================= état, sauvegarde, exemple =================
+   La clé s'appelait « pilote_budget » (nom d'origine du produit). On migre en douceur
+   vers « havn_budget » sans faire perdre ses données à un acheteur existant. */
+const CLE='havn_budget', CLE_ANCIENNE='pilote_budget';
+/* DÉMO : on ne touche à rien dans le navigateur du visiteur. */
+const moisRelatif=mo=>{ const n=new Date(), d=new Date(n.getFullYear(),n.getMonth()+mo,1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); };
+const anneeVide=()=>{ const y=new Date().getFullYear(); const o={cur:y,years:{}}; o.years[y]={entries:Array(12).fill(null),opening:0}; return o; };
+/* une page vraiment vierge : aucune ligne, aucun chiffre */
+function etatVide(){ return {
+  demo:false, autofill:false,
+  income:[], expenses:[], debts:[], prov:[], subs:[],
+  wealth:{assets:[],debts:[],history:[]},
+  goal:{amount:0,have:0,months:12,rate:0,dur:12,durUnit:'month'},
+  rule:{name:'50/30/20',need:50,want:30,save:20},
+  annual:anneeVide() }; }
+/* le budget d'exemple : chiffres fictifs, dates toujours relatives à aujourd'hui
+   pour que l'exemple ne vieillisse jamais */
+function etatExemple(){ return {
+  demo:true, autofill:false,
+  income:[{l:'Salaire',a:2200,f:'month'}],
+  expenses:[{l:'Loyer',a:750,c:'need',f:'month'},{l:'Crédit voiture (mensualité)',a:250,c:'need',f:'month'},{l:'Courses',a:90,c:'need',f:'week'},{l:'Assurance auto',a:600,c:'need',f:'year'},{l:'Restos & sorties',a:200,c:'want',f:'month'},{l:'Abonnements',a:60,c:'want',f:'month'},{l:'Épargne automatique',a:150,c:'save',f:'month'},{l:'Crédit conso (télé, meubles)',a:120,c:'debt',f:'month'}],
+  debts:[{l:'Crédit auto',cap:15000,r:4.5,dur:60,start:moisRelatif(-25),ins:12,pen:0},{l:'Crédit conso (télé)',cap:3000,r:6,dur:24,start:moisRelatif(-10),ins:0,pen:0}],
+  prov:[{l:'Vacances été',target:1500,deadline:moisRelatif(11),saved:400},{l:'Impôts',target:1200,deadline:moisRelatif(2),saved:0},{l:'Noël / cadeaux',target:600,deadline:moisRelatif(5),saved:100},{l:'Révision voiture',target:400,deadline:moisRelatif(8),saved:150}],
+  subs:[{l:'Mobile',amount:20,freq:'month',type:'facture'},{l:'Netflix',amount:14,freq:'month',type:'abo'},{l:'Spotify',amount:11,freq:'month',type:'abo'},{l:'Salle de sport',amount:35,freq:'month',type:'abo'},{l:'Assurance habitation',amount:180,freq:'year',type:'facture'},{l:'Électricité',amount:110,freq:'month',type:'facture'}],
+  wealth:{assets:[{l:'Épargne de précaution',v:3500},{l:'Compte courant',v:1200},{l:'Voiture',v:9000}],debts:[],history:[]},
+  goal:{amount:5000,have:500,months:10,rate:3,dur:10,durUnit:'month'},
+  rule:{name:'50/30/20',need:50,want:30,save:20},
+  annual:anneeVide() }; }
+/* au premier lancement, on ouvre sur l'exemple : l'acheteur voit l'outil vivant tout de suite,
+   et le bandeau lui dit comment passer à ses propres chiffres. */
+/* DÉMO : on part toujours de l'exemple, on ne lit jamais ce qui traîne dans le navigateur. */
+let S=etatExemple();
+if(!S.rule) S.rule={name:'50/30/20',need:50,want:30,save:20};
+/* migration des anciens crédits {l,a,r,m} vers le nouveau format d'amortissement */
+S.debts=(S.debts||[]).map(d=>{
+  if(d.cap!=null) return d;
+  const i=(d.r||0)/100/12; let dur=60;
+  if(d.a>0&&d.m>0){ if(i>0&&d.m>d.a*i) dur=Math.ceil(-Math.log(1-i*d.a/d.m)/Math.log(1+i)); else if(i===0) dur=Math.ceil(d.a/d.m); }
+  const now=new Date(); const start=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  return {l:d.l,cap:d.a||0,r:d.r||0,dur:Math.min(Math.max(dur,1),600),start,ins:0,pen:0};
+});
+if(!S.annual || !S.annual.years){ const _y=new Date().getFullYear(); const _old=(S.annual&&S.annual.entries)?S.annual.entries:Array(12).fill(null); S.annual={cur:_y,years:{}}; S.annual.years[_y]={entries:_old,opening:0}; }
+/* sauvegardes très anciennes : on crée les onglets manquants VIDES.
+   On n'injecte jamais de données d'exemple dans le budget réel de quelqu'un. */
+if(!S.prov) S.prov=[];
+if(!S.subs) S.subs=[];
+if(!S.wealth) S.wealth={assets:[],debts:[],history:[]};
+if(!S.goal) S.goal={amount:0,have:0,months:12,rate:0,dur:12,durUnit:'month'};
+/* DÉMO : on n'enregistre rien. Le visiteur essaie, il ne construit pas son budget ici. */
+function save(){ /* démo : pas d'enregistrement */ }
+
+/* ---- règle cible configurable ---- */
+const PRESETS={'50/30/20':[50,30,20],'50/20/30':[50,20,30],'60/30/10':[60,30,10]};
+function syncRuleInputs(){
+  $('#tgtNeed').value=S.rule.need;$('#tgtWant').value=S.rule.want;$('#tgtSave').value=S.rule.save;
+  $('#rulePreset').value=PRESETS[S.rule.name]?S.rule.name:'perso';
+}
+function setPreset(v){
+  if(v!=='perso'){const p=PRESETS[v];S.rule={name:v,need:p[0],want:p[1],save:p[2]};}
+  else S.rule.name='perso';
+  syncRuleInputs();recalc();
+}
+function ruleEdited(){
+  S.rule={name:'perso',need:+$('#tgtNeed').value||0,want:+$('#tgtWant').value||0,save:+$('#tgtSave').value||0};
+  $('#rulePreset').value='perso';recalc();
+}
+
+/* ---- tabs ---- */
+$$('.tab').forEach(t=>t.onclick=()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  ['dash','budget','epargne','dettes','annuel','prov','subs','wealth'].forEach(id=>$('#'+id).classList.add('hidden'));
+  $('#'+t.dataset.tab).classList.remove('hidden');
+  if(t.dataset.tab==='dash') renderDashboard();
+  if(t.dataset.tab==='annuel') renderAnnual();
+  if(t.dataset.tab==='prov') calcProv();
+  if(t.dataset.tab==='subs') calcSubs();
+  if(t.dataset.tab==='wealth') calcWealth();
+});
+
+/* ---- income ---- */
+function renderIncome(){
+  const w=$('#incomeList');w.innerHTML='';
+  if(!S.income.length){ w.innerHTML=videHTML('',"Aucun revenu pour l'instant. Commence par ton salaire, puis ajoute le reste : primes, allocations, pension, loyers reçus. Chaque ligne peut être hebdomadaire, mensuelle ou annuelle, tout est ramené au mois automatiquement."); return; }
+  S.income.forEach((it,i)=>{
+    const r=document.createElement('div');r.className='row';
+    r.style.gridTemplateColumns='1fr 130px 110px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Source</span><input placeholder="Source de revenu" value="${ech(it.l)}" oninput="S.income[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Montant (€)</span><input class="num" type="number" placeholder="0" value="${it.a}" oninput="S.income[${i}].a=+this.value||0;recalc()"></label>
+      <label class="f"><span class="cap">Fréquence</span><select class="freq" onchange="S.income[${i}].f=this.value;recalc()">${freqOpts(it.f)}</select></label>
+      ${acts('income',i)}`;
+    w.appendChild(r);
+  });
+}
+$('#addIncome').onclick=()=>{S.income.push({l:'',a:0});renderIncome();save();};
+
+/* ---- dépenses ---- */
+function renderExpense(){
+  const w=$('#expenseList');w.innerHTML='';
+  if(!S.expenses.length){ w.innerHTML=videHTML('',"Aucune dépense pour l'instant. Le plus simple est de reprendre un relevé bancaire du mois dernier et de tout lister, du loyer aux petites lignes. Classe chaque poste en Besoin, Envie, Épargne ou Dette : c'est ce qui alimente ta règle 50/30/20."); return; }
+  S.expenses.forEach((it,i)=>{
+    const r=document.createElement('div');r.className='row';
+    r.style.gridTemplateColumns='1fr 96px 84px 116px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Poste</span><input placeholder="Nom de la dépense" value="${ech(it.l)}" oninput="S.expenses[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Montant (€)</span><input class="num" type="number" placeholder="0" value="${it.a}" oninput="S.expenses[${i}].a=+this.value||0;recalc()"></label>
+      <label class="f"><span class="cap">Fréquence</span><select class="freq" onchange="S.expenses[${i}].f=this.value;recalc()">${freqOpts(it.f)}</select></label>
+      <label class="f"><span class="cap">Catégorie</span><select class="cat" onchange="S.expenses[${i}].c=this.value;recalc()">
+        <option value="need"${it.c==='need'?' selected':''}>Besoin</option>
+        <option value="want"${it.c==='want'?' selected':''}>Envie</option>
+        <option value="save"${it.c==='save'?' selected':''}>Épargne</option>
+        <option value="debt"${it.c==='debt'?' selected':''}>Dette (conso)</option></select></label>
+      ${acts('expenses',i)}`;
+    w.appendChild(r);
+  });
+}
+/* réordonner, dupliquer, supprimer : générique pour toutes les listes */
+function listRef(name){
+  const m={income:[S.income,renderIncome,recalc,'incomeList'],expenses:[S.expenses,renderExpense,recalc,'expenseList'],debts:[S.debts,renderDebt,calcDebt,'debtList'],prov:[S.prov,renderProv,calcProv,'provList'],subs:[S.subs,renderSubs,calcSubs,'subsList'],assets:[S.wealth.assets,renderAssets,calcWealth,'assetList'],wdebts:[S.wealth.debts,renderWdebts,calcWealth,'wdebtList']};
+  const e=m[name]; return {arr:e[0],render:e[1],calc:e[2],cid:e[3]};
+}
+function moveItem(name,i,dir){const r=listRef(name),j=i+dir;if(j<0||j>=r.arr.length)return;const m=r.arr.splice(i,1)[0];r.arr.splice(j,0,m);save();r.render();r.calc();const cont=document.getElementById(r.cid);if(cont&&cont.children[j]){const mv=cont.children[j].querySelectorAll('.acts .mv');const b=mv[dir<0?0:1];if(b){b.focus();cont.children[j].scrollIntoView({block:'nearest'});}}}
+function dupItem(name,i){const r=listRef(name);r.arr.splice(i+1,0,JSON.parse(JSON.stringify(r.arr[i])));save();r.render();r.calc();}
+function delItem(name,i){
+  const r=listRef(name), it=r.arr[i]||{};
+  const nom=String(it.l||'').trim();
+  const chiffre=(+it.a||0)+(+it.cap||0)+(+it.target||0)+(+it.amount||0)+(+it.v||0);
+  const ligneVide = !nom && !chiffre;
+  if(!ligneVide && !confirm(nom? 'Supprimer « '+nom+' » ? Cette ligne et ses montants seront perdus.' : 'Supprimer cette ligne ? Ses montants seront perdus.')) return;
+  r.arr.splice(i,1);save();r.render();r.calc();
+}
+const acts=(name,i)=>{const n=listRef(name).arr.length;return `<span class="acts"><button class="mv" title="Monter" ${i===0?'disabled':''} onclick="moveItem('${name}',${i},-1)">↑</button><button class="mv" title="Descendre" ${i===n-1?'disabled':''} onclick="moveItem('${name}',${i},1)">↓</button><button class="mv" title="Dupliquer" onclick="dupItem('${name}',${i})">⧉</button><button class="del2" title="Supprimer" onclick="delItem('${name}',${i})">✕</button></span>`;};
+$('#addExpense').onclick=()=>{S.expenses.push({l:'',a:0,c:'need'});renderExpense();save();};
+
+/* ---- recalc budget ---- */
+function recalc(){
+  const P=monthlyProj();
+  const inc=P.inc, exp=P.exp, left=inc-exp;
+  const need=P.need, want=P.want, debt=P.debt, sav=P.sav;
+  $('#kIncome').textContent=euro(inc);
+  $('#kExpense').textContent=euro(exp);
+  const kl=$('#kLeft');kl.textContent=euro(left);kl.className='val '+(left>=0?'good':'bad');
+  if(P.auto.length){
+    const catLab={need:'Besoin',want:'Envie',save:'Épargne'};
+    let ab=P.auto.map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);"><span style="flex:1;min-width:0;line-height:1.35;"><span style="color:#5a544b;">${r.l}</span><br><span style="color:var(--acc);font-size:12px;cursor:pointer;" onclick="gotoTab('${r.tab}')">↗ ${r.src}</span></span><b class="num" style="color:#5a544b;white-space:nowrap;">${euro(r.v)}</b><span style="color:var(--mut);font-size:12.5px;width:56px;text-align:right;">${catLab[r.cat]}</span></div>`).join('');
+    ab+=`<div class="note" style="margin-top:8px;">Ces lignes viennent de tes autres onglets et se mettent à jour toutes seules. Retire tes éventuels doublons de la liste manuelle ci-dessus pour ne pas compter deux fois.</div>`;
+    $('#autoBox').innerHTML=ab;
+  } else $('#autoBox').innerHTML='';
+  const base=Math.max(inc,1);
+  const pn=Math.round(need/base*100),pw=Math.round(want/base*100),pd=Math.round(debt/base*100),ps=Math.round(sav/base*100);
+  const pf=Math.max(0,100-pn-pw-ps-pd); // reste non affecté (surplus)
+  $('#pNeed').textContent=pn+'%';$('#pWant').textContent=pw+'%';$('#pSave').textContent=ps+'%';$('#pDebt').textContent=pd+'%';$('#pFree').textContent=pf+'%';
+  $('#ratioBar').innerHTML=`<div class="seg" style="width:${pn}%;background:#4E7C5A"></div><div class="seg" style="width:${pw}%;background:#C06A4A"></div><div class="seg" style="width:${ps}%;background:#8a7fb0"></div><div class="seg" style="width:${pd}%;background:#3E7C8C"></div><div class="seg" style="width:${pf}%;background:#d9d2c4"></div>`;
+  const tgt=S.rule.save;
+  let msg;
+  if(left<0) msg='<b>Attention :</b> tu dépenses plus que tu ne gagnes. Réduis d\'abord les dépenses « Envie ».';
+  else if(pf>=3) msg=`Il te reste <b>${pf}%</b> de tes revenus non affectés (${euro(left)} en fin de mois). Le mieux : bascule-les en épargne pour viser ta cible de <b>${tgt}%</b>.`+(debt>0?` Et solde tes crédits conso (${pd}%) en priorité.`:'');
+  else if(debt>0) msg=`Tu épargnes <b>${ps}%</b> (cible ${tgt}%) et <b>${pd}%</b> de tes revenus partent en crédits conso, à éliminer en priorité : une fois soldés, ce budget rejoindra ton épargne.`;
+  else if(ps>=tgt) msg=`<b>Excellent.</b> Tu épargnes ${ps}%, au niveau de ta cible de ${tgt}%. Continue.`;
+  else msg=`Tu épargnes <b>${ps}%</b>, ta cible est <b>${tgt}%</b>. Chaque envie coupée t'en rapproche.`;
+  $('#ratioNote').innerHTML=msg;
+  // camembert des dépenses (par catégorie)
+  const dd=[{l:'Besoins',value:need,color:'#4E7C5A'},{l:'Envies',value:want,color:'#C06A4A'},{l:'Épargne',value:sav,color:'#8a7fb0'},{l:'Dette',value:debt,color:'#3E7C8C'}];
+  const dtot=need+want+sav+debt;
+  const leg=dd.filter(x=>x.value>0).map(x=>`<div style="display:flex;align-items:center;gap:8px;margin:5px 0;"><span style="width:11px;height:11px;border-radius:3px;background:${x.color};display:inline-block;flex:none;"></span>${x.l}<b style="margin-left:auto;">${euro(x.value)}</b><span style="color:#7c756a;width:44px;text-align:right;">${Math.round(x.value/(dtot||1)*100)}%</span></div>`).join('');
+  $('#donutBox').innerHTML = dtot>0
+    ? `<div>${donutSVG(dd,dtot,euro(dtot),'de dépenses')}</div><div style="flex:1;min-width:210px;font-size:13.5px;">${leg}</div>`
+    : `<div style="color:#7c756a;font-size:13.5px;">Ajoute des dépenses pour voir le camembert.</div>`;
+  // cibles chiffrées en euros (zéro calcul mental)
+  const cN=Math.round(base*S.rule.need/100), cW=Math.round(base*S.rule.want/100), cS=Math.round(base*S.rule.save/100);
+  // trow(label, réel, cible, lowerBetter, objZero) : couleur selon le bon sens de chaque poste
+  const trow=(lab,real,cible,lowerBetter,objZero)=>{
+    const good = lowerBetter ? real<=cible+0.5 : real>=cible-0.5;
+    const col = good?'#4E7C5A':'#B0553F';
+    const g=Math.round(real-cible), sign=g>0?'+':'';
+    const right = objZero ? (real>0?'à réduire':'ok') : sign+euro(g);
+    return `<div class="tgtrow"><span class="tlbl">${lab}</span><b class="tnum">${euro(real)}</b><span class="tnum" style="color:var(--mut);">${euro(cible)}</span><span class="tgap" style="color:${col};">${right}</span></div>`;
+  };
+  let tb=`<div style="font-weight:600;margin:18px 0 6px;">Tes cibles en euros (règle ${S.rule.need}/${S.rule.want}/${S.rule.save})</div>`
+    +`<div class="tgtrow tgthead"><span class="tlbl"></span><span class="tnum">Réel</span><span class="tnum">Cible</span><span class="tgap">Écart</span></div>`
+    +trow('Besoins',need,cN,true,false)
+    +trow('Envies',want,cW,true,false)
+    +trow('Épargne',sav,cS,false,false)
+    +trow('Dette (conso)',debt,0,true,true);
+  const gapS=cS-sav;
+  if(inc>0){
+    let nb='';
+    if(need>cN+0.5) nb+=`<b>Tes besoins dépassent la cible, et c'est très fréquent.</b> Loyer, crédit, essence, impôts pèsent lourd, ce n'est pas un échec de ta part. Le vrai levier n'est pas de te priver, mais d'augmenter tes revenus ou d'alléger un gros poste fixe. Tu peux aussi remonter ta règle cible pour qu'elle colle à ta réalité (par exemple 65/20/15).<br><br>`;
+    nb+= gapS>0
+      ? `Pour atteindre ta cible de <b>${S.rule.save}%</b> d'épargne (${euro(cS)}/mois), il te manque <b>${euro(gapS)}/mois</b>.`+(left>0?` Tu as <b>${euro(left)}</b> non affectés à y basculer${gapS<=left?', ça suffit pour y arriver.':'.'}`:'')
+      : `<b>Cible d'épargne atteinte.</b> Tu épargnes ${euro(sav)}/mois, au niveau ou au-dessus de ta cible.`;
+    if(debt>0) nb+=` En parallèle, <b>${euro(debt)}/mois</b> de crédits conso à éliminer en priorité.`;
+    nb+=`<br><br><span style="color:var(--mut);">Rappel : ton épargne n'est pas une dépense. C'est toi qui te paies en premier, et cet argent reste le tien.</span>`;
+    tb+=`<div class="note" style="margin-top:10px;">`+nb+`</div>`;
+  }
+  $('#targetBox').innerHTML=tb;
+  save(); calcGoal(); calcDebt(); calcProv(); calcSubs();
+}
+
+/* ---- savings goal ---- */
+function calcGoal(){
+  const left=Math.max(monthlyProj().surplus,0);
+  S.goal.amount=+$('#goalAmount').value||0;S.goal.have=+$('#goalHave').value||0;S.goal.rate=+$('#goalRate').value||0;
+  S.goal.dur=+$('#goalDur').value||0;S.goal.durUnit=$('#goalUnit').value;
+  S.goal.months=Math.round(S.goal.dur*(S.goal.durUnit==='year'?12:1));
+  const FV=S.goal.amount, PV=S.goal.have, n=S.goal.months, i=(S.goal.rate/100)/12;
+  // mensualité nécessaire pour tenir le délai (intérêts composés)
+  let needed=0;
+  if(n>0){ if(i>0){ const g=Math.pow(1+i,n); needed=(FV-PV*g)*i/(g-1); } else needed=(FV-PV)/n; }
+  needed=Math.max(needed,0);
+  $('#gNeeded').textContent=euro(needed);
+  $('#gLeft').textContent=euro(left);
+  // en combien de mois à ton rythme réel (le reste mensuel) ?
+  let capM=0,bc=PV; if(FV>PV){ while(bc<FV && capM<600){ bc=bc*(1+i)+left; capM++; if(left<=0 && i<=0) break; } }
+  const capTxt = (capM>=600||(left<=0&&i<=0&&PV<FV))?'très longtemps':fmtDur(capM);
+  let note;
+  if(FV<=0) note=videHTML("À quoi sert cet onglet",
+    "Tu donnes une somme à atteindre, ce que tu as déjà de côté, et le délai que tu te fixes. "
+    +"Havn répond à deux questions : combien mettre chaque mois pour tenir ce délai, et en combien "
+    +"de temps tu y arriverais à ton rythme actuel. C'est souvent l'écart entre les deux qui fait "
+    +"décider. Renseigne le montant visé ci-dessus pour commencer.");
+  else if(needed<=left) note=`<b>C'est atteignable.</b> En mettant ${euro(needed)}/mois${i>0?` (avec ${S.goal.rate}% d'intérêts par an)`:''}, tu atteins ${euro(FV)} en ${fmtDur(n)}. Ton reste actuel (${euro(left)}/mois) le permet, et à ce rythme tu y serais en ${capTxt}.`;
+  else note=`<b>Un peu juste.</b> Il faudrait ${euro(needed)}/mois, mais ton reste n'est que de ${euro(left)}. À ton rythme, l'objectif tomberait en ${capTxt} au lieu de ${fmtDur(n)}. Réduis une « Envie », allonge le délai, ou place ton épargne pour qu'elle rapporte.`;
+  $('#goalNote').innerHTML=note;
+  // graphiques : le plan (pour tenir le délai) vs ton rythme réel
+  if(FV>0 && n>0){
+    const plan=[PV], cap=[PV]; let bp=PV,bx=PV;
+    for(let m=1;m<=n;m++){ bp=bp*(1+i)+needed; plan.push(bp); bx=bx*(1+i)+left; cap.push(bx); }
+    $('#goalChart').innerHTML=chartSVG({series:[{data:plan,color:'#4E7C5A',fill:'rgba(78,124,90,.12)'},{data:cap,color:'#3E7C8C',dash:'5 4'}],goal:FV,goalColor:'#C06A4A',goalLabel:'Objectif',money:true})
+      +htmlLeg([{label:'Le plan (pour tenir le délai)',color:'#4E7C5A'},{label:'À ton rythme actuel',color:'#3E7C8C',dash:true}]);
+    $('#goalChartTitle').style.display='block';
+  } else { $('#goalChart').innerHTML=''; $('#goalChartTitle').style.display='none'; }
+  save();
+}
+
+/* ---- crédits (amortissement) ---- */
+function amort(d){
+  const P=+d.cap||0, i=(+d.r||0)/100/12, n=Math.max(1,Math.round(+d.dur||1));
+  const M = i>0 ? P*i/(1-Math.pow(1+i,-n)) : P/n;
+  const sched=[]; let bal=P, totInt=0;
+  for(let k=1;k<=n && bal>0.005;k++){
+    const interest=bal*i; let principal=M-interest; if(principal>bal) principal=bal;
+    bal-=principal; totInt+=interest;
+    sched.push({k,interest,principal,payment:principal+interest,balance:bal>0?bal:0});
+  }
+  return {M,i,n,sched,totInterest:totInt};
+}
+function monthsElapsed(start){ if(!start) return 0; const p=start.split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return 0; const now=new Date(); return Math.max(0,(now.getFullYear()-y)*12+(now.getMonth()-(m-1))); }
+function payDate(start,k){ const p=(start||'').split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return '–'; const d=new Date(y,(m-1)+(k-1),1); return d.toLocaleDateString('fr-FR',{month:'short',year:'numeric'}); }
+function renderDebt(){
+  const w=$('#debtList');w.innerHTML='';
+  if(!S.debts.length){ w.innerHTML=videHTML('',"Aucun crédit enregistré. Si tu n'en as pas, tant mieux : laisse cet onglet vide, ton taux d'endettement restera à zéro. Sinon, ajoute chaque crédit avec son capital emprunté, son taux, sa durée et son mois de départ : Havn reconstruit l'échéancier complet, mois par mois."); return; }
+  S.debts.forEach((d,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 100px 66px 74px 130px 78px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Crédit</span><input placeholder="Nom du crédit" value="${ech(d.l)}" oninput="S.debts[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Capital (€)</span><input class="num" type="number" placeholder="0" value="${d.cap}" oninput="S.debts[${i}].cap=+this.value||0;calcDebt()"></label>
+      <label class="f"><span class="cap">Taux (%)</span><input class="num" type="number" placeholder="0" value="${d.r}" oninput="S.debts[${i}].r=+this.value||0;calcDebt()"></label>
+      <label class="f"><span class="cap">Durée (mois)</span><input class="num" type="number" placeholder="0" value="${d.dur}" oninput="S.debts[${i}].dur=+this.value||0;calcDebt()"></label>
+      <label class="f"><span class="cap">Début</span><input type="month" value="${ech(d.start||'')}" oninput="S.debts[${i}].start=this.value;calcDebt()"></label>
+      <label class="f"><span class="cap">Assurance (€/mois)</span><input class="num" type="number" placeholder="0" value="${d.ins||0}" oninput="S.debts[${i}].ins=+this.value||0;calcDebt()"></label>
+      ${acts('debts',i)}`;
+    w.appendChild(r);
+  });
+}
+$('#addDebt').onclick=()=>{const now=new Date();S.debts.push({l:'',cap:0,r:0,dur:60,start:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'),ins:0,pen:0});renderDebt();calcDebt();};
+
+
+function fmtDur(months){const y=Math.floor(months/12),m=months%12;return (y>0?y+' an'+(y>1?'s ':' '):'')+(m>0?m+' mois':(y>0?'':'0 mois'));}
+
+function calcDebt(){
+  const active=S.debts.filter(d=>(+d.cap||0)>0 && (+d.dur||0)>0);
+  if(!active.length){ $('#cTotal').textContent='–';$('#cMens').textContent='–';$('#cInt').textContent='–';$('#cRatio').textContent='– %';$('#cRatio').className='val';$('#cNote').innerHTML='Ajoute un crédit pour voir ta vue d\'ensemble.';$('#creditDetails').innerHTML='';$('#amortPicker').innerHTML='';$('#amortTable').innerHTML='';save();return; }
+  let totBal=0,totMens=0,totInt=0,details='';
+  active.forEach(d=>{
+    const a=amort(d), el=monthsElapsed(d.start);
+    const balNow = el<=0? (+d.cap||0) : (el>=a.sched.length?0:a.sched[el-1].balance);
+    const remainingPays=Math.max(0,a.n-el);
+    const intRem=Math.max(0,a.M*remainingPays-balNow);
+    const activeNow=balNow>0.5;
+    totBal+=balNow; totInt+=intRem; totMens+= activeNow? (a.M+(+d.ins||0)) : 0;
+    const pen=+d.pen||0;
+    details+=`<div style="border-bottom:1px solid var(--line);padding:11px 0;">`
+      +`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;"><b style="font-size:15px;">${ech(d.l)||'(sans nom)'}</b><span style="color:var(--mut);font-size:13px;">${d.r}% · ${a.n} mois · fin ${payDate(d.start,a.n)}</span></div>`
+      +`<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:6px;color:#5a544b;"><span>Mensualité <b>${euro(a.M)}</b>${d.ins>0?` <span style="color:var(--mut);">+ ${euro(d.ins)} assur.</span>`:''}</span><span>Capital restant <b>${euro(balNow)}</b></span><span>Intérêts du crédit <b>${euro(a.totInterest)}</b></span></div>`
+      +(activeNow?`<div class="note" style="margin-top:8px;">Si tu soldes aujourd'hui : tu rembourses <b>${euro(balNow)}</b> et tu économises <b>${euro(intRem)}</b> d'intérêts${pen>0?`, moins ta pénalité de ${euro(pen)} → gain net <b>${euro(intRem-pen)}</b>`:''}. <span style="color:var(--mut);">Vérifie une éventuelle pénalité sur ton contrat.</span></div>`:`<div style="color:var(--acc2);font-weight:600;margin-top:6px;">Crédit soldé.</div>`)
+      +`</div>`;
+  });
+  $('#cTotal').textContent=euro(totBal);
+  $('#cMens').textContent=euro(totMens);
+  $('#cInt').textContent=euro(totInt);
+  const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
+  const ratio= inc>0? totMens/inc*100 : 0;
+  const rEl=$('#cRatio'); rEl.textContent=(inc>0?ratio.toFixed(0):'–')+' %'; rEl.className='val '+(inc>0?(ratio<=35?'good':'bad'):'');
+  $('#cNote').innerHTML = inc>0
+    ? `Tes mensualités de crédits (${euro(totMens)}) représentent <b>${ratio.toFixed(0)}%</b> de tes revenus. Repère : rester sous <b>~35%</b> (le seuil des banques françaises ; ~36% aux États-Unis). ${ratio>35?'Tu es au-dessus, ça limite ta capacité à emprunter.':'Tu es dans la zone saine.'}`
+    : `Renseigne tes revenus dans l'onglet Budget pour voir ton taux d'endettement.`;
+  $('#creditDetails').innerHTML=details;
+  const prevChk=active.map((d,idx)=>{const cb=$('#amc'+idx);return cb?cb.checked:true;});
+  $('#amortPicker').innerHTML=active.map((d,idx)=>`<label style="display:inline-flex;align-items:center;gap:6px;margin:0 16px 6px 0;font-size:13px;cursor:pointer;"><input type="checkbox" id="amc${idx}" ${prevChk[idx]?'checked':''} style="width:auto;" onchange="renderAmortTable()"><span>${ech(d.l)||'(sans nom)'}</span></label>`).join('');
+  renderAmortTable();
+  save();
+}
+function parseYM(s){ const p=(s||'').split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return null; return {y,m0:m-1,abs:y*12+(m-1)}; }
+function selectedCredits(){ const active=S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0); return active.filter((d,idx)=>{const cb=$('#amc'+idx); return cb?cb.checked:true;}); }
+/* échéancier consolidé aligné sur le calendrier (chaque crédit à sa vraie date) */
+function consolidated(creds){
+  const data=creds.map(d=>({d,a:amort(d),s:parseYM(d.start)})).filter(x=>x.s);
+  if(!data.length) return [];
+  let minAbs=Infinity,maxAbs=-Infinity;
+  data.forEach(x=>{ minAbs=Math.min(minAbs,x.s.abs); maxAbs=Math.max(maxAbs,x.s.abs+x.a.n-1); });
+  const rows=[];
+  for(let t=minAbs;t<=maxAbs;t++){
+    let pay=0,intr=0,prin=0,bal=0;
+    data.forEach(x=>{ const k=t-x.s.abs+1;
+      if(k<1){ bal+=(+x.d.cap||0); }
+      else if(k<=x.a.sched.length){ const sc=x.a.sched[k-1]; pay+=sc.payment; intr+=sc.interest; prin+=sc.principal; bal+=sc.balance; }
+    });
+    const dt=new Date(Math.floor(t/12),t%12,1);
+    rows.push({label:dt.toLocaleDateString('fr-FR',{month:'short',year:'numeric'}),
+               an:dt.getFullYear(), mois:dt.getMonth()+1, pay,intr,prin,bal});
+  }
+  return rows;
+}
+function renderAmortTable(){
+  const creds=selectedCredits();
+  if(!creds.length){ $('#amortTable').innerHTML='<div style="padding:14px;color:#7c756a;font-size:13px;">Coche au moins un crédit.</div>'; return; }
+  const rows=consolidated(creds);
+  const info=creds.length>1?`<div style="font-size:12.5px;color:var(--mut);margin-bottom:6px;">Échéancier consolidé de ${creds.length} crédits (mensualités hors assurance).</div>`:'';
+  const body=rows.map(r=>`<tr><td style="text-transform:capitalize;">${r.label}</td><td>${euro(r.pay)}</td><td>${euro(r.intr)}</td><td>${euro(r.prin)}</td><td>${euro(r.bal)}</td></tr>`).join('');
+  $('#amortTable').innerHTML=info+`<table class="amort"><thead><tr><th>Échéance</th><th>Mensualité</th><th>Intérêts</th><th>Capital amorti</th><th>Capital restant</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+function printAmort(){
+  const creds=selectedCredits(); if(!creds.length){alert('Coche au moins un crédit.');return;}
+  const rows=consolidated(creds);
+  const names=creds.map(d=>ech(d.l)||'(sans nom)').join(', ');
+  let body='<h1>Tableau d\'amortissement</h1><p>'+names+' · édité le '+new Date().toLocaleDateString('fr-FR')+(creds.length>1?' · échéancier consolidé (hors assurance)':'')+'</p>';
+  body+='<table><thead><tr><th>Échéance</th><th>Mensualité</th><th>Intérêts</th><th>Capital amorti</th><th>Capital restant</th></tr></thead><tbody>';
+  body+=rows.map(r=>'<tr><td>'+r.label+'</td><td>'+euro(r.pay)+'</td><td>'+euro(r.intr)+'</td><td>'+euro(r.prin)+'</td><td>'+euro(r.bal)+'</td></tr>').join('');
+  body+='</tbody></table>';
+  const w=window.open('','_blank'); if(!w){alert('Autorise les pop-ups pour imprimer.');return;}
+  w.document.write('<html><head><meta charset="utf-8"><title>Tableau d\'amortissement</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222;}h1{font-size:22px;margin:0 0 4px;}p{color:#555;font-size:13px;margin:2px 0 10px;}table{width:100%;border-collapse:collapse;font-size:11.5px;}th,td{border:1px solid #ccc;padding:4px 7px;text-align:right;}th{background:#f0f0f0;}td:first-child,th:first-child{text-align:left;}</style></head><body>'+body+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
+  w.document.close();
+}
+
+/* ---- vue annuelle (multi-années + report de solde) ---- */
+function creditMonthly(){ let m=0; S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0).forEach(d=>{const a=amort(d),el=monthsElapsed(d.start);const bal=el<=0?(+d.cap||0):(el>=a.sched.length?0:a.sched[el-1].balance);if(bal>0.5)m+=a.M+(+d.ins||0);}); return m; }
+function subsTotals(){ let f=0,ab=0; (S.subs||[]).forEach(e=>{const m=subMonthly(e); if((e.type||'abo')==='abo')ab+=m; else f+=m;}); return {f,ab}; }
+function provMonthly(){ let m=0; (S.prov||[]).forEach(e=>{const t=+e.target||0,sv=Math.min(+e.saved||0,t);m+=Math.ceil(Math.max(0,t-sv)/monthsUntil(e.deadline));}); return m; }
+function autoLines(){
+  if(!S.autofill) return [];
+  const rows=[]; const cm=creditMonthly(); if(cm>0.5) rows.push({l:'Mensualités de crédits',v:cm,cat:'need',src:'Crédits',tab:'dettes'});
+  const st=subsTotals(); if(st.f>0.5) rows.push({l:'Factures récurrentes',v:st.f,cat:'need',src:'Abonnements',tab:'subs'}); if(st.ab>0.5) rows.push({l:'Abonnements',v:st.ab,cat:'want',src:'Abonnements',tab:'subs'});
+  return rows;
+}
+function monthlyProj(){
+  const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
+  let need=S.expenses.filter(x=>x.c==='need').reduce((s,x)=>s+monAmt(x),0);
+  let want=S.expenses.filter(x=>x.c==='want').reduce((s,x)=>s+monAmt(x),0);
+  let debt=S.expenses.filter(x=>x.c==='debt').reduce((s,x)=>s+monAmt(x),0);
+  let sav=S.expenses.filter(x=>x.c==='save').reduce((s,x)=>s+monAmt(x),0);
+  const auto=autoLines();
+  auto.forEach(r=>{ if(r.cat==='need')need+=r.v; else if(r.cat==='want')want+=r.v; else if(r.cat==='save')sav+=r.v; });
+  const exp=need+want+debt+sav;
+  return {inc,exp,need,want,debt,sav,surplus:inc-exp,proj:inc-need-want-debt,auto};
+}
+function planSave(){ return S.annual.plan!=null? S.annual.plan : Math.round(monthlyProj().sav); }
+function setPlan(v){ S.annual.plan=(v===''||v==null)?null:(+v||0); renderRows(); }
+function resetPlan(){ S.annual.plan=null; renderAnnual(); }
+function ayear(){ const y=S.annual.cur; if(!S.annual.years[y]) S.annual.years[y]={entries:Array(12).fill(null),opening:0}; return S.annual.years[y]; }
+function mLabel(k){ return new Date(S.annual.cur,k,1).toLocaleDateString('fr-FR',{month:'long'}); }
+function effSave(k){ const yd=ayear(); return yd.entries[k]!=null?yd.entries[k]:planSave(); }
+function sumYear(yd){ let s=0; for(let k=0;k<12;k++) s+= yd.entries[k]!=null?yd.entries[k]:planSave(); return s; }
+function changeYear(d){ S.annual.cur+=d; renderAnnual(); }
+function setOpening(v){ ayear().opening=+v||0; updateAnnual(); }
+function carryPrev(){ const prev=S.annual.years[S.annual.cur-1]; const base=prev?Math.round(prev.opening+sumYear(prev)):0; ayear().opening=base; $('#annualOpening').value=base; updateAnnual(); }
+function renderAnnual(){
+  const p=monthlyProj(), yd=ayear();
+  $('#annualYear').textContent=S.annual.cur;
+  $('#annualOpening').value=yd.opening||0;
+  $('#annualPlan').value=planSave();
+  $('#aInc').textContent=euro(p.inc*12);
+  $('#aExp').textContent=euro(p.exp*12);
+  $('#aSav').textContent=euro(planSave()*12);
+  renderRows();
+}
+function renderRows(){
+  const yd=ayear(); let rows='';
+  for(let k=0;k<12;k++){
+    const isProj=yd.entries[k]==null; const v=effSave(k);
+    rows+=`<div class="row" style="grid-template-columns:1fr 140px 140px 40px;"><span class="amonth" style="text-transform:capitalize;">${mLabel(k)}</span>`
+      +`<label class="f"><span class="cap">Épargne (€)</span><input class="num" type="number" value="${v}" style="${isProj?'color:#9a9186;':''}" oninput="setAnnual(${k},this.value)"></label>`
+      +`<label class="f"><span class="cap">Cumul</span><span class="num" id="acum${k}" style="align-self:center;font-weight:600;"></span></label>`
+      +`<span class="areset" style="text-align:center;">${isProj?'':`<button class="del" title="Revenir à la projection" onclick="resetAnnual(${k})">↺</button>`}</span></div>`;
+  }
+  $('#annualList').innerHTML=rows;
+  updateAnnual();
+}
+function updateAnnual(){
+  const P=monthlyProj(), yd=ayear(); const op=yd.opening||0;
+  const plan=planSave(), surplus=Math.max(P.surplus,0);
+  let cum=op, cumO=op; const cumA=[], cumB=[]; let best=-Infinity,bi=0;
+  for(let k=0;k<12;k++){ const v=effSave(k); cum+=v; cumA.push(cum); if(v>best){best=v;bi=k;} const el=$('#acum'+k); if(el) el.textContent=euro(cum); cumO+=(plan+surplus); cumB.push(cumO); }
+  const sum=cum-op;
+  $('#aTotal').textContent=euro(sum);
+  $('#aAvg').textContent=euro(sum/12);
+  $('#aBest').textContent=`${mLabel(bi)} · ${euro(best)}`;
+  $('#aEnd').textContent=euro(cum);
+  const rienSaisi = !(S.income||[]).length && !(S.expenses||[]).length
+    && !yd.entries.some(v=>v!=null) && !op && !plan;
+  if(rienSaisi){
+    $('#annualNote').innerHTML = videHTML("À quoi sert cet onglet",
+      "Les douze mois de l'année, avec ton épargne projetée en gris. Chaque mois où tu saisis ce que "
+      +"tu as réellement mis de côté, le montant passe en noir et le cumul se recalcule : tu vois "
+      +"l'écart entre ton plan et la réalité, mois après mois. Commence par l'onglet « 1 · Budget du "
+      +"mois », c'est lui qui alimente la projection.");
+  } else {
+    $('#annualNote').innerHTML = `Ton épargne volontaire est de <b>${euro(plan)}/mois</b> (${euro(plan*12)} sur l'année).`
+      +(surplus>0?` Si tu ne touches pas non plus à ton reste de fin de mois (${euro(surplus)}/mois), tu pourrais monter jusqu'à <b>${euro((plan+surplus)*12)}/an</b>.`:'')
+      +(op>0?` En partant de ${euro(op)}, tu finirais l'année entre <b>${euro(op+plan*12)}</b> et <b>${euro(op+(plan+surplus)*12)}</b>.`:'');
+  }
+  const series=[{data:[op,...cumA],color:'#4E7C5A',fill:'rgba(78,124,90,.12)'}];
+  const leg=[{label:'Épargne volontaire',color:'#4E7C5A'}];
+  if(surplus>0){ series.push({data:[op,...cumB],color:'#3E7C8C',dash:'5 4'}); leg.push({label:'Si tu gardes aussi ton reste',color:'#3E7C8C',dash:true}); }
+  $('#annualChart').innerHTML=chartSVG({series,money:true})+(leg.length>1?htmlLeg(leg):'');
+  save();
+}
+function setAnnual(k,val){ ayear().entries[k]=(val===''||val==null)?null:(+val||0); updateAnnual(); }
+function resetAnnual(k){ ayear().entries[k]=null; renderAnnual(); }
+
+/* ---- enveloppes de provision (sinking funds) ---- */
+function monthsUntil(deadline){ if(!deadline) return 1; const p=deadline.split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return 1; const now=new Date(); return Math.max(1,(y-now.getFullYear())*12+((m-1)-now.getMonth())); }
+function renderProv(){
+  const w=$('#provList');w.innerHTML='';
+  if(!S.prov.length){ w.innerHTML=videHTML('',"Aucune enveloppe. Une provision, c'est de l'argent mis de côté pour une dépense qu'on sait venir : vacances, impôts, Noël, révision de la voiture. Tu donnes le montant et la date, Havn calcule combien mettre chaque mois pour être prêt à temps."); return; }
+  S.prov.forEach((e,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 108px 128px 108px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Enveloppe</span><input placeholder="Vacances, impôts, Noël…" value="${ech(e.l)}" oninput="S.prov[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Objectif (€)</span><input class="num" type="number" placeholder="0" value="${e.target}" oninput="S.prov[${i}].target=+this.value||0;calcProv()"></label>
+      <label class="f"><span class="cap">Échéance</span><input type="month" value="${ech(e.deadline||'')}" oninput="S.prov[${i}].deadline=this.value;calcProv()"></label>
+      <label class="f"><span class="cap">Déjà mis (€)</span><input class="num" type="number" placeholder="0" value="${e.saved||0}" oninput="S.prov[${i}].saved=+this.value||0;calcProv()"></label>
+      ${acts('prov',i)}`;
+    w.appendChild(r);
+  });
+}
+$('#addProv').onclick=()=>{const n=new Date();const d=new Date(n.getFullYear(),n.getMonth()+6,1);S.prov.push({l:'',target:0,deadline:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),saved:0});renderProv();calcProv();};
+function calcProv(){
+  if(!S.prov.length){ $('#pMonthly').textContent='–';$('#pTarget').textContent='–';$('#pSaved').textContent='–';$('#provNote').innerHTML='Ajoute une enveloppe pour commencer à provisionner.';$('#provDetails').innerHTML='';save();return; }
+  let totMonthly=0,totTarget=0,totSaved=0,details='';
+  S.prov.forEach(e=>{
+    const target=+e.target||0, savedRaw=+e.saved||0, saved=Math.min(savedRaw,target), ml=monthsUntil(e.deadline);
+    const remaining=Math.max(0,target-saved), perMonth=Math.ceil(remaining/ml);
+    const prog=target>0?Math.min(100,Math.round(saved/target*100)):0;
+    totMonthly+=perMonth; totTarget+=target; totSaved+=savedRaw;
+    const p=(e.deadline||'').split('-'); const dl=(+p[0]&&+p[1])?new Date(+p[0],+p[1]-1,1).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'–';
+    details+=`<div style="padding:10px 0;border-bottom:1px solid var(--line);">`
+      +`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;"><b>${ech(e.l)||'(sans nom)'}</b><span style="color:var(--mut);font-size:13px;">${euro(saved)} / ${euro(target)} · pour ${dl}</span><b style="margin-left:auto;color:${remaining>0?'var(--acc)':'var(--acc2)'};">${remaining>0?euro(perMonth)+'/mois':'prêt'}</b></div>`
+      +`<div class="bar" style="margin-top:7px;height:10px;"><div class="seg" style="width:${prog}%;background:#4E7C5A"></div></div>`
+      +`</div>`;
+  });
+  $('#pMonthly').textContent=euro(totMonthly);
+  $('#pTarget').textContent=euro(totTarget);
+  $('#pSaved').textContent=euro(totSaved);
+  const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
+  $('#provNote').innerHTML=`Mets <b>${euro(totMonthly)}/mois</b> de côté au total pour être prêt à chaque échéance${inc>0?` (soit ${Math.round(totMonthly/inc*100)}% de tes revenus)`:''}. Attention, une provision n'est pas de l'épargne long terme : c'est de l'argent réservé à une dépense future précise, qui repartira le jour venu. On la sépare donc de ton épargne (qui, elle, construit ton patrimoine). Si tu as déjà mis l'argent de côté, le montant à provisionner tombe à zéro. C'est ça qui évite qu'une grosse dépense casse ton mois.`;
+  $('#provDetails').innerHTML=details;
+  save();
+}
+
+/* ---- abonnements et factures récurrentes ---- */
+const SUBFREQ=f=>`<option value="week"${f==='week'?' selected':''}>Semaine</option><option value="month"${(f||'month')==='month'?' selected':''}>Mois</option><option value="quarter"${f==='quarter'?' selected':''}>Trimestre</option><option value="year"${f==='year'?' selected':''}>An</option>`;
+function subMonthly(e){ const a=+e.amount||0, f=e.freq||'month'; return f==='week'?a*52/12 : f==='quarter'?a/3 : f==='year'?a/12 : a; }
+function renderSubs(){
+  const w=$('#subsList');w.innerHTML='';
+  if(!S.subs.length){ w.innerHTML=videHTML('',"Aucun abonnement ni facture. Liste ici tout ce qui part en récurrent : mobile, internet, streaming, salle de sport, assurances, énergie. C'est presque toujours le poste le plus rapide à alléger, et le plus facile à oublier."); return; }
+  S.subs.forEach((e,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 100px 108px 128px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Nom</span><input placeholder="Netflix, mobile, électricité…" value="${ech(e.l)}" oninput="S.subs[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Montant (€)</span><input class="num" type="number" placeholder="0" value="${e.amount}" oninput="S.subs[${i}].amount=+this.value||0;calcSubs()"></label>
+      <label class="f"><span class="cap">Fréquence</span><select onchange="S.subs[${i}].freq=this.value;calcSubs()">${SUBFREQ(e.freq)}</select></label>
+      <label class="f"><span class="cap">Type</span><select onchange="S.subs[${i}].type=this.value;calcSubs()"><option value="abo"${(e.type||'abo')==='abo'?' selected':''}>Abonnement</option><option value="facture"${e.type==='facture'?' selected':''}>Facture</option></select></label>
+      ${acts('subs',i)}`;
+    w.appendChild(r);
+  });
+}
+$('#addSub').onclick=()=>{S.subs.push({l:'',amount:0,freq:'month',type:'abo'});renderSubs();calcSubs();};
+function calcSubs(){
+  if(!S.subs.length){ $('#sMonthly').textContent='–';$('#sYearly').textContent='–';$('#sCut').textContent='–';$('#subsNote').innerHTML='Ajoute un abonnement ou une facture pour voir ton total.';$('#subsDetails').innerHTML='';save();return; }
+  const rows=S.subs.map(e=>({e,m:subMonthly(e)}));
+  let totM=0,cut=0; rows.forEach(x=>{ totM+=x.m; if((x.e.type||'abo')==='abo') cut+=x.m; });
+  $('#sMonthly').textContent=euro(totM);
+  $('#sYearly').textContent=euro(totM*12);
+  $('#sCut').textContent=euro(cut);
+  const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
+  $('#subsNote').innerHTML=`Tu paies <b>${euro(totM)}/mois</b> en récurrent, soit <b>${euro(totM*12)}/an</b>${inc>0?` (${Math.round(totM/inc*100)}% de tes revenus)`:''}. Dont <b>${euro(cut)}/mois</b> d'abonnements que tu pourrais réduire : c'est souvent le poste le plus rapide à alléger. Couper ${euro(cut)}/mois, c'est <b>${euro(cut*12)}/an</b> récupérés.`;
+  const sorted=[...rows].sort((a,b)=>b.m-a.m);
+  $('#subsDetails').innerHTML=`<div style="display:flex;gap:16px;font-size:12.5px;color:var(--mut);margin:12px 0 6px;"><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:2px;background:#C06A4A;display:inline-block;"></span>Abonnement</span><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:2px;background:#7c756a;display:inline-block;"></span>Facture</span></div><div style="font-weight:600;margin:8px 0 4px;">Du plus cher au moins cher</div>`+sorted.map(x=>{const abo=(x.e.type||'abo')==='abo';return `<div class="subrow"><span style="width:9px;height:9px;border-radius:2px;background:${abo?'#C06A4A':'#7c756a'};"></span><span class="snm">${x.e.l||'(sans nom)'}</span><span class="styp">${abo?'abonnement':'facture'}</span><b class="smo">${euro(x.m)}/mois</b><span class="syr">${euro(x.m*12)}/an</span></div>`;}).join('');
+  save();
+}
+
+/* ---- tableau de bord (synthèse) ---- */
+function gotoTab(id){ $$('.tab').forEach(t=>{ if(t.dataset.tab===id) t.click(); }); }
+function renderDashboard(){
+  const p=monthlyProj(); const left=p.inc-p.exp;
+  $('#dInc').textContent=euro(p.inc);
+  $('#dExp').textContent=euro(p.exp);
+  const dl=$('#dLeft'); dl.textContent=euro(left); dl.className='val '+(left>=0?'good':'bad');
+  $('#dSav').textContent=euro(p.sav);
+  // crédits
+  let cBal=0,cMens=0; S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0).forEach(d=>{const a=amort(d),el=monthsElapsed(d.start);const bal=el<=0?(+d.cap||0):(el>=a.sched.length?0:a.sched[el-1].balance);if(bal>0.5){cBal+=bal;cMens+=a.M+(+d.ins||0);}});
+  const ratio=p.inc>0?Math.round(cMens/p.inc*100):0;
+  // provisions
+  let provM=0; (S.prov||[]).forEach(e=>{const t=+e.target||0,sv=Math.min(+e.saved||0,t),ml=monthsUntil(e.deadline);provM+=Math.ceil(Math.max(0,t-sv)/ml);});
+  // abonnements
+  let subM=0; (S.subs||[]).forEach(e=>{subM+=subMonthly(e);});
+  // épargne cumulée fin d'année
+  const yd=ayear(); let cum=(yd.opening||0); for(let k=0;k<12;k++) cum+=effSave(k);
+  const totalementVide = !(S.income||[]).length && !(S.expenses||[]).length && !(S.debts||[]).length
+    && !(S.subs||[]).length && !(S.prov||[]).length && !((S.wealth&&S.wealth.assets)||[]).length;
+  if(totalementVide){
+    $('#dHealth').innerHTML=`<b>Bienvenue dans Havn.</b> Ton fichier est vierge, rien n'est enregistré. Commence par l'onglet « 1 · Budget du mois » : tu saisis tes revenus et tes dépenses, et tout le reste se calcule tout seul. Tes données restent sur cet appareil, elles ne sont envoyées nulle part.`;
+    $('#dGrid').innerHTML=videHTML("Rien à afficher pour l'instant",
+      "Chaque onglet que tu remplis vient s'afficher ici en résumé : crédits et taux d'endettement, provisions à constituer, abonnements récurrents, épargne de l'année et patrimoine net.",
+      `<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button class="btn" onclick="gotoTab('budget')">Saisir mon budget</button><button class="btn doux" onclick="chargerExemple()">Explorer avec l'exemple</button></div>`);
+    return;
+  }
+  const tile=(t,v,sub,link,warn)=>`<div class="tile${warn?' warn':''}" onclick="gotoTab('${link}')"><div class="tlab">${t}</div><div class="tval">${v}</div><div class="tsub">${sub}</div></div>`;
+  $('#dGrid').innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;">`
+    +tile('Crédits',euro(cBal),`${euro(cMens)}/mois · endettement ${ratio}%`,'dettes',ratio>35)
+    +tile('Provisions',euro(provM)+'/mois',`à mettre de côté pour tes échéances`,'prov',false)
+    +tile('Abonnements',euro(subM)+'/mois',`${euro(subM*12)}/an de récurrent`,'subs',false)
+    +tile('Épargne '+S.annual.cur,euro(cum),`cumul projeté fin d'année`,'annuel',false)
+    +tile('Patrimoine net',euro(wealthNet().net),`ce que tu possèdes moins ce que tu dois`,'wealth',wealthNet().net<0)
+    +`</div>`;
+  $('#dHealth').innerHTML = left<0
+    ? `<b>Ce mois, tu es en négatif de ${euro(-left)}.</b> Commence par l'onglet Budget pour rééquilibrer avant tout le reste.`
+    : `Tu dégages <b>${euro(left)}/mois</b> et tu mets <b>${euro(p.sav)}/mois</b> de côté. ${ratio>35?`<b>Attention :</b> ton taux d'endettement (${ratio}%) dépasse le seuil de 35%.`:`Ton taux d'endettement est de ${ratio}%, dans la zone saine.`}`;
+}
+
+/* ---- patrimoine net ---- */
+function creditBalance(){ let b=0; S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0).forEach(d=>{const a=amort(d),el=monthsElapsed(d.start);const bal=el<=0?(+d.cap||0):(el>=a.sched.length?0:a.sched[el-1].balance);b+=bal;}); return b; }
+function renderAssets(){
+  const w=$('#assetList');w.innerHTML='';
+  if(!(S.wealth.assets||[]).length){ w.innerHTML=videHTML('',"Aucun actif. Liste ce que tu possèdes : épargne, placements, véhicule, logement. Pas besoin d'être au centime, une estimation honnête suffit. Le capital restant de tes crédits est déjà compté automatiquement du côté des dettes."); return; }
+  (S.wealth.assets||[]).forEach((e,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 140px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Actif</span><input placeholder="Épargne, placements, voiture, maison…" value="${ech(e.l)}" oninput="S.wealth.assets[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Valeur (€)</span><input class="num" type="number" placeholder="0" value="${e.v}" oninput="S.wealth.assets[${i}].v=+this.value||0;calcWealth()"></label>
+      ${acts('assets',i)}`;
+    w.appendChild(r);
+  });
+}
+$('#addAsset').onclick=()=>{S.wealth.assets.push({l:'',v:0});renderAssets();calcWealth();};
+function renderWdebts(){
+  const w=$('#wdebtList');w.innerHTML='';
+  if(!(S.wealth.debts||[]).length){ w.innerHTML=videHTML('',"Aucune autre dette. Cette liste sert à ce qui n'est pas un crédit amortissable : découvert, prêt familial, dette fiscale ou facture étalée. Tes crédits de l'onglet 2 sont déjà pris en compte, inutile de les répéter ici."); return; }
+  (S.wealth.debts||[]).forEach((e,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 140px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Dette</span><input placeholder="Découvert, prêt familial…" value="${ech(e.l)}" oninput="S.wealth.debts[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Montant (€)</span><input class="num" type="number" placeholder="0" value="${e.v}" oninput="S.wealth.debts[${i}].v=+this.value||0;calcWealth()"></label>
+      ${acts('wdebts',i)}`;
+    w.appendChild(r);
+  });
+}
+$('#addWdebt').onclick=()=>{S.wealth.debts.push({l:'',v:0});renderWdebts();calcWealth();};
+function wealthNet(){ const a=(S.wealth.assets||[]).reduce((s,x)=>s+(+x.v||0),0); const md=(S.wealth.debts||[]).reduce((s,x)=>s+(+x.v||0),0); const cb=creditBalance(); return {a,d:cb+md,cb,net:a-(cb+md)}; }
+function calcWealth(){
+  const W=wealthNet();
+  $('#wAssets').textContent=euro(W.a); $('#wDebts').textContent=euro(W.d);
+  const nEl=$('#wNet'); nEl.textContent=euro(W.net); nEl.className='val '+(W.net>=0?'good':'bad');
+  $('#wealthCredits').innerHTML = W.cb>0.5 ? `<div style="display:grid;grid-template-columns:1fr 140px 28px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);color:#5a544b;"><span>Capital restant de tes crédits <span style="color:var(--acc);font-size:12px;cursor:pointer;" onclick="gotoTab('dettes')">↗ Crédits</span></span><span class="num"><b>${euro(W.cb)}</b></span><span></span></div>` : '';
+  $('#wNote').innerHTML = `Ton patrimoine net, c'est ce que tu possèdes moins ce que tu dois : <b>${euro(W.net)}</b>. `+(W.net>=0?`Chaque mois où tu épargnes et rembourses tes crédits, il grimpe.`:`Il est négatif pour l'instant : réduire tes dettes et épargner le fera remonter.`)+` Enregistre sa valeur de temps en temps pour suivre sa progression.`;
+  const h=S.wealth.history||[];
+  if(h.length>=2){ $('#wealthChart').innerHTML=chartSVG({series:[{data:h.map(x=>x.v),color:'#4E7C5A',fill:'rgba(78,124,90,.12)'}],money:true}); $('#wealthChartTitle').style.display='block'; }
+  else if(h.length===1){ $('#wealthChart').innerHTML=`<div style="color:var(--mut);font-size:13px;">Une valeur enregistrée (${euro(h[0].v)}). Reviens plus tard en enregistrer d'autres pour voir la courbe.</div>`; $('#wealthChartTitle').style.display='block'; }
+  else { $('#wealthChart').innerHTML=''; $('#wealthChartTitle').style.display='none'; }
+  save();
+}
+function saveWealthSnapshot(){
+  const net=wealthNet().net;
+  const now=new Date(); const t=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  S.wealth.history=S.wealth.history||[];
+  const ex=S.wealth.history.find(x=>x.t===t); if(ex) ex.v=net; else S.wealth.history.push({t,v:net});
+  S.wealth.history.sort((a,b)=>a.t.localeCompare(b.t));
+  calcWealth();
+}
+
+/* ---- export CSV : point-virgule et virgule décimale, pour qu'Excel français
+       ouvre le fichier en colonnes du premier coup, et BOM UTF-8 pour les accents ---- */
+function csvChamp(v){
+  const s=String(v==null?'':v);
+  return /[";\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+const csvNb=n=>String(Math.round((+n||0)*100)/100).replace('.',',');
+function csvAmort(){
+  const creds=selectedCredits();
+  if(!creds.length){ alert('Coche au moins un crédit.'); return; }
+  const rows=consolidated(creds);
+  const L=[], ligne=(...c)=>L.push(c.map(csvChamp).join(';'));
+  ligne('Havn','échéancier du '+new Date().toLocaleDateString('fr-FR'));
+  ligne('Colonnes','Année et Mois sont des nombres : Excel ne les transforme pas en dates.');
+  ligne('Crédits inclus', creds.map(d=>d.l||'(sans nom)').join(' + '));
+  if(creds.length>1) ligne('Note','échéancier consolidé, mensualités hors assurance');
+  ligne('');
+  ligne('N°','Année','Mois','Mensualité','Intérêts','Capital amorti','Capital restant');
+  rows.forEach((r,i)=>ligne(i+1, r.an, r.mois, csvNb(r.pay), csvNb(r.intr), csvNb(r.prin), csvNb(r.bal)));
+  ligne('');
+  ligne('Total payé','','', csvNb(rows.reduce((s,r)=>s+r.pay,0)));
+  ligne("Dont intérêts",'','', csvNb(rows.reduce((s,r)=>s+r.intr,0)));
+  const blob=new Blob(['\ufeff'+L.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download='Havn-echeancier-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+/* ---- impression du budget du mois ---- */
+function imprimerBudget(){
+  if(!(S.income||[]).length && !(S.expenses||[]).length){ alert("Ton budget est vide : saisis d'abord tes revenus et tes dépenses."); return; }
+  const CAT={need:'Besoins',want:'Envies',save:'Épargne',debt:'Dettes'};
+  const FREQ={week:'semaine',month:'mois',year:'an'};
+  const p=monthlyProj(), reste=p.inc-p.exp;
+  let b='<h1>Mon budget du mois</h1><p>Havn · édité le '+new Date().toLocaleDateString('fr-FR')+'</p>';
+  b+='<h2>Revenus</h2><table><thead><tr><th>Source</th><th>Montant</th><th>Par</th><th>Par mois</th></tr></thead><tbody>';
+  b+=(S.income||[]).map(x=>'<tr><td>'+(ech(x.l)||'(sans nom)')+'</td><td>'+euro(x.a)+'</td><td>'+(FREQ[x.f||'month'])+'</td><td>'+euro(monAmt(x))+'</td></tr>').join('');
+  b+='<tr class="tot"><td colspan="3">Total revenus</td><td>'+euro(p.inc)+'</td></tr></tbody></table>';
+  ['need','want','save','debt'].forEach(c=>{
+    const l=(S.expenses||[]).filter(x=>x.c===c); if(!l.length) return;
+    const st=l.reduce((s,x)=>s+monAmt(x),0);
+    b+='<h2>'+CAT[c]+'</h2><table><thead><tr><th>Poste</th><th>Montant</th><th>Par</th><th>Par mois</th></tr></thead><tbody>';
+    b+=l.map(x=>'<tr><td>'+(ech(x.l)||'(sans nom)')+'</td><td>'+euro(x.a)+'</td><td>'+(FREQ[x.f||'month'])+'</td><td>'+euro(monAmt(x))+'</td></tr>').join('');
+    b+='<tr class="tot"><td colspan="3">Total '+CAT[c].toLowerCase()+'</td><td>'+euro(st)+'</td></tr></tbody></table>';
+  });
+  b+='<h2>En résumé</h2><table><tbody>'
+   +'<tr><td>Revenus</td><td>'+euro(p.inc)+'</td></tr>'
+   +'<tr><td>Dépenses</td><td>'+euro(p.exp)+'</td></tr>'
+   +'<tr class="tot"><td>Reste chaque mois</td><td>'+euro(reste)+'</td></tr>'
+   +'<tr><td>Dont épargne prévue</td><td>'+euro(p.sav)+'</td></tr>'
+   +'<tr><td>Règle cible</td><td>'+ech(S.rule.name)+' ('+S.rule.need+' / '+S.rule.want+' / '+S.rule.save+')</td></tr>'
+   +'</tbody></table>'
+   +'<p class="pied">Montants ramenés au mois. Affichage à l\'euro près, les calculs gardent les centimes. Outil d\'aide au pilotage : ces chiffres ne remplacent pas les documents de ta banque.</p>';
+  const w=window.open('','_blank'); if(!w){alert('Autorise les pop-ups pour imprimer.');return;}
+  w.document.write('<html><head><meta charset="utf-8"><title>Mon budget du mois</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222;}h1{font-size:22px;margin:0 0 2px;}h2{font-size:14px;margin:18px 0 6px;color:#C06A4A;text-transform:uppercase;letter-spacing:.5px;}p{color:#555;font-size:12px;margin:2px 0 10px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px;}th,td{border:1px solid #ccc;padding:5px 8px;text-align:right;}th{background:#f0f0f0;}td:first-child,th:first-child{text-align:left;}tr.tot td{font-weight:bold;background:#faf7f1;}p.pied{margin-top:18px;font-size:10.5px;color:#777;}</style></head><body>'+b+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
+  w.document.close();
+}
+
+/* ================= gestion des données ================= */
+/* Sauvegarder : télécharge une copie de secours */
+function sauvegarder(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='Havn-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportData(){ sauvegarder(); } /* ancien nom, conservé par sécurité */
+function demanderRestauration(){ const f=$('#fichierImport'); if(f) f.click(); }
+function importData(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data||typeof data!=='object'||!data.income||!data.expenses){ alert("Ce fichier ne ressemble pas à une sauvegarde Havn.\n\nChoisis le fichier « Havn-sauvegarde-....json » que tu as téléchargé avec le bouton Sauvegarder."); return; }
+      if(confirm('Remplacer tes données actuelles par cette sauvegarde ?')){
+        S=data;
+        if(!S.wealth) S.wealth={assets:[],debts:[],history:[]};
+        if(!S.prov) S.prov=[]; if(!S.subs) S.subs=[]; if(!S.debts) S.debts=[];
+        if(!S.rule) S.rule={name:'50/30/20',need:50,want:30,save:20};
+        if(!S.goal) S.goal={amount:0,have:0,months:12,rate:0,dur:12,durUnit:'month'};
+        if(!S.annual||!S.annual.years) S.annual=anneeVide();
+        S.demo=!!S.demo;
+        toutRedessiner();
+      }
+    }catch(err){ alert('Fichier illisible ou corrompu.'); }
+    input.value='';
+  };
+  reader.readAsText(f);
+}
+/* Explorer avec l'exemple : disponible à tout moment, dans les deux sens */
+function chargerExemple(){
+  const dejaRempli=(S.income||[]).length||(S.expenses||[]).length||(S.debts||[]).length||(S.prov||[]).length||(S.subs||[]).length||((S.wealth&&S.wealth.assets)||[]).length;
+  if(dejaRempli && !S.demo){
+    if(!confirm("Charger le budget d'exemple va remplacer tes chiffres actuels.\n\nAstuce : clique d'abord sur « Sauvegarder » si tu veux garder une copie de ton budget. Tu pourras la remettre avec « Restaurer ».\n\nContinuer ?")) return;
+  }
+  S=etatExemple(); toutRedessiner(); gotoTab('dash');
+}
+/* Repartir de zéro : vide RÉELLEMENT l'outil, aucune donnée d'exemple ne revient */
+function repartirDeZero(){
+  if(S.demo){
+    if(!confirm("Repartir de zéro efface le budget d'exemple et te laisse une page vierge, prête pour tes chiffres.\n\nSi tu as déjà saisi tes propres montants par-dessus l'exemple, clique d'abord sur « Sauvegarder ».\n\nContinuer ?")) return;
+  } else {
+    if(!confirm("Repartir de zéro va effacer TOUTES les données enregistrées dans ce navigateur : revenus, dépenses, crédits, abonnements, provisions, objectif d'épargne, suivi annuel et patrimoine.\n\nAstuce : clique d'abord sur « Sauvegarder » si tu veux garder une copie de secours.\n\nContinuer ?")) return;
+    if(!confirm("Dernière confirmation : tout effacer définitivement ?")) return;
+  }
+  /* DÉMO : on ne supprime rien dans le navigateur du visiteur. */
+  S=etatVide(); toutRedessiner(); gotoTab('budget');
+}
+/* bandeau « tu explores l'exemple » */
+function majBandeau(){
+  const b=$('#bandeauDemo'); if(!b) return;
+  if(S.demo){
+    b.style.display='flex';
+    b.innerHTML=`<span style="flex:1 1 320px;"><b>Tu explores le budget d'exemple.</b> Ces chiffres sont fictifs, ils sont là pour te montrer l'outil rempli. Quand tu veux saisir le tien, clique sur « Repartir de zéro » : tu obtiens une page vierge, et tu peux revenir à l'exemple quand tu veux.</span>`
+      +`<span class="actions"><button class="btn" onclick="repartirDeZero()">Repartir de zéro</button><button class="ferme" title="Masquer ce message" onclick="masquerBandeau()">&times;</button></span>`;
+  } else { b.style.display='none'; b.innerHTML=''; }
+}
+function masquerBandeau(){ S.demo=false; save(); majBandeau(); }
+
+/* ---- tout redessiner après un changement global d'état ---- */
+function toutRedessiner(){
+  $('#goalAmount').value=S.goal.amount||'';$('#goalHave').value=S.goal.have||'';$('#goalRate').value=(S.goal.rate!=null?S.goal.rate:'');$('#goalDur').value=(S.goal.dur!=null?S.goal.dur:(S.goal.months||''));$('#goalUnit').value=S.goal.durUnit||'month';
+  $('#autofill').checked=!!S.autofill;
+  syncRuleInputs();
+  renderIncome();renderExpense();renderDebt();recalc();calcDebt();renderAnnual();renderProv();calcProv();renderSubs();calcSubs();renderAssets();renderWdebts();calcWealth();renderDashboard();
+  majBandeau();
+  save();
+}
+
+/* ---- init ---- */
+toutRedessiner();
+</script>
+</body>
+</html>
