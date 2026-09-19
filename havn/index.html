@@ -30,6 +30,11 @@
   .card .hint{color:var(--mut);font-size:13.5px;margin:0 0 14px;}
   .row{display:grid;grid-template-columns:1fr 130px 150px 34px;gap:10px;align-items:center;margin-bottom:8px;}
   .row.head{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  /* Sur ordinateur, UN SEUL en-tête par tableau, posé par poserEntete().
+     Répéter le libellé sur chaque ligne mangeait de la place et décalait les
+     menus déroulants par rapport aux champs texte (Logan, 18/09/2026).
+     Sur téléphone, la règle plus bas rebascule sur un libellé par champ :
+     il n'y a plus de colonnes, donc il n'y a plus d'en-tête possible. */
   .row .f{display:contents;}
   .row .cap{display:none;}
   input,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;background:#fff;color:var(--ink);transition:box-shadow .15s ease,border-color .15s ease;}
@@ -136,9 +141,23 @@
   @media(max-width:600px){
     .wrap{padding:20px 12px 64px;}
     h1{font-size:33px;}
-    .tabs{gap:6px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;margin:18px 0 6px;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    /* Sur petit écran, les 8 onglets s'ENROULENT sur plusieurs lignes.
+       Avant : une seule ligne qui défilait horizontalement, avec la barre de
+       défilement masquée. Sur un iPhone SE, deux onglets tenaient à l'écran et
+       rien n'indiquait que les six autres existaient : Logan a testé le 10/09
+       et n'a pas pu naviguer. Une navigation cachée n'est pas une navigation.
+       Cibles tactiles portées à 44 px, le minimum recommandé par Apple. */
+    /* Une seule rangée qui défile, comme le rail de Sésame. Les onglets
+       passaient à la ligne et formaient un pavé de trois rangées sur un
+       téléphone (Logan, 19/09/2026). Les marges négatives font défiler les
+       onglets d'un bord à l'autre de l'écran, sans couper le premier. */
+    .tabs{gap:7px;justify-content:flex-start;flex-wrap:nowrap;margin:16px 0 6px;
+      overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;
+      -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;
+      padding:2px 14px;margin-left:-14px;margin-right:-14px;}
     .tabs::-webkit-scrollbar{display:none;}
-    .tab{flex:0 0 auto;padding:8px 14px;font-size:13px;}
+    .tab{flex:0 0 auto;padding:0 14px;font-size:13px;min-height:44px;display:inline-flex;
+      align-items:center;scroll-snap-align:center;white-space:nowrap;}
     .card{padding:16px 15px;border-radius:14px;}
     .card h2{font-size:19px;}
     .kpi{gap:9px;}
@@ -331,7 +350,37 @@
         <div class="box"><div class="lab">Taux d'endettement</div><div class="val" id="cRatio">– %</div></div>
       </div>
       <div class="note" id="cNote"></div>
+      <p class="hint" style="margin:10px 0 0;">Le capital restant dû est calculé <b>à la date d'aujourd'hui</b> : Havn part du capital emprunté, applique l'échéancier mois par mois depuis la date de début que tu as saisie, et s'arrête au mois en cours. Il suppose que toutes les échéances ont été payées à l'heure et sans versement exceptionnel.</p>
       <div id="creditDetails" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <h2>Sortir de tes crédits plus vite</h2>
+      <p class="hint">En France, tu ne peux pas verser un peu plus chaque mois à l'organisme de crédit : la mensualité est celle du contrat. Ce que tu peux faire, c'est <b>mettre de l'argent de côté</b> et le verser en <b>remboursement anticipé partiel</b> quand la cagnotte est assez grosse. C'est un droit, l'organisme ne peut pas le refuser. Havn simule ça mois par mois sur tes vrais échéanciers.</p>
+      <div class="row" style="grid-template-columns:1fr 150px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;">
+        <span><b>Je mets de côté chaque mois</b> <span style="color:var(--mut);font-size:12px;">sur un livret, uniquement pour ça</span></span>
+        <input id="poEpargne" class="num" type="number" placeholder="0" oninput="setPayoffEpargne(this.value)">
+      </div>
+      <div class="row" style="grid-template-columns:1fr 150px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
+        <span><b>Je verse dès que la cagnotte atteint</b> <span style="color:var(--mut);font-size:12px;">la plupart des contrats imposent un minimum, souvent une échéance ou 10 % du capital. Regarde le tien.</span></span>
+        <input id="poSeuil" class="num" type="number" placeholder="1000" oninput="setPayoffSeuil(this.value)">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:13.5px;cursor:pointer;color:var(--ink);"><input type="checkbox" id="poReport" style="width:auto;" onchange="setPayoffReport(this.checked)"> Quand un crédit est soldé, je remets sa mensualité dans la cagnotte <span style="color:var(--mut);">(c'est ça, l'effet boule de neige)</span></label>
+      <div style="font-size:13px;color:var(--mut);margin-bottom:6px;">Quel crédit rembourser en premier :</div>
+      <div id="poStrats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
+      <div class="kpi">
+        <div class="box"><div class="lab">Plus aucun crédit</div><div class="val" id="poDate">–</div></div>
+        <div class="box"><div class="lab">Dans</div><div class="val" id="poDur">–</div></div>
+        <div class="box"><div class="lab">Intérêts payés d'ici là</div><div class="val" id="poInt">–</div></div>
+        <div class="box"><div class="lab">Gagné vs ne rien faire</div><div class="val" id="poGain">–</div></div>
+      </div>
+      <div class="note" id="poNote">Ajoute un crédit pour voir ton plan de sortie.</div>
+      <div id="poOrdre" style="margin-top:6px;"></div>
+      <div id="poVersements" style="margin-top:14px;"></div>
+      <div id="poCompare" style="margin-top:16px;"></div>
+      <details class="explain" style="margin-top:14px;">
+        <summary>Ce que la loi te garantit sur le remboursement anticipé</summary>
+        <div class="explain-body" id="poLoi"></div>
+      </details>
     </div>
     <div class="card">
       <h2>Tableau d'amortissement</h2>
@@ -383,7 +432,7 @@
   <section id="prov" class="hidden">
     <div class="card">
       <h2>Tes enveloppes de provision</h2>
-      <p class="hint">Anticipe les grosses dépenses qui ne tombent pas chaque mois : vacances, Noël, impôts, révision voiture, franchise, dentiste… Pour chacune, indique le montant visé, la date, et ce que tu as déjà mis. L'outil calcule combien mettre de côté chaque mois pour être prêt à temps.</p>
+      <p class="hint">La colonne « Déjà mis » se met à jour <b>à la main</b> : quand tu vires de l'argent sur ton enveloppe, reviens l'inscrire ici. Havn ne se connecte à aucune banque, il ne peut pas le savoir tout seul. Anticipe les grosses dépenses qui ne tombent pas chaque mois : vacances, Noël, impôts, révision voiture, franchise, dentiste… Pour chacune, indique le montant visé, la date, et ce que tu as déjà mis. L'outil calcule combien mettre de côté chaque mois pour être prêt à temps.</p>
       <div id="provList"></div>
       <button class="add" id="addProv">+ Ajouter une enveloppe</button>
     </div>
@@ -403,7 +452,7 @@
   <section id="subs" class="hidden">
     <div class="card">
       <h2>Tes abonnements et factures récurrentes</h2>
-      <p class="hint">Liste tout ce que tu paies régulièrement : streaming, mobile, salle de sport, assurances, électricité… Choisis « Abonnement » (que tu pourrais couper) ou « Facture » (nécessaire). L'outil calcule ton total et met en avant ce que tu pourrais alléger.</p>
+      <p class="hint">Liste tout ce que tu paies régulièrement : streaming, mobile, salle de sport, assurances, électricité… Choisis « Abonnement » (que tu pourrais couper) ou « Facture » (nécessaire). Puis <b>coche toi-même la colonne « À couper »</b> pour les lignes que tu es prêt à arrêter : Havn additionne uniquement celles-là et te dit ce que ça te rendrait sur l'année.</p>
       <div id="subsList"></div>
       <button class="add" id="addSub">+ Ajouter</button>
     </div>
@@ -412,7 +461,7 @@
       <div class="kpi">
         <div class="box"><div class="lab">Total / mois</div><div class="val" id="sMonthly">0 €</div></div>
         <div class="box"><div class="lab">Total / an</div><div class="val" id="sYearly">0 €</div></div>
-        <div class="box"><div class="lab">Abonnements à couper ?</div><div class="val" id="sCut">0 €</div></div>
+        <div class="box"><div class="lab">Ce que tu as coché à couper</div><div class="val" id="sCut">0 €</div></div>
       </div>
       <div class="note" id="subsNote"></div>
       <div id="subsDetails" style="margin-top:8px;"></div>
@@ -517,19 +566,26 @@ function etatVide(){ return {
   wealth:{assets:[],debts:[],history:[]},
   goal:{amount:0,have:0,months:12,rate:0,dur:12,durUnit:'month'},
   rule:{name:'50/30/20',need:50,want:30,save:20},
+  payoff:{epargne:0,seuil:1000,strat:'neige',report:true},
   annual:anneeVide() }; }
 /* le budget d'exemple : chiffres fictifs, dates toujours relatives à aujourd'hui
    pour que l'exemple ne vieillisse jamais */
 function etatExemple(){ return {
   demo:true, autofill:false,
   income:[{l:'Salaire',a:2200,f:'month'}],
-  expenses:[{l:'Loyer',a:750,c:'need',f:'month'},{l:'Crédit voiture (mensualité)',a:250,c:'need',f:'month'},{l:'Courses',a:90,c:'need',f:'week'},{l:'Assurance auto',a:600,c:'need',f:'year'},{l:'Restos & sorties',a:200,c:'want',f:'month'},{l:'Abonnements',a:60,c:'want',f:'month'},{l:'Épargne automatique',a:150,c:'save',f:'month'},{l:'Crédit conso (télé, meubles)',a:120,c:'debt',f:'month'}],
-  debts:[{l:'Crédit auto',cap:15000,r:4.5,dur:60,start:moisRelatif(-25),ins:12,pen:0},{l:'Crédit conso (télé)',cap:3000,r:6,dur:24,start:moisRelatif(-10),ins:0,pen:0}],
+  expenses:[{l:'Loyer',a:750,c:'need',f:'month'},{l:'Crédit voiture (mensualité)',a:250,c:'need',f:'month'},{l:'Courses',a:90,c:'need',f:'week'},{l:'Assurance auto',a:600,c:'need',f:'year'},{l:'Restos & sorties',a:200,c:'want',f:'month'},{l:'Abonnements',a:60,c:'want',f:'month'},{l:'Épargne automatique',a:150,c:'save',f:'month'},{l:'Crédit conso (télé, meubles)',a:120,c:'debt',f:'month'},{l:'Prêt étudiant',a:43,c:'debt',f:'month'}],
+  /* Trois crédits, et ce n'est pas décoratif : le plus PETIT solde (prêt
+     étudiant) est aussi le MOINS cher, donc boule de neige et avalanche ne
+     donnent pas le même ordre. Avec deux crédits seulement, l'acheteur ouvrait
+     l'outil et voyait trois stratégies identiques : la fonction ne se montrait
+     pas. Corrigé le 17/09/2026. */
+  debts:[{l:'Crédit auto',cap:15000,r:4.5,dur:60,start:moisRelatif(-25),ins:12,pen:0},{l:'Crédit conso (télé)',cap:3000,r:6,dur:24,start:moisRelatif(-10),ins:0,pen:0},{l:'Prêt étudiant',cap:1500,r:1.5,dur:36,start:moisRelatif(-14),ins:0,pen:0}],
   prov:[{l:'Vacances été',target:1500,deadline:moisRelatif(11),saved:400},{l:'Impôts',target:1200,deadline:moisRelatif(2),saved:0},{l:'Noël / cadeaux',target:600,deadline:moisRelatif(5),saved:100},{l:'Révision voiture',target:400,deadline:moisRelatif(8),saved:150}],
-  subs:[{l:'Mobile',amount:20,freq:'month',type:'facture'},{l:'Netflix',amount:14,freq:'month',type:'abo'},{l:'Spotify',amount:11,freq:'month',type:'abo'},{l:'Salle de sport',amount:35,freq:'month',type:'abo'},{l:'Assurance habitation',amount:180,freq:'year',type:'facture'},{l:'Électricité',amount:110,freq:'month',type:'facture'}],
+  subs:[{l:'Mobile',amount:20,freq:'month',type:'facture'},{l:'Netflix',amount:14,freq:'month',type:'abo',cut:true},{l:'Spotify',amount:11,freq:'month',type:'abo',cut:true},{l:'Salle de sport',amount:35,freq:'month',type:'abo',cut:false},{l:'Assurance habitation',amount:180,freq:'year',type:'facture'},{l:'Électricité',amount:110,freq:'month',type:'facture'}],
   wealth:{assets:[{l:'Épargne de précaution',v:3500},{l:'Compte courant',v:1200},{l:'Voiture',v:9000}],debts:[],history:[]},
   goal:{amount:5000,have:500,months:10,rate:3,dur:10,durUnit:'month'},
   rule:{name:'50/30/20',need:50,want:30,save:20},
+  payoff:{epargne:150,seuil:1000,strat:'neige',report:true},
   annual:anneeVide() }; }
 /* au premier lancement, on ouvre sur l'exemple : l'acheteur voit l'outil vivant tout de suite,
    et le bandeau lui dit comment passer à ses propres chiffres. */
@@ -547,6 +603,7 @@ S.debts=(S.debts||[]).map(d=>{
 if(!S.annual || !S.annual.years){ const _y=new Date().getFullYear(); const _old=(S.annual&&S.annual.entries)?S.annual.entries:Array(12).fill(null); S.annual={cur:_y,years:{}}; S.annual.years[_y]={entries:_old,opening:0}; }
 /* sauvegardes très anciennes : on crée les onglets manquants VIDES.
    On n'injecte jamais de données d'exemple dans le budget réel de quelqu'un. */
+if(!S.payoff || S.payoff.epargne===undefined) S.payoff={epargne:0,seuil:1000,strat:'neige',report:true};
 if(!S.prov) S.prov=[];
 if(!S.subs) S.subs=[];
 if(!S.wealth) S.wealth={assets:[],debts:[],history:[]};
@@ -573,6 +630,7 @@ function ruleEdited(){
 /* ---- tabs ---- */
 $$('.tab').forEach(t=>t.onclick=()=>{
   $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  if(t.scrollIntoView) t.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   ['dash','budget','epargne','dettes','annuel','prov','subs','wealth'].forEach(id=>$('#'+id).classList.add('hidden'));
   $('#'+t.dataset.tab).classList.remove('hidden');
   if(t.dataset.tab==='dash') renderDashboard();
@@ -583,6 +641,24 @@ $$('.tab').forEach(t=>t.onclick=()=>{
 });
 
 /* ---- income ---- */
+/* L'en-tête se DÉDUIT de la première ligne : il relit ses libellés au lieu de
+   les recopier. Une deuxième liste de titres finit toujours par diverger de la
+   première, et l'anglais aurait eu deux endroits à traduire au lieu d'un. */
+function poserEntete(conteneur){
+  const modele = conteneur.querySelector('.row');
+  if(!modele) return;
+  const champs = [...modele.querySelectorAll('.f')];
+  if(!champs.length) return;
+  const h = document.createElement('div');
+  h.className = 'row head';
+  h.style.gridTemplateColumns = modele.style.gridTemplateColumns;
+  h.innerHTML = champs.map(f=>{
+    const cap = f.querySelector('.cap');
+    const num = !!f.querySelector('.num');
+    return `<span style="${num?'text-align:right;':''}">${cap?cap.textContent:''}</span>`;
+  }).join('') + '<span></span>';
+  conteneur.insertBefore(h, conteneur.firstChild);
+}
 function renderIncome(){
   const w=$('#incomeList');w.innerHTML='';
   if(!S.income.length){ w.innerHTML=videHTML('',"Aucun revenu pour l'instant. Commence par ton salaire, puis ajoute le reste : primes, allocations, pension, loyers reçus. Chaque ligne peut être hebdomadaire, mensuelle ou annuelle, tout est ramené au mois automatiquement."); return; }
@@ -595,6 +671,7 @@ function renderIncome(){
       ${acts('income',i)}`;
     w.appendChild(r);
   });
+  poserEntete(w);
 }
 $('#addIncome').onclick=()=>{S.income.push({l:'',a:0});renderIncome();save();};
 
@@ -616,6 +693,7 @@ function renderExpense(){
       ${acts('expenses',i)}`;
     w.appendChild(r);
   });
+  poserEntete(w);
 }
 /* réordonner, dupliquer, supprimer : générique pour toutes les listes */
 function listRef(name){
@@ -764,6 +842,7 @@ function renderDebt(){
       ${acts('debts',i)}`;
     w.appendChild(r);
   });
+  poserEntete(w);
 }
 $('#addDebt').onclick=()=>{const now=new Date();S.debts.push({l:'',cap:0,r:0,dur:60,start:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'),ins:0,pen:0});renderDebt();calcDebt();};
 
@@ -772,7 +851,7 @@ function fmtDur(months){const y=Math.floor(months/12),m=months%12;return (y>0?y+
 
 function calcDebt(){
   const active=S.debts.filter(d=>(+d.cap||0)>0 && (+d.dur||0)>0);
-  if(!active.length){ $('#cTotal').textContent='–';$('#cMens').textContent='–';$('#cInt').textContent='–';$('#cRatio').textContent='– %';$('#cRatio').className='val';$('#cNote').innerHTML='Ajoute un crédit pour voir ta vue d\'ensemble.';$('#creditDetails').innerHTML='';$('#amortPicker').innerHTML='';$('#amortTable').innerHTML='';save();return; }
+  if(!active.length){ $('#cTotal').textContent='–';$('#cMens').textContent='–';$('#cInt').textContent='–';$('#cRatio').textContent='– %';$('#cRatio').className='val';$('#cNote').innerHTML='Ajoute un crédit pour voir ta vue d\'ensemble.';$('#creditDetails').innerHTML='';$('#amortPicker').innerHTML='';$('#amortTable').innerHTML='';renderPayoff();save();return; }
   let totBal=0,totMens=0,totInt=0,details='';
   active.forEach(d=>{
     const a=amort(d), el=monthsElapsed(d.start);
@@ -801,8 +880,188 @@ function calcDebt(){
   const prevChk=active.map((d,idx)=>{const cb=$('#amc'+idx);return cb?cb.checked:true;});
   $('#amortPicker').innerHTML=active.map((d,idx)=>`<label style="display:inline-flex;align-items:center;gap:6px;margin:0 16px 6px 0;font-size:13px;cursor:pointer;"><input type="checkbox" id="amc${idx}" ${prevChk[idx]?'checked':''} style="width:auto;" onchange="renderAmortTable()"><span>${ech(d.l)||'(sans nom)'}</span></label>`).join('');
   renderAmortTable();
+  renderPayoff();
   save();
 }
+
+/* ---- MOTEUR DE SORTIE DE CRÉDITS (réécrit le 17/09/2026) -----------------
+   LE POINT QUI A TOUT CHANGÉ, ET QUI VIENT DE LOGAN :
+   en France on ne peut PAS verser un peu plus chaque mois à l'organisme. La
+   mensualité est celle du contrat. Le premier jet du 16/09 copiait le modèle
+   américain des neuf fiches relevées sur `debt payoff tracker` : il aurait fait
+   promettre à Havn un geste que l'acheteur français ne peut pas faire.
+
+   LE VRAI MÉCANISME FRANÇAIS, vérifié le 17/09 (Code de la consommation,
+   art. L312-34 et L312-35) :
+     - le remboursement anticipé, total ou partiel, est un DROIT : le prêteur
+       ne peut pas le refuser ;
+     - AUCUNE indemnité en dessous de 10 000 € remboursés par anticipation sur
+       12 mois glissants, ni jamais sur un renouvelable, un découvert ou un
+       taux variable ;
+     - au-delà : 1 % du capital remboursé s'il reste plus d'un an, 0,5 % sinon,
+       et jamais plus que les intérêts restants.
+   Donc le geste réel est : METTRE DE CÔTÉ, puis VERSER une somme quand la
+   cagnotte atteint le minimum du contrat. C'est ce que simule ce moteur.
+
+   Après un versement, la mensualité ne bouge pas : c'est la DURÉE qui tombe.
+   C'est l'option la plus courante et la plus intéressante des deux. */
+
+function poCredits(){
+  return S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0).map(d=>{
+    const a=amort(d), el=monthsElapsed(d.start);
+    const solde = el<=0 ? (+d.cap||0) : (el>=a.sched.length?0:a.sched[el-1].balance);
+    return {nom:(d.l||'(sans nom)'), solde, taux:(+d.r||0), mens:a.M, pen:(+d.pen||0)};
+  }).filter(c=>c.solde>0.5);
+}
+function poOrdonner(cr,strat){
+  const c=cr.slice();
+  if(strat==='neige') c.sort((a,b)=>a.solde-b.solde);
+  else if(strat==='avalanche') c.sort((a,b)=>b.taux-a.taux);
+  return c;
+}
+/* Simulation mois par mois.
+   ep     : ce qui part sur le livret chaque mois
+   seuil  : le montant à partir duquel on verse
+   report : la mensualité d'un crédit soldé retourne-t-elle dans la cagnotte */
+function poSimuler(cr,strat,ep,seuil,report){
+  const credits=poOrdonner(cr,strat).map(c=>({...c}));
+  let mois=0, interets=0, cagnotte=0, libere=0, indemnites=0;
+  const jalons=[], versements=[], histo=[];   /* histo : versements sur 12 mois glissants */
+  const MAX=1200, SEUIL_LIBRE=10000;
+  while(credits.some(c=>c.solde>0.005) && mois<MAX){
+    mois++;
+    cagnotte += (+ep||0) + libere;
+    for(const c of credits){                        /* 1. les mensualités du contrat */
+      if(c.solde<=0.005) continue;
+      const i=c.taux/100/12, int=c.solde*i;
+      let cap=c.mens-int; if(cap<0) cap=0; if(cap>c.solde) cap=c.solde;
+      c.solde-=cap; interets+=int;
+    }
+    /* 2. le versement anticipé, quand la cagnotte a atteint le minimum du contrat */
+    if(cagnotte>=(+seuil||0) && (+seuil||0)>0 || (cagnotte>0 && credits.every(c=>c.solde<=cagnotte))){
+      for(const c of credits){
+        if(cagnotte<=0.005) break;
+        if(c.solde<=0.005) continue;
+        const v=Math.min(cagnotte,c.solde);
+        /* indemnité : seulement sur la part qui dépasse 10 000 € sur 12 mois */
+        const recent=histo.filter(h=>mois-h.m<12).reduce((t,h)=>t+h.v,0);
+        const taxable=Math.max(0,(recent+v)-SEUIL_LIBRE);
+        if(taxable>0){
+          const resteAnnees=(c.solde-v)>0 ? 2 : 0;   /* approximation prudente */
+          indemnites += taxable * (resteAnnees>0?0.01:0.005);
+        }
+        histo.push({m:mois,v});
+        c.solde-=v; cagnotte-=v;
+        versements.push({mois,nom:c.nom,montant:v});
+      }
+    }
+    for(const c of credits){                        /* 3. ce qui se libère */
+      if(c.solde<=0.005 && !c.fini){ c.fini=true; if(report) libere+=c.mens; jalons.push({nom:c.nom,mois}); }
+    }
+  }
+  return {mois,interets,indemnites,jalons,versements,bloque:mois>=MAX};
+}
+function poDateDans(mois){
+  const n=new Date(), d=new Date(n.getFullYear(), n.getMonth()+mois, 1);
+  return d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+}
+const PO_NOMS={neige:'Le plus petit d\'abord',avalanche:'Le plus cher d\'abord',ordre:'Mon ordre'};
+const PO_EXPL={
+  neige:"Le plus petit solde d'abord, la « boule de neige ». Ce n'est pas le plus rentable, c'est le plus tenable : le premier crédit disparaît vite, et c'est ça qui fait continuer.",
+  avalanche:"Le taux le plus élevé d'abord, « l'avalanche ». C'est toujours le moins cher en intérêts, mais le premier crédit peut mettre longtemps à disparaître.",
+  ordre:"L'ordre dans lequel tu as saisi tes crédits, sans rien réarranger."};
+
+function setPayoffEpargne(v){ S.payoff.epargne=Math.max(0,+v||0); renderPayoff(); save(); }
+function setPayoffSeuil(v){ S.payoff.seuil=Math.max(0,+v||0); renderPayoff(); save(); }
+function setPayoffReport(v){ S.payoff.report=!!v; renderPayoff(); save(); }
+function setPayoffStrat(k){ S.payoff.strat=k; renderPayoff(); save(); }
+
+function renderPayoff(){
+  if(!S.payoff||S.payoff.epargne===undefined) S.payoff={epargne:0,seuil:1000,strat:'neige',report:true};
+  const P=S.payoff, cr=poCredits();
+  const e1=$('#poEpargne'); if(e1&&document.activeElement!==e1) e1.value=P.epargne||'';
+  const e2=$('#poSeuil');   if(e2&&document.activeElement!==e2) e2.value=P.seuil||'';
+  const e3=$('#poReport');  if(e3) e3.checked=!!P.report;
+  $('#poStrats').innerHTML=['neige','avalanche','ordre'].map(k=>
+    `<button class="btn ${P.strat===k?'':'doux'}" onclick="setPayoffStrat('${k}')">${PO_NOMS[k]}</button>`).join('');
+  const vide=t=>{['poDate','poDur','poInt','poGain'].forEach(i=>$('#'+i).textContent='–');
+    $('#poNote').innerHTML=t;['poOrdre','poVersements','poCompare','poLoi'].forEach(i=>$('#'+i).innerHTML='');};
+  if(!cr.length){ vide("Ajoute un crédit pour voir ton plan de sortie."); return; }
+
+  const ref=poSimuler(cr,'ordre',0,0,false);
+  const r=poSimuler(cr,P.strat,P.epargne,P.seuil,P.report);
+  if(r.bloque||ref.bloque){
+    vide("Avec ces chiffres, un de tes crédits ne se rembourse jamais : sa mensualité ne couvre pas ses intérêts. Vérifie le capital, le taux et la durée que tu as saisis.");
+    return;
+  }
+  $('#poDate').textContent=poDateDans(r.mois);
+  $('#poDur').textContent=fmtDur(r.mois);
+  $('#poInt').textContent=euro(r.interets+r.indemnites);
+  const gm=ref.mois-r.mois, gi=(ref.interets)-(r.interets+r.indemnites);
+  $('#poGain').textContent=(gm>0||gi>1)?euro(gi):'–';
+  $('#poNote').innerHTML = (P.epargne>0)
+    ? `En mettant <b>${euro(P.epargne)}</b> de côté chaque mois et en versant dès <b>${euro(P.seuil)}</b>, tu sors de tes crédits en <b>${fmtDur(r.mois)}</b> au lieu de ${fmtDur(ref.mois)}. Tu gagnes <b>${gm} mois</b> et <b>${euro(gi)}</b>. <span style="color:var(--mut);">${PO_EXPL[P.strat]}</span>`
+    : `Sans rien mettre de côté, tu sors de tes crédits en <b>${fmtDur(ref.mois)}</b>. Indique un montant au-dessus pour voir ce que ça change. <span style="color:var(--mut);">${PO_EXPL[P.strat]}</span>`;
+
+  const ordre=poOrdonner(cr,P.strat);
+  $('#poOrdre').innerHTML='<div style="font-weight:600;margin:16px 0 8px;">Dans cet ordre</div>'+
+    ordre.map((c,n)=>{
+      const j=r.jalons.find(x=>x.nom===c.nom);
+      return `<div style="display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--line);padding:9px 0;flex-wrap:wrap;">`
+        +`<span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:${n===0?'var(--acc)':'var(--line)'};color:${n===0?'#fff':'var(--mut)'};align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none;">${n+1}</span>`
+        +`<b>${ech(c.nom)}</b><span style="color:var(--mut);font-size:13px;">${euro(c.solde)} restants · ${c.taux}%</span>`
+        +(j?`<span style="margin-left:auto;font-size:13px;">soldé en <b>${poDateDans(j.mois)}</b></span>`
+           :`<span style="margin-left:auto;color:var(--mut);font-size:13px;">–</span>`)
+        +`</div>`;
+    }).join('');
+
+  /* Les versements à faire : c'est le mode d'emploi, pas une courbe. */
+  if(r.versements.length){
+    const v12=r.versements.slice(0,12);
+    $('#poVersements').innerHTML='<div style="font-weight:600;margin-bottom:8px;">Tes versements anticipés, à demander à l\'organisme</div>'
+      +'<div class="amortwrap"><table style="width:100%;border-collapse:collapse;font-size:13.5px;">'
+      +'<tr><th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);">Quand</th>'
+      +'<th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);">Sur quel crédit</th>'
+      +'<th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">Montant</th></tr>'
+      +v12.map(v=>`<tr><td style="padding:7px 8px;border-bottom:1px solid var(--line);">${poDateDans(v.mois)}</td>`
+        +`<td style="padding:7px 8px;border-bottom:1px solid var(--line);">${ech(v.nom)}</td>`
+        +`<td style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);"><b>${euro(v.montant)}</b></td></tr>`).join('')
+      +'</table></div>'
+      +(r.versements.length>12?`<div style="color:var(--mut);font-size:12.5px;margin-top:6px;">et ${r.versements.length-12} versement(s) ensuite</div>`:'');
+  } else { $('#poVersements').innerHTML=''; }
+
+  const lignes=['neige','avalanche','ordre'].map(k=>{
+    const x=poSimuler(cr,k,P.epargne,P.seuil,P.report);
+    return {k,mois:x.mois,int:x.interets+x.indemnites};
+  });
+  const min=Math.min(...lignes.map(l=>l.int));
+  const exAequo=lignes.filter(l=>l.int<=min+0.01).length>1;
+  $('#poCompare').innerHTML='<div style="font-weight:600;margin-bottom:8px;">Les trois ordres, avec ton effort actuel</div>'
+    +'<div class="amortwrap"><table style="width:100%;border-collapse:collapse;font-size:13.5px;">'
+    +'<tr><th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);">Ordre</th>'
+    +'<th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">Durée</th>'
+    +'<th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">Intérêts payés</th>'
+    +'<th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">Écart</th></tr>'
+    +lignes.map(l=>`<tr style="${l.k===P.strat?'background:var(--soft);':''}">`
+      +`<td style="padding:7px 8px;border-bottom:1px solid var(--line);">${PO_NOMS[l.k]}${l.int<=min+0.01?(exAequo?' <span style="color:var(--acc2);font-weight:600;">· à égalité</span>':' <span style="color:var(--acc2);font-weight:600;">· le moins cher</span>'):''}</td>`
+      +`<td style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">${fmtDur(l.mois)}</td>`
+      +`<td style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">${euro(l.int)}</td>`
+      +`<td style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--mut);">${l.int<=min+0.01?'–':'+ '+euro(l.int-min)}</td></tr>`).join('')
+    +'</table></div>';
+
+  /* Ce que dit la loi. Ce n'est pas du remplissage : c'est l'argument qui fait
+     que l'acheteur ose appeler son organisme. */
+  const gros=r.versements.some(v=>v.montant>10000);
+  $('#poLoi').innerHTML='Le remboursement anticipé, partiel ou total, est un droit : '
+    +'ton organisme ne peut pas le refuser (Code de la consommation, art. L312-34). '
+    +'<b>Aucune indemnité</b> ne peut t\'être réclamée tant que tu rembourses par anticipation <b>moins de 10 000 € sur 12 mois glissants</b>, '
+    +'ni jamais sur un crédit renouvelable, un découvert ou un taux variable. Au-delà, elle est plafonnée à 1 % du capital remboursé '
+    +'s\'il reste plus d\'un an, 0,5 % sinon, et jamais plus que les intérêts restants.'
+    +(r.indemnites>1?` <b>Ici, ton plan dépasse ce seuil : ${euro(r.indemnites)} d'indemnités estimées sont déjà comptées ci-dessus.</b>`:'')
+    +' Demande le versement par écrit, et vérifie le montant minimum exigé par ton contrat.'
+    +' <span style="color:var(--mut);">Après un versement, ta mensualité ne change pas : c\'est la durée qui tombe.</span>';
+}
+
 function parseYM(s){ const p=(s||'').split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return null; return {y,m0:m-1,abs:y*12+(m-1)}; }
 function selectedCredits(){ const active=S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0); return active.filter((d,idx)=>{const cb=$('#amc'+idx); return cb?cb.checked:true;}); }
 /* échéancier consolidé aligné sur le calendrier (chaque crédit à sa vraie date) */
@@ -944,6 +1203,7 @@ function renderProv(){
       ${acts('prov',i)}`;
     w.appendChild(r);
   });
+  poserEntete(w);
 }
 $('#addProv').onclick=()=>{const n=new Date();const d=new Date(n.getFullYear(),n.getMonth()+6,1);S.prov.push({l:'',target:0,deadline:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),saved:0});renderProv();calcProv();};
 function calcProv(){
@@ -971,37 +1231,50 @@ function calcProv(){
 
 /* ---- abonnements et factures récurrentes ---- */
 const SUBFREQ=f=>`<option value="week"${f==='week'?' selected':''}>Semaine</option><option value="month"${(f||'month')==='month'?' selected':''}>Mois</option><option value="quarter"${f==='quarter'?' selected':''}>Trimestre</option><option value="year"${f==='year'?' selected':''}>An</option>`;
+function aCouper(e){ return e.cut===undefined ? (e.type||'abo')==='abo' : !!e.cut; }
 function subMonthly(e){ const a=+e.amount||0, f=e.freq||'month'; return f==='week'?a*52/12 : f==='quarter'?a/3 : f==='year'?a/12 : a; }
 function renderSubs(){
   const w=$('#subsList');w.innerHTML='';
   if(!S.subs.length){ w.innerHTML=videHTML('',"Aucun abonnement ni facture. Liste ici tout ce qui part en récurrent : mobile, internet, streaming, salle de sport, assurances, énergie. C'est presque toujours le poste le plus rapide à alléger, et le plus facile à oublier."); return; }
   S.subs.forEach((e,i)=>{
-    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 100px 108px 128px 122px';
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 100px 108px 128px 92px 122px';
     r.innerHTML=`<label class="f full"><span class="cap">Nom</span><input placeholder="Netflix, mobile, électricité…" value="${ech(e.l)}" oninput="S.subs[${i}].l=this.value;save()"></label>
       <label class="f"><span class="cap">Montant (€)</span><input class="num" type="number" placeholder="0" value="${e.amount}" oninput="S.subs[${i}].amount=+this.value||0;calcSubs()"></label>
       <label class="f"><span class="cap">Fréquence</span><select onchange="S.subs[${i}].freq=this.value;calcSubs()">${SUBFREQ(e.freq)}</select></label>
       <label class="f"><span class="cap">Type</span><select onchange="S.subs[${i}].type=this.value;calcSubs()"><option value="abo"${(e.type||'abo')==='abo'?' selected':''}>Abonnement</option><option value="facture"${e.type==='facture'?' selected':''}>Facture</option></select></label>
+      <label class="f" title="Coche ce que tu es prêt à arrêter. C'est toi qui décides, pas l'outil."><span class="cap">À couper</span><input type="checkbox" style="width:auto;height:20px;" ${aCouper(e)?'checked':''} onchange="S.subs[${i}].cut=this.checked;calcSubs()"></label>
       ${acts('subs',i)}`;
     w.appendChild(r);
   });
+  poserEntete(w);
 }
-$('#addSub').onclick=()=>{S.subs.push({l:'',amount:0,freq:'month',type:'abo'});renderSubs();calcSubs();};
+$('#addSub').onclick=()=>{S.subs.push({l:'',amount:0,freq:'month',type:'abo',cut:false});renderSubs();calcSubs();};
 function calcSubs(){
   if(!S.subs.length){ $('#sMonthly').textContent='–';$('#sYearly').textContent='–';$('#sCut').textContent='–';$('#subsNote').innerHTML='Ajoute un abonnement ou une facture pour voir ton total.';$('#subsDetails').innerHTML='';save();return; }
   const rows=S.subs.map(e=>({e,m:subMonthly(e)}));
-  let totM=0,cut=0; rows.forEach(x=>{ totM+=x.m; if((x.e.type||'abo')==='abo') cut+=x.m; });
+  let totM=0,cut=0,nbCut=0; rows.forEach(x=>{ totM+=x.m; if(aCouper(x.e)){ cut+=x.m; nbCut++; } });
   $('#sMonthly').textContent=euro(totM);
   $('#sYearly').textContent=euro(totM*12);
   $('#sCut').textContent=euro(cut);
   const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
-  $('#subsNote').innerHTML=`Tu paies <b>${euro(totM)}/mois</b> en récurrent, soit <b>${euro(totM*12)}/an</b>${inc>0?` (${Math.round(totM/inc*100)}% de tes revenus)`:''}. Dont <b>${euro(cut)}/mois</b> d'abonnements que tu pourrais réduire : c'est souvent le poste le plus rapide à alléger. Couper ${euro(cut)}/mois, c'est <b>${euro(cut*12)}/an</b> récupérés.`;
+  $('#subsNote').innerHTML=`Tu paies <b>${euro(totM)}/mois</b> en récurrent, soit <b>${euro(totM*12)}/an</b>${inc>0?` (${Math.round(totM/inc*100)}% de tes revenus)`:''}. ${nbCut>0?`Tu as coché <b>${nbCut}</b> ligne${nbCut>1?'s':''} comme « à couper », soit <b>${euro(cut)}/mois</b> : les arrêter te rendrait <b>${euro(cut*12)}/an</b>.`:`Aucune ligne n'est cochée « à couper ». Coche celles que tu es prêt à arrêter pour voir ce que ça te rendrait dans l'année.`} C'est presque toujours le poste le plus rapide à alléger.`;
   const sorted=[...rows].sort((a,b)=>b.m-a.m);
   $('#subsDetails').innerHTML=`<div style="display:flex;gap:16px;font-size:12.5px;color:var(--mut);margin:12px 0 6px;"><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:2px;background:#C06A4A;display:inline-block;"></span>Abonnement</span><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:2px;background:#7c756a;display:inline-block;"></span>Facture</span></div><div style="font-weight:600;margin:8px 0 4px;">Du plus cher au moins cher</div>`+sorted.map(x=>{const abo=(x.e.type||'abo')==='abo';return `<div class="subrow"><span style="width:9px;height:9px;border-radius:2px;background:${abo?'#C06A4A':'#7c756a'};"></span><span class="snm">${x.e.l||'(sans nom)'}</span><span class="styp">${abo?'abonnement':'facture'}</span><b class="smo">${euro(x.m)}/mois</b><span class="syr">${euro(x.m*12)}/an</span></div>`;}).join('');
   save();
 }
 
 /* ---- tableau de bord (synthèse) ---- */
-function gotoTab(id){ $$('.tab').forEach(t=>{ if(t.dataset.tab===id) t.click(); }); }
+function gotoTab(id){
+  $$('.tab').forEach(t=>{ if(t.dataset.tab===id) t.click(); });
+  /* sur téléphone la rangée défile : sans ça, l'onglet choisi peut rester
+     hors de l'écran et on ne voit pas lequel est actif */
+  const actif = [...$$('.tab')].find(t=>t.dataset.tab===id);
+  if(actif && actif.scrollIntoView) actif.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+  /* Sans ça, on changeait d'onglet en gardant la position de défilement : le
+     raccourci « Crédits » du tableau de bord déposait l'utilisateur au bas de
+     l'onglet Crédits. Relevé par Logan le 18/09/2026. */
+  window.scrollTo({top:0, behavior:'smooth'});
+}
 function renderDashboard(){
   const p=monthlyProj(); const left=p.inc-p.exp;
   $('#dInc').textContent=euro(p.inc);
@@ -1051,6 +1324,7 @@ function renderAssets(){
       ${acts('assets',i)}`;
     w.appendChild(r);
   });
+  poserEntete(w);
 }
 $('#addAsset').onclick=()=>{S.wealth.assets.push({l:'',v:0});renderAssets();calcWealth();};
 function renderWdebts(){
@@ -1063,6 +1337,7 @@ function renderWdebts(){
       ${acts('wdebts',i)}`;
     w.appendChild(r);
   });
+  poserEntete(w);
 }
 $('#addWdebt').onclick=()=>{S.wealth.debts.push({l:'',v:0});renderWdebts();calcWealth();};
 function wealthNet(){ const a=(S.wealth.assets||[]).reduce((s,x)=>s+(+x.v||0),0); const md=(S.wealth.debts||[]).reduce((s,x)=>s+(+x.v||0),0); const cb=creditBalance(); return {a,d:cb+md,cb,net:a-(cb+md)}; }
@@ -1168,7 +1443,8 @@ function importData(input){
       if(confirm('Remplacer tes données actuelles par cette sauvegarde ?')){
         S=data;
         if(!S.wealth) S.wealth={assets:[],debts:[],history:[]};
-        if(!S.prov) S.prov=[]; if(!S.subs) S.subs=[]; if(!S.debts) S.debts=[];
+        if(!S.payoff || S.payoff.epargne===undefined) S.payoff={epargne:0,seuil:1000,strat:'neige',report:true};
+if(!S.prov) S.prov=[]; if(!S.subs) S.subs=[]; if(!S.debts) S.debts=[];
         if(!S.rule) S.rule={name:'50/30/20',need:50,want:30,save:20};
         if(!S.goal) S.goal={amount:0,have:0,months:12,rate:0,dur:12,durUnit:'month'};
         if(!S.annual||!S.annual.years) S.annual=anneeVide();
