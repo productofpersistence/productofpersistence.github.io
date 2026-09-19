@@ -503,7 +503,7 @@
     <button class="btn doux" onclick="chargerExemple()">Explorer avec l'exemple</button>
     <button class="btn discret" onclick="repartirDeZero()">Repartir de zéro</button>
   </div>
-  <div style="text-align:center;color:var(--mut);font-size:12.5px;margin-top:10px;max-width:620px;margin-left:auto;margin-right:auto;">Tes données sont enregistrées automatiquement sur cet appareil, tu les retrouves en revenant sur la page. Pense au bouton &laquo;&nbsp;Sauvegarder&nbsp;&raquo; pour garder une copie de secours ou passer sur un autre appareil. &laquo;&nbsp;Explorer avec l'exemple&nbsp;&raquo; et &laquo;&nbsp;Repartir de zéro&nbsp;&raquo; se font dans les deux sens, autant de fois que tu veux.</div>
+  <div style="text-align:center;color:var(--mut);font-size:12.5px;margin-top:10px;max-width:620px;margin-left:auto;margin-right:auto;">Dans cette démo, rien n'est enregistré : tu peux tout modifier, tout essayer, la page repart de l'exemple au rechargement. Dans la version achetée, tes chiffres sont gardés sur ton appareil et les boutons &laquo;&nbsp;Sauvegarder&nbsp;&raquo; et &laquo;&nbsp;Restaurer&nbsp;&raquo; te font passer d'un appareil à l'autre. &laquo;&nbsp;Explorer avec l'exemple&nbsp;&raquo; et &laquo;&nbsp;Repartir de zéro&nbsp;&raquo; se font dans les deux sens, autant de fois que tu veux.</div>
   <div class="foot">PRODUCT OF PERSISTENCE · Démo en ligne. La version achetée est un fichier qui fonctionne hors ligne et garde tes chiffres chez toi.</div>
   <div style="text-align:center;color:var(--mut);font-size:11.5px;margin-top:8px;max-width:620px;margin-left:auto;margin-right:auto;line-height:1.5;">Havn est un outil d'aide au pilotage de ton budget. Les mensualités, intérêts, tableaux d'amortissement et projections affichés sont indicatifs : ils dépendent des chiffres que tu saisis et ne remplacent ni ton contrat de prêt, ni les documents officiels de ta banque, ni l'avis d'un professionnel.</div>
 </div>
@@ -1422,17 +1422,12 @@ function imprimerBudget(){
 }
 
 /* ================= gestion des données ================= */
-/* Sauvegarder : télécharge une copie de secours */
-function sauvegarder(){
-  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='Havn-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
+/* DÉMO : les deux boutons restent visibles et expliquent ce que fait la version achetée. */
+const MSG_DEMO = "Dans la démo en ligne, Sauvegarder et Restaurer sont désactivés.\n\nDans la version achetée, « Sauvegarder » télécharge un fichier avec tous tes chiffres, et « Restaurer » le recharge, sur cet appareil ou sur un autre. C'est comme ça qu'on passe de l'ordinateur au téléphone.\n\nIci, la page repart de l'exemple à chaque rechargement.";
+/* Sauvegarder : dans la version achetée, télécharge une copie de secours */
+function sauvegarder(){ alert(MSG_DEMO); }
 function exportData(){ sauvegarder(); } /* ancien nom, conservé par sécurité */
-function demanderRestauration(){ const f=$('#fichierImport'); if(f) f.click(); }
+function demanderRestauration(){ alert(MSG_DEMO); }
 function importData(input){
   const f=input.files&&input.files[0]; if(!f) return;
   const reader=new FileReader();
