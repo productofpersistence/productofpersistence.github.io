@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Havn, live demo · Product of Persistence</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 42'%3E%3Cpath d='M9 25 A15 13 0 0 0 39 25' fill='none' stroke='%2323201C' stroke-width='4.5' stroke-linecap='round'/%3E%3Ccircle cx='24' cy='16' r='7.5' fill='%23C06A4A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4EFE7; --ink:#23201C; --mut:#7c756a; --acc:#C06A4A; --acc2:#4E7C5A; --red:#B0553F;
+    --card:#FFFFFF; --line:#E7DFD1; --soft:#FBF8F2;
+    --shadow:0 1px 2px rgba(35,32,28,.04),0 18px 40px -26px rgba(35,32,28,.22);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:linear-gradient(180deg,#F7F2EA 0%,#F4EFE7 40%) fixed,var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  .wrap{max-width:920px;margin:0 auto;padding:34px 20px 90px;}
+  header.top{text-align:center;margin-bottom:10px;}
+  .brand{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--acc);font-weight:700;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:42px;margin:8px 0 4px;letter-spacing:5px;padding-left:5px;}
+  .sub{color:var(--mut);font-size:15px;}
+  .tabs{display:flex;gap:8px;justify-content:center;margin:24px 0 6px;flex-wrap:wrap;}
+  .tab{padding:9px 18px;border:1px solid var(--line);background:var(--soft);border-radius:999px;cursor:pointer;font-weight:600;font-size:14px;color:var(--mut);transition:.18s ease;}
+  .tab:hover{border-color:var(--acc);color:var(--acc);}
+  .tab.active{background:var(--ink);color:var(--bg);border-color:var(--ink);box-shadow:0 8px 18px -9px rgba(35,32,28,.55);}
+  .tab.active:hover{color:var(--bg);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:16px 0;box-shadow:var(--shadow);}
+  .card h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0 0 4px;}
+  .card .hint{color:var(--mut);font-size:13.5px;margin:0 0 14px;}
+  .row{display:grid;grid-template-columns:1fr 130px 150px 34px;gap:10px;align-items:center;margin-bottom:8px;}
+  .row.head{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  /* Sur ordinateur, UN SEUL en-tête par tableau, posé par poserEntete().
+     Répéter le libellé sur chaque ligne mangeait de la place et décalait les
+     menus déroulants par rapport aux champs texte (Logan, 18/09/2026).
+     Sur téléphone, la règle plus bas rebascule sur un libellé par champ :
+     il n'y a plus de colonnes, donc il n'y a plus d'en-tête possible. */
+  .row .f{display:contents;}
+  .row .cap{display:none;}
+  input,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;background:#fff;color:var(--ink);transition:box-shadow .15s ease,border-color .15s ease;}
+  input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(192,106,74,.16);}
+  .num{text-align:right;}
+  .del{border:none;background:none;color:var(--mut);font-size:18px;cursor:pointer;border-radius:8px;transition:.15s ease;}
+  .del:hover{color:var(--red);background:rgba(176,85,63,.08);}
+  .acts{display:flex;gap:1px;justify-content:flex-end;align-items:center;}
+  .acts button{border:none;background:none;cursor:pointer;font-size:15px;line-height:1;padding:5px 6px;border-radius:7px;transition:.15s ease;}
+  .acts .mv{color:#c59a86;}
+  .acts .mv:hover{color:var(--acc);background:rgba(192,106,74,.11);}
+  .acts .del2{color:#c2a597;}
+  .acts .del2:hover{color:var(--red);background:rgba(176,85,63,.10);}
+  .acts .mv:disabled{color:#d9cec0;cursor:default;}
+  .acts .mv:disabled:hover{background:none;}
+  .subrow{display:grid;grid-template-columns:14px 1fr 96px 92px 78px;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .subrow .snm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .subrow .styp{color:var(--mut);}
+  .subrow .smo{text-align:right;font-weight:600;white-space:nowrap;}
+  .subrow .syr{text-align:right;color:var(--mut);white-space:nowrap;}
+  .tgtrow{display:grid;grid-template-columns:1fr 88px 88px 78px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .tgtrow .tnum{text-align:center;white-space:nowrap;}
+  .tgtrow .tgap{text-align:right;font-weight:600;white-space:nowrap;}
+  .tgthead{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
+  .tgthead .tnum,.tgthead .tgap{font-weight:600;}
+  .add{margin-top:6px;background:none;border:1px dashed var(--acc);color:var(--acc);padding:9px 14px;border-radius:9px;cursor:pointer;font-weight:600;transition:.18s ease;}
+  .add:hover{background:var(--soft);border-style:solid;}
+  .btn{background:var(--acc);color:#fff;border:none;padding:11px 18px;border-radius:10px;font-weight:700;cursor:pointer;transition:.18s ease;box-shadow:0 8px 18px -10px rgba(192,106,74,.75);}
+  .btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;}
+  .kpi .box{flex:1;min-width:150px;background:linear-gradient(180deg,#FFFFFF,var(--soft));border:1px solid var(--line);border-radius:14px;padding:15px 17px;}
+  .kpi .lab{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);}
+  .kpi .val{font-family:'Fraunces',serif;font-size:28px;font-weight:600;margin-top:3px;}
+  .val.good{color:var(--acc2);} .val.bad{color:var(--red);}
+  .tile{flex:1;min-width:210px;background:linear-gradient(180deg,#FFFFFF,var(--soft));border:1px solid var(--line);border-radius:14px;padding:15px 17px;cursor:pointer;transition:.18s ease;}
+  .tile:hover{transform:translateY(-2px);box-shadow:0 14px 26px -16px rgba(35,32,28,.32);border-color:var(--acc);}
+  .tile.warn{border-color:var(--red);}
+  .tile .tlab{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);}
+  .tile .tval{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin-top:3px;}
+  .tile .tsub{font-size:12.5px;color:var(--mut);margin-top:2px;}
+  .barwrap{margin-top:14px;}
+  .bar{height:16px;border-radius:8px;background:#eee;overflow:hidden;display:flex;}
+  .seg{height:100%;}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:8px;}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+  .hidden{display:none;}
+  .note{background:var(--soft);border-left:3px solid var(--acc);padding:12px 15px;border-radius:8px;color:#5a544b;font-size:14px;margin-top:12px;}
+  .note b{color:var(--ink);}
+  .guide{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .gcard{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:13px 15px;font-size:13.5px;color:#5a544b;transition:.15s;}
+  .gcard.on{border-color:var(--acc);background:#fff;box-shadow:0 2px 10px rgba(192,106,74,.12);}
+  .gcard .gt{font-family:'Fraunces',serif;font-size:16px;color:var(--ink);margin-bottom:4px;font-weight:600;}
+  .gcard .gt small{font-family:'Inter';font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--acc);}
+  .gcompare{grid-column:1/3;background:#23201C;color:#F4EFE7;border-radius:10px;padding:13px 16px;font-size:14px;line-height:1.55;}
+  .gcompare b{color:#E8C9A0;}
+  .grip{cursor:grab;color:#c3b9a8;user-select:none;text-align:center;font-size:15px;line-height:38px;}
+  .grip:active{cursor:grabbing;}
+  .row.dragover{outline:2px dashed var(--acc);outline-offset:2px;border-radius:8px;}
+  .row.dragging{opacity:.4;}
+  details.explain{margin-top:14px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:0 15px;}
+  details.explain summary{cursor:pointer;padding:12px 0;font-weight:600;font-size:14px;color:var(--acc);list-style:none;}
+  details.explain summary::-webkit-details-marker{display:none;}
+  details.explain summary::before{content:'+ ';font-weight:700;}
+  details.explain[open] summary::before{content:'– ';}
+  details.explain .body{padding:2px 0 15px;font-size:13.5px;color:#5a544b;line-height:1.6;}
+  details.explain .body b{color:var(--ink);}
+  details.explain .cat3{margin:10px 0;padding-left:12px;border-left:3px solid var(--line);}
+  .rulebox{display:flex;gap:10px 16px;flex-wrap:wrap;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--mut);}
+  .rulebox .rulelab{font-weight:700;color:var(--ink);}
+  .rulebox select{width:auto;padding:6px 9px;font-size:13px;}
+  .tgtwrap{display:inline-flex;align-items:center;gap:5px;}
+  .tgt{width:54px;padding:5px 6px;text-align:center;}
+  .freq{padding:8px 5px;font-size:13px;}
+  .amortwrap{max-height:380px;overflow:auto;border:1px solid var(--line);border-radius:10px;}
+  table.amort{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.amort th,table.amort td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:right;white-space:nowrap;}
+  table.amort th{background:var(--soft);font-weight:600;position:sticky;top:0;color:var(--ink);}
+  table.amort td:first-child,table.amort th:first-child{text-align:left;}
+  .btn.doux{background:#fff;color:var(--acc);border:1px solid var(--acc);box-shadow:none;font-weight:600;}
+  .btn.doux:hover{background:var(--soft);}
+  .btn.discret{background:#fff;color:var(--mut);border:1px solid var(--line);box-shadow:none;font-weight:600;}
+  .btn.discret:hover{color:var(--red);border-color:var(--red);}
+  .ruban{background:var(--ink);color:#F4EFE7;font-size:11.5px;line-height:1.55;text-align:center;padding:9px 18px;letter-spacing:.2px;}
+  .barre-outils{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+  .barre-outils .btn{font-size:13px;padding:9px 15px;}
+  .bandeau-demo{display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap;justify-content:space-between;background:#FBEFE8;border:1px solid #E9C6B4;border-left:4px solid var(--acc);border-radius:12px;padding:12px 16px;margin:20px 0 0;font-size:13.5px;color:#5a544b;}
+  .bandeau-demo .actions{display:flex;gap:8px;align-items:center;flex:none;}
+  .bandeau-demo .ferme{border:none;background:none;color:var(--mut);font-size:17px;cursor:pointer;padding:2px 8px;border-radius:8px;line-height:1;}
+  .bandeau-demo .ferme:hover{color:var(--red);background:rgba(176,85,63,.08);}
+  .vide{text-align:center;color:var(--mut);background:var(--soft);border:1px dashed var(--line);border-radius:12px;padding:20px 18px;font-size:13.5px;}
+  .vide .grand{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .vide p{margin:0 auto 12px;max-width:540px;}
+  .vide p:last-child{margin-bottom:0;}
+  .demo-haut{position:sticky;top:0;z-index:50;background:#23201C;color:#F4EFE7;padding:11px 18px;
+    display:flex;gap:10px 18px;align-items:center;justify-content:center;flex-wrap:wrap;
+    font-size:13px;line-height:1.45;box-shadow:0 6px 18px -12px rgba(0,0,0,.6);}
+  .demo-haut b{color:#F0B49A;}
+  .demo-haut a{background:#C06A4A;color:#fff;text-decoration:none;font-weight:700;
+    padding:8px 15px;border-radius:9px;white-space:nowrap;font-size:13px;}
+  .demo-haut a:hover{filter:brightness(1.07);}
+  @media(max-width:600px){.demo-haut{font-size:12px;padding:10px 12px;}}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:30px;letter-spacing:1px;}
+  @media(max-width:600px){
+    .wrap{padding:20px 12px 64px;}
+    h1{font-size:33px;}
+    /* Sur petit écran, les 8 onglets s'ENROULENT sur plusieurs lignes.
+       Avant : une seule ligne qui défilait horizontalement, avec la barre de
+       défilement masquée. Sur un iPhone SE, deux onglets tenaient à l'écran et
+       rien n'indiquait que les six autres existaient : Logan a testé le 10/09
+       et n'a pas pu naviguer. Une navigation cachée n'est pas une navigation.
+       Cibles tactiles portées à 44 px, le minimum recommandé par Apple. */
+    /* Une seule rangée qui défile, comme le rail de Sésame. Les onglets
+       passaient à la ligne et formaient un pavé de trois rangées sur un
+       téléphone (Logan, 19/09/2026). Les marges négatives font défiler les
+       onglets d'un bord à l'autre de l'écran, sans couper le premier. */
+    .tabs{gap:7px;justify-content:flex-start;flex-wrap:nowrap;margin:16px 0 6px;
+      overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;
+      -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;
+      padding:2px 14px;margin-left:-14px;margin-right:-14px;}
+    .tabs::-webkit-scrollbar{display:none;}
+    .tab{flex:0 0 auto;padding:0 14px;font-size:13px;min-height:44px;display:inline-flex;
+      align-items:center;scroll-snap-align:center;white-space:nowrap;}
+    .card{padding:16px 15px;border-radius:14px;}
+    .card h2{font-size:19px;}
+    .kpi{gap:9px;}
+    .kpi .box{flex:1 1 calc(50% - 5px);min-width:0;}
+    .kpi .val{font-size:23px;}
+    .guide{grid-template-columns:1fr;}.gcompare{grid-column:1;}
+    .row.head{display:none;}
+    .row{display:flex !important;flex-wrap:wrap;gap:9px 10px;grid-template-columns:none !important;align-items:flex-end;padding:13px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);margin-bottom:10px;}
+    .row .f{display:flex;flex-direction:column;gap:3px;flex:1 1 calc(50% - 5px);}
+    .row .f.full{flex:1 1 100%;}
+    .row .cap{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--mut);}
+    .row .num{text-align:left;}
+    .row .grip{display:none;}
+    .row .del{flex:0 0 auto;margin-left:auto;align-self:center;font-size:20px;}
+    .row .acts{flex:1 1 100%;justify-content:flex-end;gap:2px;margin-top:5px;padding-top:9px;border-top:1px dashed var(--line);}
+    .row .acts button{font-size:19px;padding:8px 13px;}
+    .subrow{grid-template-columns:12px 1fr auto;gap:8px;}
+    .subrow .styp,.subrow .syr{display:none;}
+    .tgtrow{grid-template-columns:1fr 64px 64px 58px;gap:6px;font-size:12.5px;}
+    .row .amonth{flex:1 1 100%;font-weight:700;font-size:15px;text-transform:capitalize;}
+    .row .areset{flex:0 0 auto;margin-left:auto;}
+    #dGrid .tile{min-width:0;flex:1 1 100%;}
+    .ruban{font-size:10.5px;padding:8px 12px;}
+    .barre-outils{gap:6px;}
+    .barre-outils .btn{font-size:12.5px;padding:9px 12px;flex:1 1 calc(50% - 3px);}
+    .bandeau-demo{font-size:13px;padding:12px 13px;}
+    .bandeau-demo .actions{flex:1 1 100%;justify-content:flex-end;}
+  }
+</style>
+</head>
+<body>
+<div class="demo-haut">
+  <span><b>You are trying the live demo.</b> Every feature works, but nothing is saved: reload the page
+  and the example comes back. The version you buy is a file of your own, which keeps your figures on
+  your device, offline.</span>
+  <a href="https://www.etsy.com/fr/shop/ProductofPersistence" target="_blank" rel="noopener">See the product</a>
+</div>
+<div class="ruban">HAVN &middot; your budget, private: everything stays on your device, nothing is sent to the internet &middot; amounts are shown to the dollar, the math keeps the cents &middot; a budgeting aid, the figures are indicative and do not replace your bank's documents</div>
+<div class="wrap" spellcheck="false">
+  <header class="top">
+    <div class="brand">Product of Persistence</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:13px;margin-top:6px;">
+      <svg viewBox="0 0 48 42" width="46" height="40" aria-hidden="true"><path d="M9 25 A15 13 0 0 0 39 25" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><circle cx="24" cy="16" r="7.5" fill="var(--acc)"/></svg>
+      <h1 style="margin:0;">HAVN</h1>
+    </div>
+    <div class="sub">Your budget, your debts, your savings. Private, no subscription, no bank connection.</div>
+    <div class="barre-outils">
+      <button class="btn" onclick="sauvegarder()" title="Download a backup of your data">Back up</button>
+      <button class="btn doux" onclick="demanderRestauration()" title="Load a backup">Restore</button>
+      <button class="btn doux" onclick="chargerExemple()" title="Load the example budget and explore a filled-in tool">Explore the example</button>
+      <button class="btn discret" onclick="repartirDeZero()" title="Erase everything and start from a blank page">Start from scratch</button>
+      <input type="file" id="fichierImport" accept="application/json" style="display:none" onchange="importData(this)">
+    </div>
+  </header>
+  <div id="bandeauDemo" class="bandeau-demo" style="display:none;"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="dash">Dashboard</div>
+    <div class="tab" data-tab="budget">1 · This month</div>
+    <div class="tab" data-tab="dettes">2 · My debts</div>
+    <div class="tab" data-tab="subs">3 · Subscriptions</div>
+    <div class="tab" data-tab="prov">4 · Sinking funds</div>
+    <div class="tab" data-tab="epargne">5 · Savings goal</div>
+    <div class="tab" data-tab="annuel">6 · Year view</div>
+    <div class="tab" data-tab="wealth">7 · Net worth</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section id="dash">
+    <div class="card">
+      <h2>Where you stand, at a glance</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Income / month</div><div class="val" id="dInc">$0</div></div>
+        <div class="box"><div class="lab">Spending / month</div><div class="val" id="dExp">$0</div></div>
+        <div class="box"><div class="lab">Left / month</div><div class="val" id="dLeft">$0</div></div>
+        <div class="box"><div class="lab">Saved / month</div><div class="val" id="dSav">$0</div></div>
+      </div>
+      <div class="note" id="dHealth"></div>
+    </div>
+    <div class="card">
+      <h2>Your key numbers</h2>
+      <p class="hint">A summary of every tab. Click a tile to jump to the detail.</p>
+      <div id="dGrid"></div>
+    </div>
+  </section>
+
+  <!-- BUDGET -->
+  <section id="budget" class="hidden">
+    <div class="card">
+      <h2>Your income</h2>
+      <p class="hint">Add every bit of money coming in and how often. Everything is converted to a monthly figure for you.</p>
+      <div id="incomeList"></div>
+      <button class="add" id="addIncome">+ Add income</button>
+    </div>
+
+    <div class="card">
+      <h2>Your spending</h2>
+      <p class="hint">A loan for something you genuinely need (a home, the car you drive to work) is a <b>Need</b>. The <b>Debt</b> category is for paying down a <b>store card or consumer loan</b>: money borrowed for something non-essential (a TV, furniture, appliances…). The Frequency column converts everything to a monthly figure (groceries by the week, insurance by the year…).</p>
+      <div id="expenseList"></div>
+      <button class="add" id="addExpense">+ Add an expense</button>
+      <button class="add" onclick="imprimerBudget()" style="border-style:solid;margin-left:8px;">Print / PDF my budget</button>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13.5px;cursor:pointer;color:var(--ink);"><input type="checkbox" id="autofill" style="width:auto;" onchange="S.autofill=this.checked;save();recalc()"> Fill my budget automatically from my Debts and Subscriptions tabs</label>
+      <div id="autoBox"></div>
+    </div>
+
+    <div class="card">
+      <h2>Your summary</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Income</div><div class="val" id="kIncome">$0</div></div>
+        <div class="box"><div class="lab">Spending</div><div class="val" id="kExpense">$0</div></div>
+        <div class="box"><div class="lab">Left at the end of the month</div><div class="val" id="kLeft">$0</div></div>
+      </div>
+      <div class="barwrap">
+        <div class="rulebox">
+          <span class="rulelab">Your target rule</span>
+          <select id="rulePreset" onchange="setPreset(this.value)">
+            <option value="50/30/20">50 / 30 / 20 · Classic</option>
+            <option value="50/20/30">50 / 20 / 30 · Saving hard</option>
+            <option value="60/30/10">60 / 30 / 10 · Tight income</option>
+            <option value="perso">Custom</option>
+          </select>
+          <span class="tgtwrap">Needs <input id="tgtNeed" type="number" class="tgt" oninput="ruleEdited()">%</span>
+          <span class="tgtwrap">Wants <input id="tgtWant" type="number" class="tgt" oninput="ruleEdited()">%</span>
+          <span class="tgtwrap">Saving+Debt <input id="tgtSave" type="number" class="tgt" oninput="ruleEdited()">%</span>
+        </div>
+        <div style="font-weight:600;margin:14px 0 8px;">Where your money goes this month</div>
+        <div class="bar" id="ratioBar"></div>
+        <div class="legend">
+          <span><span class="dot" style="background:#4E7C5A"></span>Needs <b id="pNeed">0%</b></span>
+          <span><span class="dot" style="background:#C06A4A"></span>Wants <b id="pWant">0%</b></span>
+          <span><span class="dot" style="background:#8a7fb0"></span>Savings <b id="pSave">0%</b></span>
+          <span><span class="dot" style="background:#3E7C8C"></span>Debt <b id="pDebt">0%</b></span>
+          <span><span class="dot" style="background:#d9d2c4"></span>Unassigned <b id="pFree">0%</b></span>
+        </div>
+        <div class="note" id="ratioNote"></div>
+        <div style="font-weight:600;margin:18px 0 10px;">How your spending splits</div>
+        <div id="donutBox" style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;"></div>
+        <div id="targetBox"></div>
+        <details class="explain">
+          <summary>A short guide: splitting your budget, sorting your spending, keeping debt in check</summary>
+          <div class="explain-body">
+            <p><b>The 50/30/20 rule.</b> A simple way to balance a budget, made popular by Elizabeth Warren (a Harvard professor, later a US senator) in her book <i>All Your Worth</i> (2005). The idea: split your after-tax income into a few clear buckets, so you never have to police every dollar.</p>
+            <p><b>50% Needs.</b> What you <b>have to</b> pay to live and work: rent or mortgage, groceries, power, water, transport, insurance, and the payments on something you genuinely need (your home, the car you drive to work). <b>If your needs run over 50%, that is extremely common</b> (high rent, a mortgage, taxes): it is not a personal failure. Adjust your target rule and aim to raise your income instead.</p>
+            <p><b>30% Wants.</b> What makes life good but you could live without, paid in cash: eating out, going out, streaming, shopping for fun, hobbies, vacations.</p>
+            <p><b>20% Future = Savings + Debt.</b> The rule puts together the two things that build what you own: what you <b>save</b> and what you <b>pay down</b> on consumer debt. That is why Debt sits right next to Savings and nowhere else. With no debt, the whole 20% goes to savings.</p>
+            <p><b>Note: your savings are not really an expense</b>, they are paying yourself first. They are listed with everything else so that every dollar has a job, but that money stays yours.</p>
+            <p><b>So where does consumer debt fit?</b> Debt taken on for something non-essential (a TV, furniture) is paid down <b>first</b>, out of that bucket, before you save: it costs you more in interest than your savings earn. Clear it to zero, then move the whole share to savings.</p>
+            <p><b>&ldquo;Is a loan a Need or a Debt?&rdquo;</b> It depends on <b>what you took it out for</b>. For something you need to live or work (a home, a car), the payment is a <b>Need</b>, like rent. For something non-essential (a TV), it is a <b>Debt</b>. Keeping it separate shows you how much of your paycheck is still paying for things you already bought.</p>
+            <p><b>How much to save, and how much debt at most?</b> The rule aims at <b>20% for your future</b> (saving and paying down debt together). It sets <b>no ceiling on debt</b>: that is not its job. A common second yardstick is to keep consumer-debt payments <b>under about 10 to 15%</b> of your income. Lenders, for their part, usually turn down new credit once all your debt payments, mortgage included, go past <b>about 36%</b> of your gross income: that is the debt-to-income ratio. Past those marks, debt weighs too much and becomes priority number one.</p>
+            <p><b>The three-second sorting test:</b> "If I do not pay this one this month, does it break my life, my housing, my ability to eat or to work?" If yes, it is a Need. If it is a choice, it is a Want.</p>
+            <p>50/30/20 is a yardstick, not a law, and it is not the only one. You can change your target rule just above the chart (or set your own percentages). What matters is a balance you can hold for years, not a perfect number.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- EPARGNE -->
+  <section id="epargne" class="hidden">
+    <div class="card">
+      <h2>Your savings goal</h2>
+      <p class="hint">Set a goal and Havn tells you whether you can reach it, and how long it takes.</p>
+      <div class="row" style="grid-template-columns:1fr 160px;"><span>Target amount ($)</span><input id="goalAmount" class="num" type="number" placeholder="5000" oninput="calcGoal()"></div>
+      <div class="row" style="grid-template-columns:1fr 160px;"><span>Already saved ($)</span><input id="goalHave" class="num" type="number" placeholder="500" oninput="calcGoal()"></div>
+      <div class="row" style="grid-template-columns:1fr 96px 116px;"><span>By when?</span><input id="goalDur" class="num" type="number" placeholder="10" oninput="calcGoal()"><select id="goalUnit" onchange="calcGoal()"><option value="month">Months</option><option value="year">Years</option></select></div>
+      <div class="row" style="grid-template-columns:1fr 160px;"><span>Annual interest on your savings (%) <span style="color:var(--mut);font-size:12px;">e.g. 2 to 4% in a high-yield savings account, 0 if your money earns nothing</span></span><input id="goalRate" class="num" type="number" placeholder="3" oninput="calcGoal()"></div>
+      <div class="kpi" style="margin-top:12px;">
+        <div class="box"><div class="lab">To set aside / month</div><div class="val" id="gNeeded">$0</div></div>
+        <div class="box"><div class="lab">What you have left each month today</div><div class="val" id="gLeft">$0</div></div>
+      </div>
+      <div class="note" id="goalNote">Enter your goal to see the plan.</div>
+      <div id="goalChartTitle" style="font-weight:600;margin:18px 0 6px;display:none;">Your progress toward the goal</div>
+      <div id="goalChart"></div>
+    </div>
+  </section>
+
+  <!-- CREDITS -->
+  <section id="dettes" class="hidden">
+    <div class="card">
+      <h2>Your debts</h2>
+      <p class="hint">Enter what your agreement says: amount borrowed, annual rate, term, start date, and the monthly insurance if you pay any. Havn works out your payment, your balance and your full schedule.</p>
+      <div id="debtList"></div>
+      <button class="add" id="addDebt">+ Add a debt</button>
+    </div>
+    <div class="card">
+      <h2>Overview</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Balance remaining</div><div class="val" id="cTotal">$0</div></div>
+        <div class="box"><div class="lab">Total monthly payments</div><div class="val" id="cMens">$0</div></div>
+        <div class="box"><div class="lab">Interest remaining</div><div class="val" id="cInt">$0</div></div>
+        <div class="box"><div class="lab">Debt-to-income</div><div class="val" id="cRatio">–</div></div>
+      </div>
+      <div class="note" id="cNote"></div>
+      <p class="hint" style="margin:10px 0 0;">The balance remaining is worked out <b>as of today</b>: Havn starts from the amount you borrowed, runs the schedule month by month from the start date you entered, and stops at the current month. It assumes every payment was made on time, with no extra payments along the way.</p>
+      <div id="creditDetails" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <h2>Get out of debt faster</h2>
+      <p class="hint">Put a little extra toward one debt every month and the whole thing collapses years earlier. Havn runs it month by month on your real schedules and tells you the exact date you stop owing anything. When a debt is cleared, its payment does not go back into your budget: it rolls onto the next debt.</p>
+      <div class="row" style="grid-template-columns:1fr 150px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
+        <span><b>Extra payment / month</b> <span style="color:var(--mut);font-size:12px;">on top of your required minimums, straight to the principal</span></span>
+        <input id="poEpargne" class="num" type="number" placeholder="0" oninput="setPayoffEpargne(this.value)">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:13.5px;cursor:pointer;color:var(--ink);"><input type="checkbox" id="poReport" style="width:auto;" onchange="setPayoffReport(this.checked)"> When a debt is cleared, roll its payment onto the next one <span style="color:var(--mut);">(this is what makes it a snowball)</span></label>
+      <div style="font-size:13px;color:var(--mut);margin-bottom:6px;">Which debt to attack first:</div>
+      <div id="poStrats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
+      <div class="kpi">
+        <div class="box"><div class="lab">Debt-free on</div><div class="val" id="poDate">–</div></div>
+        <div class="box"><div class="lab">That is in</div><div class="val" id="poDur">–</div></div>
+        <div class="box"><div class="lab">Interest paid until then</div><div class="val" id="poInt">–</div></div>
+        <div class="box"><div class="lab">Saved vs doing nothing</div><div class="val" id="poGain">–</div></div>
+      </div>
+      <div class="note" id="poNote">Add a debt to see your payoff plan.</div>
+      <div id="poOrdre" style="margin-top:6px;"></div>
+      <div id="poVersements" style="margin-top:14px;"></div>
+      <div id="poCompare" style="margin-top:16px;"></div>
+      <details class="explain" style="margin-top:14px;">
+        <summary>What to check before you start</summary>
+        <div class="explain-body" id="poLoi"></div>
+      </details>
+    </div>
+    <div class="card">
+      <h2>Amortization schedule</h2>
+      <p class="hint">The full schedule, month by month: payment, interest, principal paid and balance left. Print it, save it as a PDF, or open it in Excel to check it against your lender's.</p>
+      <div style="font-size:13px;color:var(--mut);margin-bottom:6px;">Debts to include (tick to combine them into one schedule):</div>
+      <div id="amortPicker" style="margin-bottom:10px;"></div>
+      <div style="margin-bottom:12px;"><button class="btn" onclick="printAmort()">Print / PDF the selection</button>
+      <button class="btn doux" onclick="csvAmort()" style="margin-left:8px;" title="Open the schedule in Excel or Google Sheets">Export the schedule to CSV</button></div>
+      <div class="amortwrap"><div id="amortTable"></div></div>
+    </div>
+  </section>
+
+  <!-- VUE ANNUELLE -->
+  <section id="annuel" class="hidden">
+    <div class="card">
+      <h2>Your 12-month projection</h2>
+      <div style="display:flex;align-items:center;gap:14px;margin:8px 0 12px;">
+        <button class="btn" style="background:var(--soft);color:var(--ink);border:1px solid var(--line);padding:6px 14px;" onclick="changeYear(-1)">◀</button>
+        <span style="font-family:'Fraunces',serif;font-size:26px;font-weight:600;min-width:80px;text-align:center;" id="annualYear">2026</span>
+        <button class="btn" style="background:var(--soft);color:var(--ink);border:1px solid var(--line);padding:6px 14px;" onclick="changeYear(1)">▶</button>
+      </div>
+      <p class="hint">Worked out from your current budget, assuming it holds steady. A snapshot of your year if you stay the course.</p>
+      <div class="kpi">
+        <div class="box"><div class="lab">Income / year</div><div class="val" id="aInc">$0</div></div>
+        <div class="box"><div class="lab">Spending / year</div><div class="val" id="aExp">$0</div></div>
+        <div class="box"><div class="lab">Saved / year</div><div class="val" id="aSav">$0</div></div>
+      </div>
+      <div class="note" id="annualNote"></div>
+      <div style="font-weight:600;margin:18px 0 6px;">Your savings, month after month</div>
+      <div id="annualChart"></div>
+    </div>
+    <div class="card">
+      <h2>Month by month</h2>
+      <p class="hint">Set the amount you choose to save each month. Months are pre-filled with it (in grey). As the months go by, replace it with what you actually saved: the running total and the totals recalculate. Come back each month to update it.</p>
+      <div class="row" style="grid-template-columns:1fr 140px 190px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px;"><span><b>Money you choose to save / month</b> <span style="color:var(--mut);font-size:12px;">the amount you decide to put aside. By default Havn uses the savings figure from the "1 · This month" tab. You can override it here.</span></span><input id="annualPlan" class="num" type="number" placeholder="0" oninput="setPlan(this.value)"><button class="add" style="margin:0;" onclick="resetPlan()">↺ Use the budget figure again</button></div>
+      <div class="row" style="grid-template-columns:1fr 140px 190px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><span><b>Starting balance</b> <span style="color:var(--mut);font-size:12px;">what you had already saved before this year</span></span><input id="annualOpening" class="num" type="number" placeholder="0" oninput="setOpening(this.value)"><button class="add" style="margin:0;" onclick="carryPrev()">↩ Carry over last year</button></div>
+      <div class="row head" style="grid-template-columns:1fr 140px 140px 40px;"><span>Month</span><span class="num">Saved this month</span><span class="num">Running total</span><span></span></div>
+      <div id="annualList"></div>
+      <div class="kpi" style="margin-top:14px;">
+        <div class="box"><div class="lab">Saved this year</div><div class="val" id="aTotal">$0</div></div>
+        <div class="box"><div class="lab">Average / month</div><div class="val" id="aAvg">$0</div></div>
+        <div class="box"><div class="lab">Best month</div><div class="val" id="aBest" style="font-size:17px;">–</div></div>
+        <div class="box"><div class="lab">Total at year end</div><div class="val" id="aEnd">$0</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROVISIONS -->
+  <section id="prov" class="hidden">
+    <div class="card">
+      <h2>Your sinking funds</h2>
+      <p class="hint">The “Already in” column is updated <b>by hand</b>: when you move money into a fund, come back and enter it here. Havn connects to no bank, so it cannot know on its own. Get ahead of the big bills that do not come every month: vacation, the holidays, taxes, car service, an insurance deductible, the dentist… For each one, enter the amount you are aiming for, the date, and what you have already put aside. Havn works out how much to set aside each month so you are ready in time.</p>
+      <div id="provList"></div>
+      <button class="add" id="addProv">+ Add a fund</button>
+    </div>
+    <div class="card">
+      <h2>Overview</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">To set aside / month</div><div class="val" id="pMonthly">$0</div></div>
+        <div class="box"><div class="lab">Total target</div><div class="val" id="pTarget">$0</div></div>
+        <div class="box"><div class="lab">Already set aside</div><div class="val" id="pSaved">$0</div></div>
+      </div>
+      <div class="note" id="provNote"></div>
+      <div id="provDetails" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <!-- ABONNEMENTS -->
+  <section id="subs" class="hidden">
+    <div class="card">
+      <h2>Your subscriptions and recurring bills</h2>
+      <p class="hint">List everything you pay on a regular basis: streaming, phone, gym, insurance, power… Pick “Subscription” (something you could cancel) or “Bill” (something you cannot). Then <b>tick the “Cancel” column yourself</b> for the lines you are ready to stop: Havn adds up only those and tells you what it would give you back over a year.</p>
+      <div id="subsList"></div>
+      <button class="add" id="addSub">+ Add</button>
+    </div>
+    <div class="card">
+      <h2>Overview</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Total / month</div><div class="val" id="sMonthly">$0</div></div>
+        <div class="box"><div class="lab">Total / year</div><div class="val" id="sYearly">$0</div></div>
+        <div class="box"><div class="lab">What you ticked to cancel</div><div class="val" id="sCut">$0</div></div>
+      </div>
+      <div class="note" id="subsNote"></div>
+      <div id="subsDetails" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <!-- PATRIMOINE -->
+  <section id="wealth" class="hidden">
+    <div class="card">
+      <h2>What you own</h2>
+      <p class="hint">Everything you own that has a value: savings, investments, property, a car, your checking account… Anything you could turn into cash.</p>
+      <div id="assetList"></div>
+      <button class="add" id="addAsset">+ Add an asset</button>
+    </div>
+    <div class="card">
+      <h2>What you owe</h2>
+      <p class="hint">What you owe. The balance left on your debts is pulled in automatically from the Debts tab. Add your other debts here (an overdraft, money owed to family…).</p>
+      <div id="wealthCredits"></div>
+      <div id="wdebtList"></div>
+      <button class="add" id="addWdebt">+ Add a debt</button>
+    </div>
+    <div class="card">
+      <h2>Your net worth</h2>
+      <div class="kpi">
+        <div class="box"><div class="lab">Total assets</div><div class="val" id="wAssets">$0</div></div>
+        <div class="box"><div class="lab">Total debts</div><div class="val" id="wDebts">$0</div></div>
+        <div class="box"><div class="lab">Net worth</div><div class="val" id="wNet">$0</div></div>
+      </div>
+      <div class="note" id="wNote"></div>
+      <div style="margin:14px 0;"><button class="btn" onclick="saveWealthSnapshot()">Save today's value</button></div>
+      <div id="wealthChartTitle" style="font-weight:600;margin:8px 0 6px;display:none;">How your net worth has moved</div>
+      <div id="wealthChart"></div>
+    </div>
+  </section>
+
+  <div class="barre-outils" style="margin-top:26px;">
+    <button class="btn" onclick="sauvegarder()">Back up</button>
+    <button class="btn doux" onclick="demanderRestauration()">Restore</button>
+    <button class="btn doux" onclick="chargerExemple()">Explore the example</button>
+    <button class="btn discret" onclick="repartirDeZero()">Start from scratch</button>
+  </div>
+  <div style="text-align:center;color:var(--mut);font-size:12.5px;margin-top:10px;max-width:620px;margin-left:auto;margin-right:auto;">Nothing is saved in this demo: change anything you like, try anything you like, the page starts again from the example on reload. In the version you buy, your figures are kept on your device, and the &ldquo;Back up&rdquo; and &ldquo;Restore&rdquo; buttons move them from one device to another. &ldquo;Explore the example&rdquo; and &ldquo;Start from scratch&rdquo; work both ways, as many times as you like.</div>
+  <div class="foot">PRODUCT OF PERSISTENCE · Live demo. The version you buy is a file that works offline and keeps your figures with you.</div>
+  <div style="text-align:center;color:var(--mut);font-size:11.5px;margin-top:8px;max-width:620px;margin-left:auto;margin-right:auto;line-height:1.5;">Havn is a tool to help you steer your budget. The payments, interest, amortization schedules and projections it shows are indicative: they depend on the figures you enter and they do not replace your loan agreement, your lender's official documents, or professional advice.</div>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+/* échappement : un libellé saisi par l'utilisateur ne doit jamais casser l'affichage */
+const ech=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* écran vide pédagogique, reprend le principe de Régie */
+function videHTML(titre,texte,boutons){ return `<div class="vide">${titre?`<div class="grand">${titre}</div>`:''}<p>${texte}</p>${boutons||''}</div>`; }
+const euro=n=>{const v=isFinite(n)?Math.round(n):0;return (v<0?'-$':'$')+Math.abs(v).toLocaleString('en-US');};
+/* conversion vers un montant mensuel selon la fréquence */
+const toMon=(a,f)=> f==='week'? a*52/12 : (f==='year'? a/12 : a);
+const monAmt=x=>toMon(+x.a||0, x.f||'month');
+const freqOpts=f=>`<option value="week"${f==='week'?' selected':''}>Week</option><option value="month"${(f||'month')==='month'?' selected':''}>Month</option><option value="year"${f==='year'?' selected':''}>Year</option>`;
+
+/* ---- graphiques SVG (aucune dépendance) ---- */
+function donutSVG(data,total,centerTop,centerBot){
+  const size=168,thick=32,r=(size-thick)/2,cx=size/2,cy=size/2,circ=2*Math.PI*r;
+  let off=0,segs='';
+  data.forEach(d=>{ if(d.value<=0) return; const len=d.value/(total||1)*circ;
+    segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.color}" stroke-width="${thick}" stroke-dasharray="${len.toFixed(2)} ${(circ-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    off+=len; });
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#eee" stroke-width="${thick}"/>${segs}<text x="${cx}" y="${cy-2}" text-anchor="middle" font-family="Fraunces,serif" font-size="24" font-weight="600" fill="#23201C">${centerTop}</text><text x="${cx}" y="${cy+17}" text-anchor="middle" font-family="Inter" font-size="11" fill="#7c756a">${centerBot||''}</text></svg>`;
+}
+function chartSVG(opts){
+  const w=580,h=190,padL=54,padR=16,padT=14,padB=28;
+  const series=(opts.series||[]).filter(s=>s.data&&s.data.length);
+  if(!series.length || Math.max(...series.map(s=>s.data.length))<2) return '';
+  const nmax=Math.max(...series.map(s=>s.data.length)), lastX=nmax-1;
+  let maxY=opts.goal||0; series.forEach(s=>s.data.forEach(v=>{if(v>maxY)maxY=v;})); maxY=maxY||1;
+  const niceStep=v=>{const p=Math.pow(10,Math.floor(Math.log10(v||1)));const u=v/p;return (u<=1?1:u<=2?2:u<=5?5:10)*p;};
+  const step=niceStep(maxY/4)||1; maxY=Math.ceil(maxY/step)*step;
+  const X=i=> padL+(lastX?i/lastX:0)*(w-padL-padR);
+  const Y=v=> (h-padB)-(v/maxY)*(h-padB-padT);
+  let grid=''; for(let v=0; v<=maxY+0.001; v+=step){ const y=Y(v).toFixed(1); grid+=`<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#ece5d8" stroke-width="1"/><text x="${padL-6}" y="${(+y+3).toFixed(1)}" text-anchor="end" font-family="Inter" font-size="10" fill="#9a9186">${opts.money?euro(v):Math.round(v)}</text>`; }
+  const tstep = lastX<=6?1:Math.ceil(lastX/6); const ticks=[]; for(let i=0;i<=lastX;i+=tstep) ticks.push(i); if(ticks[ticks.length-1]!==lastX) ticks.push(lastX);
+  let xax=''; ticks.forEach(i=>{ const x=X(i).toFixed(1); const lab= i===0?'0':(i%12===0?`${i/12} yr${i/12>1?'s':''}`:`${i} mo`); xax+=`<line x1="${x}" y1="${padT}" x2="${x}" y2="${h-padB}" stroke="#f4efe4" stroke-width="1"/><text x="${x}" y="${h-padB+15}" text-anchor="middle" font-family="Inter" font-size="10" fill="#9a9186">${lab}</text>`; });
+  let paths=''; series.forEach(s=>{
+    let d=''; s.data.forEach((v,i)=>{ d+=(i===0?'M':'L')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' '; });
+    if(s.fill){ paths+=`<path d="${d}L${X(s.data.length-1).toFixed(1)} ${(h-padB).toFixed(1)} L${X(0).toFixed(1)} ${(h-padB).toFixed(1)} Z" fill="${s.fill}"/>`; }
+    paths+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"${s.dash?` stroke-dasharray="${s.dash}"`:''}/>`;
+  });
+  let goal=''; if(opts.goal){ const gy=Y(opts.goal); goal=`<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${w-padR}" y2="${gy.toFixed(1)}" stroke="${opts.goalColor||'#C06A4A'}" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${w-padR}" y="${(gy-5).toFixed(1)}" text-anchor="end" font-family="Inter" font-size="10.5" fill="${opts.goalColor||'#C06A4A'}">${opts.goalLabel||''}</text>`; }
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="auto" style="max-width:${w}px;display:block;">${grid}${xax}${paths}${goal}</svg>`;
+}
+function htmlLeg(items){ return `<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:#5a544b;margin-top:6px;">`+items.map(it=>`<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:16px;height:0;border-top:3px ${it.dash?'dashed':'solid'} ${it.color};display:inline-block;"></span>${it.label}</span>`).join('')+`</div>`; }
+/* ================= état, sauvegarde, exemple =================
+   La clé s'appelait “pilote_budget” (nom d'origine du produit). On migre en douceur
+   vers “havn_budget” sans faire perdre ses données à un acheteur existant. */
+const CLE='havn_budget_en', CLE_ANCIENNE='pilote_budget';
+/* DÉMO : on ne touche à rien dans le navigateur du visiteur. */
+const moisRelatif=mo=>{ const n=new Date(), d=new Date(n.getFullYear(),n.getMonth()+mo,1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); };
+const anneeVide=()=>{ const y=new Date().getFullYear(); const o={cur:y,years:{}}; o.years[y]={entries:Array(12).fill(null),opening:0}; return o; };
+/* une page vraiment vierge : aucune ligne, aucun chiffre */
+function etatVide(){ return {
+  demo:false, autofill:false,
+  income:[], expenses:[], debts:[], prov:[], subs:[],
+  wealth:{assets:[],debts:[],history:[]},
+  goal:{amount:0,have:0,months:12,rate:0,dur:12,durUnit:'month'},
+  rule:{name:'50/30/20',need:50,want:30,save:20},
+  payoff:{epargne:0,seuil:1000,strat:'neige',report:true},
+  annual:anneeVide() }; }
+/* le budget d'exemple : chiffres fictifs, dates toujours relatives à aujourd'hui
+   pour que l'exemple ne vieillisse jamais */
+function etatExemple(){ return {
+  demo:true, autofill:false,
+  income:[{l:'Paycheck',a:2200,f:'month'}],
+  expenses:[{l:'Rent',a:750,c:'need',f:'month'},{l:'Car loan (payment)',a:250,c:'need',f:'month'},{l:'Groceries',a:90,c:'need',f:'week'},{l:'Car insurance',a:600,c:'need',f:'year'},{l:'Eating out & going out',a:200,c:'want',f:'month'},{l:'Subscriptions',a:60,c:'want',f:'month'},{l:'Automatic savings',a:150,c:'save',f:'month'},{l:'Store card (TV, furniture)',a:120,c:'debt',f:'month'},{l:'Student loan',a:43,c:'debt',f:'month'}],
+  /* Trois crédits, et ce n'est pas décoratif : le plus PETIT solde (prêt
+     étudiant) est aussi le MOINS cher, donc boule de neige et avalanche ne
+     donnent pas le même ordre. Avec deux crédits seulement, l'acheteur ouvrait
+     l'outil et voyait trois stratégies identiques : la fonction ne se montrait
+     pas. Corrigé le 17/09/2026. */
+  debts:[{l:'Car loan',cap:15000,r:4.5,dur:60,start:moisRelatif(-25),ins:12,pen:0},{l:'Store card (TV)',cap:3000,r:6,dur:24,start:moisRelatif(-10),ins:0,pen:0},{l:'Student loan',cap:1500,r:1.5,dur:36,start:moisRelatif(-14),ins:0,pen:0}],
+  prov:[{l:'Summer vacation',target:1500,deadline:moisRelatif(11),saved:400},{l:'Taxes',target:1200,deadline:moisRelatif(2),saved:0},{l:'Holidays / gifts',target:600,deadline:moisRelatif(5),saved:100},{l:'Car service',target:400,deadline:moisRelatif(8),saved:150}],
+  subs:[{l:'Phone',amount:20,freq:'month',type:'bill'},{l:'Netflix',amount:14,freq:'month',type:'abo',cut:true},{l:'Spotify',amount:11,freq:'month',type:'abo',cut:true},{l:'Gym',amount:35,freq:'month',type:'abo',cut:false},{l:'Home insurance',amount:180,freq:'year',type:'bill'},{l:'Power',amount:110,freq:'month',type:'bill'}],
+  wealth:{assets:[{l:'Emergency fund',v:3500},{l:'Checking account',v:1200},{l:'Car',v:9000}],debts:[],history:[]},
+  goal:{amount:5000,have:500,months:10,rate:3,dur:10,durUnit:'month'},
+  rule:{name:'50/30/20',need:50,want:30,save:20},
+  payoff:{epargne:150,seuil:1000,strat:'neige',report:true},
+  annual:anneeVide() }; }
+/* au premier lancement, on ouvre sur l'exemple : l'acheteur voit l'outil vivant tout de suite,
+   et le bandeau lui dit comment passer à ses propres chiffres. */
+/* DÉMO : on part toujours de l'exemple, on ne lit jamais ce qui traîne dans le navigateur. */
+let S=etatExemple();
+if(!S.rule) S.rule={name:'50/30/20',need:50,want:30,save:20};
+/* migration des anciens crédits {l,a,r,m} vers le nouveau format d'amortissement */
+S.debts=(S.debts||[]).map(d=>{
+  if(d.cap!=null) return d;
+  const i=(d.r||0)/100/12; let dur=60;
+  if(d.a>0&&d.m>0){ if(i>0&&d.m>d.a*i) dur=Math.ceil(-Math.log(1-i*d.a/d.m)/Math.log(1+i)); else if(i===0) dur=Math.ceil(d.a/d.m); }
+  const now=new Date(); const start=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  return {l:d.l,cap:d.a||0,r:d.r||0,dur:Math.min(Math.max(dur,1),600),start,ins:0,pen:0};
+});
+if(!S.annual || !S.annual.years){ const _y=new Date().getFullYear(); const _old=(S.annual&&S.annual.entries)?S.annual.entries:Array(12).fill(null); S.annual={cur:_y,years:{}}; S.annual.years[_y]={entries:_old,opening:0}; }
+/* sauvegardes très anciennes : on crée les onglets manquants VIDES.
+   On n'injecte jamais de données d'exemple dans le budget réel de quelqu'un. */
+if(!S.payoff || S.payoff.epargne===undefined) S.payoff={epargne:0,seuil:1000,strat:'neige',report:true};
+if(!S.prov) S.prov=[];
+if(!S.subs) S.subs=[];
+if(!S.wealth) S.wealth={assets:[],debts:[],history:[]};
+if(!S.goal) S.goal={amount:0,have:0,months:12,rate:0,dur:12,durUnit:'month'};
+/* DÉMO : on n'enregistre rien. Le visiteur essaie, il ne construit pas son budget ici. */
+function save(){ /* démo : pas d'enregistrement */ }
+
+/* ---- règle cible configurable ---- */
+const PRESETS={'50/30/20':[50,30,20],'50/20/30':[50,20,30],'60/30/10':[60,30,10]};
+function syncRuleInputs(){
+  $('#tgtNeed').value=S.rule.need;$('#tgtWant').value=S.rule.want;$('#tgtSave').value=S.rule.save;
+  $('#rulePreset').value=PRESETS[S.rule.name]?S.rule.name:'perso';
+}
+function setPreset(v){
+  if(v!=='perso'){const p=PRESETS[v];S.rule={name:v,need:p[0],want:p[1],save:p[2]};}
+  else S.rule.name='perso';
+  syncRuleInputs();recalc();
+}
+function ruleEdited(){
+  S.rule={name:'perso',need:+$('#tgtNeed').value||0,want:+$('#tgtWant').value||0,save:+$('#tgtSave').value||0};
+  $('#rulePreset').value='perso';recalc();
+}
+
+/* ---- tabs ---- */
+$$('.tab').forEach(t=>t.onclick=()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  if(t.scrollIntoView) t.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+  ['dash','budget','epargne','dettes','annuel','prov','subs','wealth'].forEach(id=>$('#'+id).classList.add('hidden'));
+  $('#'+t.dataset.tab).classList.remove('hidden');
+  if(t.dataset.tab==='dash') renderDashboard();
+  if(t.dataset.tab==='annuel') renderAnnual();
+  if(t.dataset.tab==='prov') calcProv();
+  if(t.dataset.tab==='subs') calcSubs();
+  if(t.dataset.tab==='wealth') calcWealth();
+});
+
+/* ---- income ---- */
+/* L'en-tête se DÉDUIT de la première ligne : il relit ses libellés au lieu de
+   les recopier. Une deuxième liste de titres finit toujours par diverger de la
+   première, et l'anglais aurait eu deux endroits à traduire au lieu d'un. */
+function poserEntete(conteneur){
+  const modele = conteneur.querySelector('.row');
+  if(!modele) return;
+  const champs = [...modele.querySelectorAll('.f')];
+  if(!champs.length) return;
+  const h = document.createElement('div');
+  h.className = 'row head';
+  h.style.gridTemplateColumns = modele.style.gridTemplateColumns;
+  h.innerHTML = champs.map(f=>{
+    const cap = f.querySelector('.cap');
+    const num = !!f.querySelector('.num');
+    return `<span style="${num?'text-align:right;':''}">${cap?cap.textContent:''}</span>`;
+  }).join('') + '<span></span>';
+  conteneur.insertBefore(h, conteneur.firstChild);
+}
+function renderIncome(){
+  const w=$('#incomeList');w.innerHTML='';
+  if(!S.income.length){ w.innerHTML=videHTML('',"No income yet. Start with your paycheck, then add the rest: bonuses, benefits, a pension, rent you receive. Each row can be weekly, monthly or yearly, and everything is converted to a monthly figure for you."); return; }
+  S.income.forEach((it,i)=>{
+    const r=document.createElement('div');r.className='row';
+    r.style.gridTemplateColumns='1fr 130px 110px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Source</span><input placeholder="Source of income" value="${ech(it.l)}" oninput="S.income[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Amount ($)</span><input class="num" type="number" placeholder="0" value="${it.a}" oninput="S.income[${i}].a=+this.value||0;recalc()"></label>
+      <label class="f"><span class="cap">Frequency</span><select class="freq" onchange="S.income[${i}].f=this.value;recalc()">${freqOpts(it.f)}</select></label>
+      ${acts('income',i)}`;
+    w.appendChild(r);
+  });
+  poserEntete(w);
+}
+$('#addIncome').onclick=()=>{S.income.push({l:'',a:0});renderIncome();save();};
+
+/* ---- dépenses ---- */
+function renderExpense(){
+  const w=$('#expenseList');w.innerHTML='';
+  if(!S.expenses.length){ w.innerHTML=videHTML('',"No spending yet. The easiest way is to take last month's bank statement and list everything, from the rent down to the small stuff. Sort each item into Need, Want, Savings or Debt: that is what feeds your 50/30/20 rule."); return; }
+  S.expenses.forEach((it,i)=>{
+    const r=document.createElement('div');r.className='row';
+    r.style.gridTemplateColumns='1fr 96px 84px 116px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Item</span><input placeholder="Expense name" value="${ech(it.l)}" oninput="S.expenses[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Amount ($)</span><input class="num" type="number" placeholder="0" value="${it.a}" oninput="S.expenses[${i}].a=+this.value||0;recalc()"></label>
+      <label class="f"><span class="cap">Frequency</span><select class="freq" onchange="S.expenses[${i}].f=this.value;recalc()">${freqOpts(it.f)}</select></label>
+      <label class="f"><span class="cap">Category</span><select class="cat" onchange="S.expenses[${i}].c=this.value;recalc()">
+        <option value="need"${it.c==='need'?' selected':''}>Need</option>
+        <option value="want"${it.c==='want'?' selected':''}>Want</option>
+        <option value="save"${it.c==='save'?' selected':''}>Savings</option>
+        <option value="debt"${it.c==='debt'?' selected':''}>Debt (consumer)</option></select></label>
+      ${acts('expenses',i)}`;
+    w.appendChild(r);
+  });
+  poserEntete(w);
+}
+/* réordonner, dupliquer, supprimer : générique pour toutes les listes */
+function listRef(name){
+  const m={income:[S.income,renderIncome,recalc,'incomeList'],expenses:[S.expenses,renderExpense,recalc,'expenseList'],debts:[S.debts,renderDebt,calcDebt,'debtList'],prov:[S.prov,renderProv,calcProv,'provList'],subs:[S.subs,renderSubs,calcSubs,'subsList'],assets:[S.wealth.assets,renderAssets,calcWealth,'assetList'],wdebts:[S.wealth.debts,renderWdebts,calcWealth,'wdebtList']};
+  const e=m[name]; return {arr:e[0],render:e[1],calc:e[2],cid:e[3]};
+}
+function moveItem(name,i,dir){const r=listRef(name),j=i+dir;if(j<0||j>=r.arr.length)return;const m=r.arr.splice(i,1)[0];r.arr.splice(j,0,m);save();r.render();r.calc();const cont=document.getElementById(r.cid);if(cont&&cont.children[j]){const mv=cont.children[j].querySelectorAll('.acts .mv');const b=mv[dir<0?0:1];if(b){b.focus();cont.children[j].scrollIntoView({block:'nearest'});}}}
+function dupItem(name,i){const r=listRef(name);r.arr.splice(i+1,0,JSON.parse(JSON.stringify(r.arr[i])));save();r.render();r.calc();}
+function delItem(name,i){
+  const r=listRef(name), it=r.arr[i]||{};
+  const nom=String(it.l||'').trim();
+  const chiffre=(+it.a||0)+(+it.cap||0)+(+it.target||0)+(+it.amount||0)+(+it.v||0);
+  const ligneVide = !nom && !chiffre;
+  if(!ligneVide && !confirm(nom? 'Delete “'+nom+'”? This row and its amounts will be lost.' : 'Delete this row? Its amounts will be lost.')) return;
+  r.arr.splice(i,1);save();r.render();r.calc();
+}
+const acts=(name,i)=>{const n=listRef(name).arr.length;return `<span class="acts"><button class="mv" title="Move up" ${i===0?'disabled':''} onclick="moveItem('${name}',${i},-1)">↑</button><button class="mv" title="Move down" ${i===n-1?'disabled':''} onclick="moveItem('${name}',${i},1)">↓</button><button class="mv" title="Duplicate" onclick="dupItem('${name}',${i})">⧉</button><button class="del2" title="Delete" onclick="delItem('${name}',${i})">✕</button></span>`;};
+$('#addExpense').onclick=()=>{S.expenses.push({l:'',a:0,c:'need'});renderExpense();save();};
+
+/* ---- recalc budget ---- */
+function recalc(){
+  const P=monthlyProj();
+  const inc=P.inc, exp=P.exp, left=inc-exp;
+  const need=P.need, want=P.want, debt=P.debt, sav=P.sav;
+  $('#kIncome').textContent=euro(inc);
+  $('#kExpense').textContent=euro(exp);
+  const kl=$('#kLeft');kl.textContent=euro(left);kl.className='val '+(left>=0?'good':'bad');
+  if(P.auto.length){
+    const catLab={need:'Need',want:'Want',save:'Savings'};
+    let ab=P.auto.map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);"><span style="flex:1;min-width:0;line-height:1.35;"><span style="color:#5a544b;">${r.l}</span><br><span style="color:var(--acc);font-size:12px;cursor:pointer;" onclick="gotoTab('${r.tab}')">↗ ${r.src}</span></span><b class="num" style="color:#5a544b;white-space:nowrap;">${euro(r.v)}</b><span style="color:var(--mut);font-size:12.5px;width:56px;text-align:right;">${catLab[r.cat]}</span></div>`).join('');
+    ab+=`<div class="note" style="margin-top:8px;">These rows come from your other tabs and update on their own. Remove any duplicates from the manual list above so nothing is counted twice.</div>`;
+    $('#autoBox').innerHTML=ab;
+  } else $('#autoBox').innerHTML='';
+  const base=Math.max(inc,1);
+  const pn=Math.round(need/base*100),pw=Math.round(want/base*100),pd=Math.round(debt/base*100),ps=Math.round(sav/base*100);
+  const pf=Math.max(0,100-pn-pw-ps-pd); // reste non affecté (surplus)
+  $('#pNeed').textContent=pn+'%';$('#pWant').textContent=pw+'%';$('#pSave').textContent=ps+'%';$('#pDebt').textContent=pd+'%';$('#pFree').textContent=pf+'%';
+  $('#ratioBar').innerHTML=`<div class="seg" style="width:${pn}%;background:#4E7C5A"></div><div class="seg" style="width:${pw}%;background:#C06A4A"></div><div class="seg" style="width:${ps}%;background:#8a7fb0"></div><div class="seg" style="width:${pd}%;background:#3E7C8C"></div><div class="seg" style="width:${pf}%;background:#d9d2c4"></div>`;
+  const tgt=S.rule.save;
+  let msg;
+  if(left<0) msg='<b>Careful:</b> you are spending more than you earn. Start by cutting the \'Want\' lines.';
+  else if(pf>=3) msg=`You still have <b>${pf}%</b> of your income unassigned (${euro(left)} at the end of the month). Best move: send it to savings and aim for your <b>${tgt}%</b> target.`+(debt>0?`  And clear your consumer debt (${pd}%) first.`:'');
+  else if(debt>0) msg=`You are saving <b>${ps}%</b> (target ${tgt}%) and <b>${pd}%</b> of your income goes to consumer debt, which comes first: once it is gone, that money joins your savings.`;
+  else if(ps>=tgt) msg=`<b>Excellent.</b> You are saving ${ps}%, right at your ${tgt}% target. Keep going.`;
+  else msg=`You are saving <b>${ps}%</b>, your target is <b>${tgt}%</b>. Every want you cut brings it closer.`;
+  $('#ratioNote').innerHTML=msg;
+  // camembert des dépenses (par catégorie)
+  const dd=[{l:'Needs',value:need,color:'#4E7C5A'},{l:'Wants',value:want,color:'#C06A4A'},{l:'Savings',value:sav,color:'#8a7fb0'},{l:'Debt',value:debt,color:'#3E7C8C'}];
+  const dtot=need+want+sav+debt;
+  const leg=dd.filter(x=>x.value>0).map(x=>`<div style="display:flex;align-items:center;gap:8px;margin:5px 0;"><span style="width:11px;height:11px;border-radius:3px;background:${x.color};display:inline-block;flex:none;"></span>${x.l}<b style="margin-left:auto;">${euro(x.value)}</b><span style="color:#7c756a;width:44px;text-align:right;">${Math.round(x.value/(dtot||1)*100)}%</span></div>`).join('');
+  $('#donutBox').innerHTML = dtot>0
+    ? `<div>${donutSVG(dd,dtot,euro(dtot),'of spending')}</div><div style="flex:1;min-width:210px;font-size:13.5px;">${leg}</div>`
+    : `<div style="color:#7c756a;font-size:13.5px;">Add some spending to see the chart.</div>`;
+  // cibles chiffrées en euros (zéro calcul mental)
+  const cN=Math.round(base*S.rule.need/100), cW=Math.round(base*S.rule.want/100), cS=Math.round(base*S.rule.save/100);
+  // trow(label, réel, cible, lowerBetter, objZero) : couleur selon le bon sens de chaque poste
+  const trow=(lab,real,cible,lowerBetter,objZero)=>{
+    const good = lowerBetter ? real<=cible+0.5 : real>=cible-0.5;
+    const col = good?'#4E7C5A':'#B0553F';
+    const g=Math.round(real-cible), sign=g>0?'+':'';
+    const right = objZero ? (real>0?'to cut':'ok') : sign+euro(g);
+    return `<div class="tgtrow"><span class="tlbl">${lab}</span><b class="tnum">${euro(real)}</b><span class="tnum" style="color:var(--mut);">${euro(cible)}</span><span class="tgap" style="color:${col};">${right}</span></div>`;
+  };
+  let tb=`<div style="font-weight:600;margin:18px 0 6px;">Your targets in dollars (${S.rule.need}/${S.rule.want}/${S.rule.save} rule)</div>`
+    +`<div class="tgtrow tgthead"><span class="tlbl"></span><span class="tnum">Actual</span><span class="tnum">Target</span><span class="tgap">Difference</span></div>`
+    +trow('Needs',need,cN,true,false)
+    +trow('Wants',want,cW,true,false)
+    +trow('Savings',sav,cS,false,false)
+    +trow('Debt (consumer)',debt,0,true,true);
+  const gapS=cS-sav;
+  if(inc>0){
+    let nb='';
+    if(need>cN+0.5) nb+=`<b>Your needs are over target, and that is very common.</b> Rent, a mortgage, gas and taxes weigh a lot, and that is not a failure on your part. The real lever is not depriving yourself, it is earning more or shrinking one big fixed cost. You can also raise your target rule so it matches your reality, 65/20/15 for instance.<br><br>`;
+    nb+= gapS>0
+      ? `To hit your <b>${S.rule.save}%</b> savings target (${euro(cS)}/month), you are <b>${euro(gapS)}/month</b> short.`+(left>0?`  You have <b>${euro(left)}</b> unassigned to move over${gapS<=left?', which is enough to get there.':'.'}`:'')
+      : `<b>Savings target reached.</b> You are saving ${euro(sav)}/month, at or above your target.`;
+    if(debt>0) nb+=` Alongside that, <b>${euro(debt)}/month</b> of consumer debt to clear first.`;
+    nb+=`<br><br><span style="color:var(--mut);">A reminder: your savings are not an expense. You are paying yourself first, and that money stays yours.</span>`;
+    tb+=`<div class="note" style="margin-top:10px;">`+nb+`</div>`;
+  }
+  $('#targetBox').innerHTML=tb;
+  save(); calcGoal(); calcDebt(); calcProv(); calcSubs();
+}
+
+/* ---- savings goal ---- */
+function calcGoal(){
+  const left=Math.max(monthlyProj().surplus,0);
+  S.goal.amount=+$('#goalAmount').value||0;S.goal.have=+$('#goalHave').value||0;S.goal.rate=+$('#goalRate').value||0;
+  S.goal.dur=+$('#goalDur').value||0;S.goal.durUnit=$('#goalUnit').value;
+  S.goal.months=Math.round(S.goal.dur*(S.goal.durUnit==='year'?12:1));
+  const FV=S.goal.amount, PV=S.goal.have, n=S.goal.months, i=(S.goal.rate/100)/12;
+  // mensualité nécessaire pour tenir le délai (intérêts composés)
+  let needed=0;
+  if(n>0){ if(i>0){ const g=Math.pow(1+i,n); needed=(FV-PV*g)*i/(g-1); } else needed=(FV-PV)/n; }
+  needed=Math.max(needed,0);
+  $('#gNeeded').textContent=euro(needed);
+  $('#gLeft').textContent=euro(left);
+  // en combien de mois à ton rythme réel (le reste mensuel) ?
+  let capM=0,bc=PV; if(FV>PV){ while(bc<FV && capM<600){ bc=bc*(1+i)+left; capM++; if(left<=0 && i<=0) break; } }
+  const capTxt = (capM>=600||(left<=0&&i<=0&&PV<FV))?'a very long time':fmtDur(capM);
+  let note;
+  if(FV<=0) note=videHTML("What this tab is for",
+    "You give a target amount, what you already have set aside, and the deadline you set yourself. "
+    +"Havn answers two questions: how much to put in each month to hit that deadline, and how "
+    +"long it would take at your current pace. The gap between the two is usually what makes "
+    +"the decision. Enter your target amount above to start.");
+  else if(needed<=left) note=`<b>That works.</b> Putting away ${euro(needed)}/month${i>0?` (with ${S.goal.rate}% interest a year)`:''}, you reach ${euro(FV)} in ${fmtDur(n)}. What you have left today (${euro(left)}/month) covers it, and at that pace you would get there in ${capTxt}.`;
+  else note=`<b>That is tight.</b> You would need ${euro(needed)}/month, but you only have ${euro(left)} left. At your pace the goal would land in ${capTxt} instead of ${fmtDur(n)}. Cut a want, give yourself more time, or put your savings somewhere they earn.`;
+  $('#goalNote').innerHTML=note;
+  // graphiques : le plan (pour tenir le délai) vs ton rythme réel
+  if(FV>0 && n>0){
+    const plan=[PV], cap=[PV]; let bp=PV,bx=PV;
+    for(let m=1;m<=n;m++){ bp=bp*(1+i)+needed; plan.push(bp); bx=bx*(1+i)+left; cap.push(bx); }
+    $('#goalChart').innerHTML=chartSVG({series:[{data:plan,color:'#4E7C5A',fill:'rgba(78,124,90,.12)'},{data:cap,color:'#3E7C8C',dash:'5 4'}],goal:FV,goalColor:'#C06A4A',goalLabel:'Target',money:true})
+      +htmlLeg([{label:'The plan (to hit your deadline)',color:'#4E7C5A'},{label:'At your current pace',color:'#3E7C8C',dash:true}]);
+    $('#goalChartTitle').style.display='block';
+  } else { $('#goalChart').innerHTML=''; $('#goalChartTitle').style.display='none'; }
+  save();
+}
+
+/* ---- crédits (amortissement) ---- */
+function amort(d){
+  const P=+d.cap||0, i=(+d.r||0)/100/12, n=Math.max(1,Math.round(+d.dur||1));
+  const M = i>0 ? P*i/(1-Math.pow(1+i,-n)) : P/n;
+  const sched=[]; let bal=P, totInt=0;
+  for(let k=1;k<=n && bal>0.005;k++){
+    const interest=bal*i; let principal=M-interest; if(principal>bal) principal=bal;
+    bal-=principal; totInt+=interest;
+    sched.push({k,interest,principal,payment:principal+interest,balance:bal>0?bal:0});
+  }
+  return {M,i,n,sched,totInterest:totInt};
+}
+function monthsElapsed(start){ if(!start) return 0; const p=start.split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return 0; const now=new Date(); return Math.max(0,(now.getFullYear()-y)*12+(now.getMonth()-(m-1))); }
+function payDate(start,k){ const p=(start||'').split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return '–'; const d=new Date(y,(m-1)+(k-1),1); return d.toLocaleDateString('en-US',{month:'short',year:'numeric'}); }
+function renderDebt(){
+  const w=$('#debtList');w.innerHTML='';
+  if(!S.debts.length){ w.innerHTML=videHTML('',"No debts on file. If you have none, so much the better: leave this tab empty and your debt-to-income ratio stays at zero. Otherwise add each debt with the amount borrowed, its rate, its term and its start month, and Havn rebuilds the whole schedule, month by month."); return; }
+  S.debts.forEach((d,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 100px 66px 74px 130px 78px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Debt</span><input placeholder="Debt name" value="${ech(d.l)}" oninput="S.debts[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Amount borrowed ($)</span><input class="num" type="number" placeholder="0" value="${d.cap}" oninput="S.debts[${i}].cap=+this.value||0;calcDebt()"></label>
+      <label class="f"><span class="cap">Rate (%)</span><input class="num" type="number" placeholder="0" value="${d.r}" oninput="S.debts[${i}].r=+this.value||0;calcDebt()"></label>
+      <label class="f"><span class="cap">Term (months)</span><input class="num" type="number" placeholder="0" value="${d.dur}" oninput="S.debts[${i}].dur=+this.value||0;calcDebt()"></label>
+      <label class="f"><span class="cap">Start</span><input type="month" value="${ech(d.start||'')}" oninput="S.debts[${i}].start=this.value;calcDebt()"></label>
+      <label class="f"><span class="cap">Insurance ($/mo)</span><input class="num" type="number" placeholder="0" value="${d.ins||0}" oninput="S.debts[${i}].ins=+this.value||0;calcDebt()"></label>
+      ${acts('debts',i)}`;
+    w.appendChild(r);
+  });
+  poserEntete(w);
+}
+$('#addDebt').onclick=()=>{const now=new Date();S.debts.push({l:'',cap:0,r:0,dur:60,start:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'),ins:0,pen:0});renderDebt();calcDebt();};
+
+
+function fmtDur(months){const y=Math.floor(months/12),m=months%12;return (y>0?y+' year'+(y>1?'s ':' '):'')+(m>0?m+' month'+(m>1?'s':''):(y>0?'':'0 months'));}
+
+function calcDebt(){
+  const active=S.debts.filter(d=>(+d.cap||0)>0 && (+d.dur||0)>0);
+  if(!active.length){ $('#cTotal').textContent='–';$('#cMens').textContent='–';$('#cInt').textContent='–';$('#cRatio').textContent='–';$('#cRatio').className='val';$('#cNote').innerHTML='Add a debt to see your overview.';$('#creditDetails').innerHTML='';$('#amortPicker').innerHTML='';$('#amortTable').innerHTML='';renderPayoff();save();return; }
+  let totBal=0,totMens=0,totInt=0,details='';
+  active.forEach(d=>{
+    const a=amort(d), el=monthsElapsed(d.start);
+    const balNow = el<=0? (+d.cap||0) : (el>=a.sched.length?0:a.sched[el-1].balance);
+    const remainingPays=Math.max(0,a.n-el);
+    const intRem=Math.max(0,a.M*remainingPays-balNow);
+    const activeNow=balNow>0.5;
+    totBal+=balNow; totInt+=intRem; totMens+= activeNow? (a.M+(+d.ins||0)) : 0;
+    const pen=+d.pen||0;
+    details+=`<div style="border-bottom:1px solid var(--line);padding:11px 0;">`
+      +`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;"><b style="font-size:15px;">${ech(d.l)||'(unnamed)'}</b><span style="color:var(--mut);font-size:13px;">${d.r}% · ${a.n} months · ends ${payDate(d.start,a.n)}</span></div>`
+      +`<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:6px;color:#5a544b;"><span>Payment <b>${euro(a.M)}</b>${d.ins>0?` <span style="color:var(--mut);">+ ${euro(d.ins)} ins.</span>`:''}</span><span>Balance left <b>${euro(balNow)}</b></span><span>Interest on this debt <b>${euro(a.totInterest)}</b></span></div>`
+      +(activeNow?`<div class="note" style="margin-top:8px;">If you pay it off today: you hand over <b>${euro(balNow)}</b> and you save <b>${euro(intRem)}</b> in interest${pen>0?`, less your ${euro(pen)} penalty → net gain <b>${euro(intRem-pen)}</b>`:''}. <span style="color:var(--mut);">Check your agreement for a prepayment penalty.</span></div>`:`<div style="color:var(--acc2);font-weight:600;margin-top:6px;">Paid off.</div>`)
+      +`</div>`;
+  });
+  $('#cTotal').textContent=euro(totBal);
+  $('#cMens').textContent=euro(totMens);
+  $('#cInt').textContent=euro(totInt);
+  const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
+  const ratio= inc>0? totMens/inc*100 : 0;
+  const rEl=$('#cRatio'); rEl.textContent=(inc>0?ratio.toFixed(0):'–')+'%'; rEl.className='val '+(inc>0?(ratio<=35?'good':'bad'):'');
+  $('#cNote').innerHTML = inc>0
+    ? `Your debt payments (${euro(totMens)}) are <b>${ratio.toFixed(0)}%</b> of your income. The mark to stay under is <b>36%</b>, the debt-to-income ratio lenders use. ${ratio>35?'You are above it, which limits what you can borrow.':'You are in the healthy range.'}`
+    : `Enter your income in the Budget tab to see your debt-to-income ratio.`;
+  $('#creditDetails').innerHTML=details;
+  const prevChk=active.map((d,idx)=>{const cb=$('#amc'+idx);return cb?cb.checked:true;});
+  $('#amortPicker').innerHTML=active.map((d,idx)=>`<label style="display:inline-flex;align-items:center;gap:6px;margin:0 16px 6px 0;font-size:13px;cursor:pointer;"><input type="checkbox" id="amc${idx}" ${prevChk[idx]?'checked':''} style="width:auto;" onchange="renderAmortTable()"><span>${ech(d.l)||'(unnamed)'}</span></label>`).join('');
+  renderAmortTable();
+  renderPayoff();
+  save();
+}
+
+/* ---- DEBT PAYOFF ENGINE ---------------------------------------------------
+   US MODEL. In the United States an extra payment can be sent straight to the
+   principal every month, which is exactly what the nine competing listings
+   measured on 16/09/2026 assume. The French twin does NOT work this way: there
+   the monthly payment is fixed by contract, so the money is saved up and paid
+   as a lump-sum early repayment. Same product, two different laws, one
+   deliberate divergence, declared in the factory.
+   Verified 17/09/2026: on US mortgages a prepayment penalty is only allowed on
+   a fixed-rate qualified mortgage that is not higher-priced, for the first
+   three years, capped at 2% of the balance in years 1-2 and 1% in year 3, and
+   the lender must also offer a version without one (CFPB, 12 CFR 1026.43). */
+
+function poCredits(){
+  return S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0).map(d=>{
+    const a=amort(d), el=monthsElapsed(d.start);
+    const solde = el<=0 ? (+d.cap||0) : (el>=a.sched.length?0:a.sched[el-1].balance);
+    return {nom:(d.l||'(unnamed)'), solde, taux:(+d.r||0), mens:a.M, pen:(+d.pen||0)};
+  }).filter(c=>c.solde>0.5);
+}
+function poOrdonner(cr,strat){
+  const c=cr.slice();
+  if(strat==='neige') c.sort((a,b)=>a.solde-b.solde);
+  else if(strat==='avalanche') c.sort((a,b)=>b.taux-a.taux);
+  return c;
+}
+function poSimuler(cr,strat,ep,seuil,report){
+  const credits=poOrdonner(cr,strat).map(c=>({...c}));
+  let mois=0, interets=0, libere=0; const jalons=[], versements=[];
+  const MAX=1200;
+  while(credits.some(c=>c.solde>0.005) && mois<MAX){
+    mois++;
+    let budget=(+ep||0)+libere;
+    for(const c of credits){
+      if(c.solde<=0.005) continue;
+      const i=c.taux/100/12, int=c.solde*i;
+      let cap=c.mens-int; if(cap<0) cap=0; if(cap>c.solde) cap=c.solde;
+      c.solde-=cap; interets+=int;
+    }
+    for(const c of credits){
+      if(budget<=0.005) break;
+      if(c.solde<=0.005) continue;
+      const v=Math.min(budget,c.solde); c.solde-=v; budget-=v;
+      versements.push({mois,nom:c.nom,montant:v});
+    }
+    for(const c of credits){
+      if(c.solde<=0.005 && !c.fini){ c.fini=true; if(report) libere+=c.mens; jalons.push({nom:c.nom,mois}); }
+    }
+  }
+  return {mois,interets,indemnites:0,jalons,versements,bloque:mois>=MAX};
+}
+function poDateDans(mois){
+  const n=new Date(), d=new Date(n.getFullYear(), n.getMonth()+mois, 1);
+  return d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+}
+const PO_NOMS={neige:'Smallest balance first',avalanche:'Highest rate first',ordre:'My own order'};
+const PO_EXPL={
+  neige:"Smallest balance first, the snowball. It is not the cheapest, it is the one people finish: the first debt disappears fast, and that is what keeps you going.",
+  avalanche:"Highest rate first, the avalanche. Always the cheapest in interest, but the first debt can take a long time to disappear.",
+  ordre:"The order you entered your debts in, left alone."};
+
+function setPayoffEpargne(v){ S.payoff.epargne=Math.max(0,+v||0); renderPayoff(); save(); }
+function setPayoffSeuil(v){ S.payoff.seuil=Math.max(0,+v||0); renderPayoff(); save(); }
+function setPayoffReport(v){ S.payoff.report=!!v; renderPayoff(); save(); }
+function setPayoffStrat(k){ S.payoff.strat=k; renderPayoff(); save(); }
+
+function renderPayoff(){
+  if(!S.payoff||S.payoff.epargne===undefined) S.payoff={epargne:0,seuil:0,strat:'neige',report:true};
+  const P=S.payoff, cr=poCredits();
+  const e1=$('#poEpargne'); if(e1&&document.activeElement!==e1) e1.value=P.epargne||'';
+  const e3=$('#poReport');  if(e3) e3.checked=!!P.report;
+  $('#poStrats').innerHTML=['neige','avalanche','ordre'].map(k=>
+    `<button class="btn ${P.strat===k?'':'doux'}" onclick="setPayoffStrat('${k}')">${PO_NOMS[k]}</button>`).join('');
+  const vide=t=>{['poDate','poDur','poInt','poGain'].forEach(i=>$('#'+i).textContent='–');
+    $('#poNote').innerHTML=t;['poOrdre','poVersements','poCompare','poLoi'].forEach(i=>$('#'+i).innerHTML='');};
+  if(!cr.length){ vide("Add a debt to see your payoff plan."); return; }
+
+  const ref=poSimuler(cr,'ordre',0,0,false);
+  const r=poSimuler(cr,P.strat,P.epargne,0,P.report);
+  if(r.bloque||ref.bloque){
+    vide("With these numbers one of your debts never clears: its payment does not cover its own interest. Check the amount, the rate and the term you entered.");
+    return;
+  }
+  $('#poDate').textContent=poDateDans(r.mois);
+  $('#poDur').textContent=fmtDur(r.mois);
+  $('#poInt').textContent=euro(r.interets);
+  const gm=ref.mois-r.mois, gi=ref.interets-r.interets;
+  $('#poGain').textContent=(gm>0||gi>1)?euro(gi):'–';
+  $('#poNote').innerHTML = (P.epargne>0)
+    ? `Putting <b>${euro(P.epargne)}</b> extra toward your debts every month gets you out in <b>${fmtDur(r.mois)}</b> instead of ${fmtDur(ref.mois)}. That is <b>${gm} months</b> and <b>${euro(gi)}</b> saved. <span style="color:var(--mut);">${PO_EXPL[P.strat]}</span>`
+    : `Paying only the required minimums, you are out of debt in <b>${fmtDur(ref.mois)}</b>. Enter an extra amount above to see what changes. <span style="color:var(--mut);">${PO_EXPL[P.strat]}</span>`;
+
+  const ordre=poOrdonner(cr,P.strat);
+  $('#poOrdre').innerHTML='<div style="font-weight:600;margin:16px 0 8px;">In this order</div>'+
+    ordre.map((c,n)=>{
+      const j=r.jalons.find(x=>x.nom===c.nom);
+      return `<div style="display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--line);padding:9px 0;flex-wrap:wrap;">`
+        +`<span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:${n===0?'var(--acc)':'var(--line)'};color:${n===0?'#fff':'var(--mut)'};align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none;">${n+1}</span>`
+        +`<b>${ech(c.nom)}</b><span style="color:var(--mut);font-size:13px;">${euro(c.solde)} left · ${c.taux}%</span>`
+        +(j?`<span style="margin-left:auto;font-size:13px;">cleared in <b>${poDateDans(j.mois)}</b></span>`
+           :`<span style="margin-left:auto;color:var(--mut);font-size:13px;">–</span>`)
+        +`</div>`;
+    }).join('');
+  $('#poVersements').innerHTML='';
+
+  const lignes=['neige','avalanche','ordre'].map(k=>{
+    const x=poSimuler(cr,k,P.epargne,0,P.report);
+    return {k,mois:x.mois,int:x.interets};
+  });
+  const min=Math.min(...lignes.map(l=>l.int));
+  const exAequo=lignes.filter(l=>l.int<=min+0.01).length>1;
+  $('#poCompare').innerHTML='<div style="font-weight:600;margin-bottom:8px;">The three orders, with your current extra payment</div>'
+    +'<div class="amortwrap"><table style="width:100%;border-collapse:collapse;font-size:13.5px;">'
+    +'<tr><th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);">Order</th>'
+    +'<th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">Time</th>'
+    +'<th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">Interest paid</th>'
+    +'<th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">Difference</th></tr>'
+    +lignes.map(l=>`<tr style="${l.k===P.strat?'background:var(--soft);':''}">`
+      +`<td style="padding:7px 8px;border-bottom:1px solid var(--line);">${PO_NOMS[l.k]}${l.int<=min+0.01?(exAequo?' <span style="color:var(--acc2);font-weight:600;">· tied</span>':' <span style="color:var(--acc2);font-weight:600;">· cheapest</span>'):''}</td>`
+      +`<td style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">${fmtDur(l.mois)}</td>`
+      +`<td style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);">${euro(l.int)}</td>`
+      +`<td style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--mut);">${l.int<=min+0.01?'–':'+ '+euro(l.int-min)}</td></tr>`).join('')
+    +'</table></div>';
+
+  $('#poLoi').innerHTML='<b>Before you start, one thing to check.</b> Credit cards and most personal loans let you pay extra at any time. '
+    +'Some auto loans and mortgages carry a prepayment penalty, so read your agreement. '
+    +'On a US mortgage a penalty is only allowed on a fixed-rate qualified loan that is not higher-priced, for the first three years, '
+    +'capped at 2% of the balance in years one and two and 1% in year three, and your lender must also offer you a version without one. '
+    +'<span style="color:var(--mut);">Tell your servicer the extra is for the principal. Some apply it to next month\'s payment instead, which saves you nothing.</span>';
+}
+function parseYM(s){ const p=(s||'').split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return null; return {y,m0:m-1,abs:y*12+(m-1)}; }
+function selectedCredits(){ const active=S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0); return active.filter((d,idx)=>{const cb=$('#amc'+idx); return cb?cb.checked:true;}); }
+/* échéancier consolidé aligné sur le calendrier (chaque crédit à sa vraie date) */
+function consolidated(creds){
+  const data=creds.map(d=>({d,a:amort(d),s:parseYM(d.start)})).filter(x=>x.s);
+  if(!data.length) return [];
+  let minAbs=Infinity,maxAbs=-Infinity;
+  data.forEach(x=>{ minAbs=Math.min(minAbs,x.s.abs); maxAbs=Math.max(maxAbs,x.s.abs+x.a.n-1); });
+  const rows=[];
+  for(let t=minAbs;t<=maxAbs;t++){
+    let pay=0,intr=0,prin=0,bal=0;
+    data.forEach(x=>{ const k=t-x.s.abs+1;
+      if(k<1){ bal+=(+x.d.cap||0); }
+      else if(k<=x.a.sched.length){ const sc=x.a.sched[k-1]; pay+=sc.payment; intr+=sc.interest; prin+=sc.principal; bal+=sc.balance; }
+    });
+    const dt=new Date(Math.floor(t/12),t%12,1);
+    rows.push({label:dt.toLocaleDateString('en-US',{month:'short',year:'numeric'}),
+               an:dt.getFullYear(), mois:dt.getMonth()+1, pay,intr,prin,bal});
+  }
+  return rows;
+}
+function renderAmortTable(){
+  const creds=selectedCredits();
+  if(!creds.length){ $('#amortTable').innerHTML='<div style="padding:14px;color:#7c756a;font-size:13px;">Tick at least one debt.</div>'; return; }
+  const rows=consolidated(creds);
+  const info=creds.length>1?`<div style="font-size:12.5px;color:var(--mut);margin-bottom:6px;">Combined schedule for ${creds.length} debts (payments exclude insurance).</div>`:'';
+  const body=rows.map(r=>`<tr><td style="text-transform:capitalize;">${r.label}</td><td>${euro(r.pay)}</td><td>${euro(r.intr)}</td><td>${euro(r.prin)}</td><td>${euro(r.bal)}</td></tr>`).join('');
+  $('#amortTable').innerHTML=info+`<table class="amort"><thead><tr><th>Due</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+function printAmort(){
+  const creds=selectedCredits(); if(!creds.length){alert('Tick at least one debt.');return;}
+  const rows=consolidated(creds);
+  const names=creds.map(d=>ech(d.l)||'(unnamed)').join(', ');
+  let body='<h1>Amortization schedule</h1><p>'+names+' · printed on '+new Date().toLocaleDateString('en-US')+(creds.length>1?' · combined schedule (insurance excluded)':'')+'</p>';
+  body+='<table><thead><tr><th>Due</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody>';
+  body+=rows.map(r=>'<tr><td>'+r.label+'</td><td>'+euro(r.pay)+'</td><td>'+euro(r.intr)+'</td><td>'+euro(r.prin)+'</td><td>'+euro(r.bal)+'</td></tr>').join('');
+  body+='</tbody></table>';
+  const w=window.open('','_blank'); if(!w){alert('Allow pop-ups to print.');return;}
+  w.document.write('<html><head><meta charset="utf-8"><title>Amortization schedule</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222;}h1{font-size:22px;margin:0 0 4px;}p{color:#555;font-size:13px;margin:2px 0 10px;}table{width:100%;border-collapse:collapse;font-size:11.5px;}th,td{border:1px solid #ccc;padding:4px 7px;text-align:right;}th{background:#f0f0f0;}td:first-child,th:first-child{text-align:left;}</style></head><body>'+body+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
+  w.document.close();
+}
+
+/* ---- vue annuelle (multi-années + report de solde) ---- */
+function creditMonthly(){ let m=0; S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0).forEach(d=>{const a=amort(d),el=monthsElapsed(d.start);const bal=el<=0?(+d.cap||0):(el>=a.sched.length?0:a.sched[el-1].balance);if(bal>0.5)m+=a.M+(+d.ins||0);}); return m; }
+function subsTotals(){ let f=0,ab=0; (S.subs||[]).forEach(e=>{const m=subMonthly(e); if((e.type||'abo')==='abo')ab+=m; else f+=m;}); return {f,ab}; }
+function provMonthly(){ let m=0; (S.prov||[]).forEach(e=>{const t=+e.target||0,sv=Math.min(+e.saved||0,t);m+=Math.ceil(Math.max(0,t-sv)/monthsUntil(e.deadline));}); return m; }
+function autoLines(){
+  if(!S.autofill) return [];
+  const rows=[]; const cm=creditMonthly(); if(cm>0.5) rows.push({l:'Debt payments',v:cm,cat:'need',src:'Debts',tab:'dettes'});
+  const st=subsTotals(); if(st.f>0.5) rows.push({l:'Recurring bills',v:st.f,cat:'need',src:'Subscriptions',tab:'subs'}); if(st.ab>0.5) rows.push({l:'Subscriptions',v:st.ab,cat:'want',src:'Subscriptions',tab:'subs'});
+  return rows;
+}
+function monthlyProj(){
+  const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
+  let need=S.expenses.filter(x=>x.c==='need').reduce((s,x)=>s+monAmt(x),0);
+  let want=S.expenses.filter(x=>x.c==='want').reduce((s,x)=>s+monAmt(x),0);
+  let debt=S.expenses.filter(x=>x.c==='debt').reduce((s,x)=>s+monAmt(x),0);
+  let sav=S.expenses.filter(x=>x.c==='save').reduce((s,x)=>s+monAmt(x),0);
+  const auto=autoLines();
+  auto.forEach(r=>{ if(r.cat==='need')need+=r.v; else if(r.cat==='want')want+=r.v; else if(r.cat==='save')sav+=r.v; });
+  const exp=need+want+debt+sav;
+  return {inc,exp,need,want,debt,sav,surplus:inc-exp,proj:inc-need-want-debt,auto};
+}
+function planSave(){ return S.annual.plan!=null? S.annual.plan : Math.round(monthlyProj().sav); }
+function setPlan(v){ S.annual.plan=(v===''||v==null)?null:(+v||0); renderRows(); }
+function resetPlan(){ S.annual.plan=null; renderAnnual(); }
+function ayear(){ const y=S.annual.cur; if(!S.annual.years[y]) S.annual.years[y]={entries:Array(12).fill(null),opening:0}; return S.annual.years[y]; }
+function mLabel(k){ return new Date(S.annual.cur,k,1).toLocaleDateString('en-US',{month:'long'}); }
+function effSave(k){ const yd=ayear(); return yd.entries[k]!=null?yd.entries[k]:planSave(); }
+function sumYear(yd){ let s=0; for(let k=0;k<12;k++) s+= yd.entries[k]!=null?yd.entries[k]:planSave(); return s; }
+function changeYear(d){ S.annual.cur+=d; renderAnnual(); }
+function setOpening(v){ ayear().opening=+v||0; updateAnnual(); }
+function carryPrev(){ const prev=S.annual.years[S.annual.cur-1]; const base=prev?Math.round(prev.opening+sumYear(prev)):0; ayear().opening=base; $('#annualOpening').value=base; updateAnnual(); }
+function renderAnnual(){
+  const p=monthlyProj(), yd=ayear();
+  $('#annualYear').textContent=S.annual.cur;
+  $('#annualOpening').value=yd.opening||0;
+  $('#annualPlan').value=planSave();
+  $('#aInc').textContent=euro(p.inc*12);
+  $('#aExp').textContent=euro(p.exp*12);
+  $('#aSav').textContent=euro(planSave()*12);
+  renderRows();
+}
+function renderRows(){
+  const yd=ayear(); let rows='';
+  for(let k=0;k<12;k++){
+    const isProj=yd.entries[k]==null; const v=effSave(k);
+    rows+=`<div class="row" style="grid-template-columns:1fr 140px 140px 40px;"><span class="amonth" style="text-transform:capitalize;">${mLabel(k)}</span>`
+      +`<label class="f"><span class="cap">Saved ($)</span><input class="num" type="number" value="${v}" style="${isProj?'color:#9a9186;':''}" oninput="setAnnual(${k},this.value)"></label>`
+      +`<label class="f"><span class="cap">Running total</span><span class="num" id="acum${k}" style="align-self:center;font-weight:600;"></span></label>`
+      +`<span class="areset" style="text-align:center;">${isProj?'':`<button class="del" title="Back to the projection" onclick="resetAnnual(${k})">↺</button>`}</span></div>`;
+  }
+  $('#annualList').innerHTML=rows;
+  updateAnnual();
+}
+function updateAnnual(){
+  const P=monthlyProj(), yd=ayear(); const op=yd.opening||0;
+  const plan=planSave(), surplus=Math.max(P.surplus,0);
+  let cum=op, cumO=op; const cumA=[], cumB=[]; let best=-Infinity,bi=0;
+  for(let k=0;k<12;k++){ const v=effSave(k); cum+=v; cumA.push(cum); if(v>best){best=v;bi=k;} const el=$('#acum'+k); if(el) el.textContent=euro(cum); cumO+=(plan+surplus); cumB.push(cumO); }
+  const sum=cum-op;
+  $('#aTotal').textContent=euro(sum);
+  $('#aAvg').textContent=euro(sum/12);
+  $('#aBest').textContent=`${mLabel(bi)} · ${euro(best)}`;
+  $('#aEnd').textContent=euro(cum);
+  const rienSaisi = !(S.income||[]).length && !(S.expenses||[]).length
+    && !yd.entries.some(v=>v!=null) && !op && !plan;
+  if(rienSaisi){
+    $('#annualNote').innerHTML = videHTML("What this tab is for",
+      "The twelve months of the year, with your projected savings in grey. Each month you enter "
+      +"what you actually put aside, the figure turns black and the running total recalculates: "
+      +"you see the gap between your plan and reality, month after month. Start with the "
+      +"“1 · This month” tab, it is what feeds the projection.");
+  } else {
+    $('#annualNote').innerHTML = `The amount you choose to save is <b>${euro(plan)}/month</b> (${euro(plan*12)} over the year).`
+      +(surplus>0?` If you also leave your end-of-month surplus alone (${euro(surplus)}/month), you could push it to <b>${euro((plan+surplus)*12)}/year</b>.`:'')
+      +(op>0?`  Starting from ${euro(op)}, you would end the year between <b>${euro(op+plan*12)}</b> and <b>${euro(op+(plan+surplus)*12)}</b>.`:'');
+  }
+  const series=[{data:[op,...cumA],color:'#4E7C5A',fill:'rgba(78,124,90,.12)'}];
+  const leg=[{label:'Money you choose to save',color:'#4E7C5A'}];
+  if(surplus>0){ series.push({data:[op,...cumB],color:'#3E7C8C',dash:'5 4'}); leg.push({label:'If you also keep what is left over',color:'#3E7C8C',dash:true}); }
+  $('#annualChart').innerHTML=chartSVG({series,money:true})+(leg.length>1?htmlLeg(leg):'');
+  save();
+}
+function setAnnual(k,val){ ayear().entries[k]=(val===''||val==null)?null:(+val||0); updateAnnual(); }
+function resetAnnual(k){ ayear().entries[k]=null; renderAnnual(); }
+
+/* ---- enveloppes de provision (sinking funds) ---- */
+function monthsUntil(deadline){ if(!deadline) return 1; const p=deadline.split('-'); const y=+p[0],m=+p[1]; if(!y||!m) return 1; const now=new Date(); return Math.max(1,(y-now.getFullYear())*12+((m-1)-now.getMonth())); }
+function renderProv(){
+  const w=$('#provList');w.innerHTML='';
+  if(!S.prov.length){ w.innerHTML=videHTML('',"No funds yet. A sinking fund is money set aside for a bill you know is coming: a vacation, taxes, the holidays, a car service. You give the amount and the date, and Havn works out how much to put in each month to be ready in time."); return; }
+  S.prov.forEach((e,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 108px 128px 108px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Fund</span><input placeholder="Vacation, taxes, holidays…" value="${ech(e.l)}" oninput="S.prov[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Target ($)</span><input class="num" type="number" placeholder="0" value="${e.target}" oninput="S.prov[${i}].target=+this.value||0;calcProv()"></label>
+      <label class="f"><span class="cap">Due date</span><input type="month" value="${ech(e.deadline||'')}" oninput="S.prov[${i}].deadline=this.value;calcProv()"></label>
+      <label class="f"><span class="cap">Already in ($)</span><input class="num" type="number" placeholder="0" value="${e.saved||0}" oninput="S.prov[${i}].saved=+this.value||0;calcProv()"></label>
+      ${acts('prov',i)}`;
+    w.appendChild(r);
+  });
+  poserEntete(w);
+}
+$('#addProv').onclick=()=>{const n=new Date();const d=new Date(n.getFullYear(),n.getMonth()+6,1);S.prov.push({l:'',target:0,deadline:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),saved:0});renderProv();calcProv();};
+function calcProv(){
+  if(!S.prov.length){ $('#pMonthly').textContent='–';$('#pTarget').textContent='–';$('#pSaved').textContent='–';$('#provNote').innerHTML='Add a fund to start setting money aside.';$('#provDetails').innerHTML='';save();return; }
+  let totMonthly=0,totTarget=0,totSaved=0,details='';
+  S.prov.forEach(e=>{
+    const target=+e.target||0, savedRaw=+e.saved||0, saved=Math.min(savedRaw,target), ml=monthsUntil(e.deadline);
+    const remaining=Math.max(0,target-saved), perMonth=Math.ceil(remaining/ml);
+    const prog=target>0?Math.min(100,Math.round(saved/target*100)):0;
+    totMonthly+=perMonth; totTarget+=target; totSaved+=savedRaw;
+    const p=(e.deadline||'').split('-'); const dl=(+p[0]&&+p[1])?new Date(+p[0],+p[1]-1,1).toLocaleDateString('en-US',{month:'short',year:'numeric'}):'–';
+    details+=`<div style="padding:10px 0;border-bottom:1px solid var(--line);">`
+      +`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;"><b>${ech(e.l)||'(unnamed)'}</b><span style="color:var(--mut);font-size:13px;">${euro(saved)} / ${euro(target)} · for ${dl}</span><b style="margin-left:auto;color:${remaining>0?'var(--acc)':'var(--acc2)'};">${remaining>0?euro(perMonth)+'/month':'ready'}</b></div>`
+      +`<div class="bar" style="margin-top:7px;height:10px;"><div class="seg" style="width:${prog}%;background:#4E7C5A"></div></div>`
+      +`</div>`;
+  });
+  $('#pMonthly').textContent=euro(totMonthly);
+  $('#pTarget').textContent=euro(totTarget);
+  $('#pSaved').textContent=euro(totSaved);
+  const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
+  $('#provNote').innerHTML=`Set aside <b>${euro(totMonthly)}/month</b> in total to be ready for every due date${inc>0?` (that is ${Math.round(totMonthly/inc*100)}% of your income)`:''}. Careful, a sinking fund is not long-term saving: it is money reserved for one specific future bill, and it leaves again on the day. That is why it sits apart from your savings, which build what you own. If you have already set the money aside, the monthly amount drops to zero. This is what stops one big bill from wrecking your month.`;
+  $('#provDetails').innerHTML=details;
+  save();
+}
+
+/* ---- abonnements et factures récurrentes ---- */
+const SUBFREQ=f=>`<option value="week"${f==='week'?' selected':''}>Week</option><option value="month"${(f||'month')==='month'?' selected':''}>Month</option><option value="quarter"${f==='quarter'?' selected':''}>Quarter</option><option value="year"${f==='year'?' selected':''}>Year</option>`;
+function aCouper(e){ return e.cut===undefined ? (e.type||'abo')==='abo' : !!e.cut; }
+function subMonthly(e){ const a=+e.amount||0, f=e.freq||'month'; return f==='week'?a*52/12 : f==='quarter'?a/3 : f==='year'?a/12 : a; }
+function renderSubs(){
+  const w=$('#subsList');w.innerHTML='';
+  if(!S.subs.length){ w.innerHTML=videHTML('',"No subscriptions or bills yet. List everything that leaves on a schedule: phone, internet, streaming, gym, insurance, power. It is almost always the fastest line to trim, and the easiest one to forget."); return; }
+  S.subs.forEach((e,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 100px 108px 128px 92px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Name</span><input placeholder="Netflix, phone, power…" value="${ech(e.l)}" oninput="S.subs[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Amount ($)</span><input class="num" type="number" placeholder="0" value="${e.amount}" oninput="S.subs[${i}].amount=+this.value||0;calcSubs()"></label>
+      <label class="f"><span class="cap">Frequency</span><select onchange="S.subs[${i}].freq=this.value;calcSubs()">${SUBFREQ(e.freq)}</select></label>
+      <label class="f"><span class="cap">Type</span><select onchange="S.subs[${i}].type=this.value;calcSubs()"><option value="abo"${(e.type||'abo')==='abo'?' selected':''}>Subscription</option><option value="facture"${e.type==='facture'?' selected':''}>Bill</option></select></label>
+      <label class="f" title="Tick what you are ready to stop. You decide, not the tool."><span class="cap">Cancel</span><input type="checkbox" style="width:auto;height:20px;" ${aCouper(e)?'checked':''} onchange="S.subs[${i}].cut=this.checked;calcSubs()"></label>
+      ${acts('subs',i)}`;
+    w.appendChild(r);
+  });
+  poserEntete(w);
+}
+$('#addSub').onclick=()=>{S.subs.push({l:'',amount:0,freq:'month',type:'abo',cut:false});renderSubs();calcSubs();};
+function calcSubs(){
+  if(!S.subs.length){ $('#sMonthly').textContent='–';$('#sYearly').textContent='–';$('#sCut').textContent='–';$('#subsNote').innerHTML='Add a subscription or a bill to see your total.';$('#subsDetails').innerHTML='';save();return; }
+  const rows=S.subs.map(e=>({e,m:subMonthly(e)}));
+  let totM=0,cut=0,nbCut=0; rows.forEach(x=>{ totM+=x.m; if(aCouper(x.e)){ cut+=x.m; nbCut++; } });
+  $('#sMonthly').textContent=euro(totM);
+  $('#sYearly').textContent=euro(totM*12);
+  $('#sCut').textContent=euro(cut);
+  const inc=S.income.reduce((s,x)=>s+monAmt(x),0);
+  $('#subsNote').innerHTML=`You pay <b>${euro(totM)}/month</b> on recurring things, which is <b>${euro(totM*12)}/year</b>${inc>0?` (${Math.round(totM/inc*100)}% of your income)`:''}. ${nbCut>0?`You ticked <b>${nbCut}</b> line${nbCut>1?'s':''} as “to cancel”, which is <b>${euro(cut)}/month</b>: stopping them would give you back <b>${euro(cut*12)}/year</b>.`:`No line is ticked “to cancel”. Tick the ones you are ready to stop to see what it would give you back over a year.`} It is almost always the fastest line to trim.`;
+  const sorted=[...rows].sort((a,b)=>b.m-a.m);
+  $('#subsDetails').innerHTML=`<div style="display:flex;gap:16px;font-size:12.5px;color:var(--mut);margin:12px 0 6px;"><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:2px;background:#C06A4A;display:inline-block;"></span>Subscription</span><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:2px;background:#7c756a;display:inline-block;"></span>Bill</span></div><div style="font-weight:600;margin:8px 0 4px;">Most expensive first</div>`+sorted.map(x=>{const abo=(x.e.type||'abo')==='abo';return `<div class="subrow"><span style="width:9px;height:9px;border-radius:2px;background:${abo?'#C06A4A':'#7c756a'};"></span><span class="snm">${x.e.l||'(unnamed)'}</span><span class="styp">${abo?'subscription':'bill'}</span><b class="smo">${euro(x.m)}/month</b><span class="syr">${euro(x.m*12)}/year</span></div>`;}).join('');
+  save();
+}
+
+/* ---- tableau de bord (synthèse) ---- */
+function gotoTab(id){
+  $$('.tab').forEach(t=>{ if(t.dataset.tab===id) t.click(); });
+  /* sur téléphone la rangée défile : sans ça, l'onglet choisi peut rester
+     hors de l'écran et on ne voit pas lequel est actif */
+  const actif = [...$$('.tab')].find(t=>t.dataset.tab===id);
+  if(actif && actif.scrollIntoView) actif.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+  /* Sans ça, on changeait d'onglet en gardant la position de défilement : le
+     raccourci “Crédits” du tableau de bord déposait l'utilisateur au bas de
+     l'onglet Crédits. Relevé par Logan le 18/09/2026. */
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function renderDashboard(){
+  const p=monthlyProj(); const left=p.inc-p.exp;
+  $('#dInc').textContent=euro(p.inc);
+  $('#dExp').textContent=euro(p.exp);
+  const dl=$('#dLeft'); dl.textContent=euro(left); dl.className='val '+(left>=0?'good':'bad');
+  $('#dSav').textContent=euro(p.sav);
+  // crédits
+  let cBal=0,cMens=0; S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0).forEach(d=>{const a=amort(d),el=monthsElapsed(d.start);const bal=el<=0?(+d.cap||0):(el>=a.sched.length?0:a.sched[el-1].balance);if(bal>0.5){cBal+=bal;cMens+=a.M+(+d.ins||0);}});
+  const ratio=p.inc>0?Math.round(cMens/p.inc*100):0;
+  // provisions
+  let provM=0; (S.prov||[]).forEach(e=>{const t=+e.target||0,sv=Math.min(+e.saved||0,t),ml=monthsUntil(e.deadline);provM+=Math.ceil(Math.max(0,t-sv)/ml);});
+  // abonnements
+  let subM=0; (S.subs||[]).forEach(e=>{subM+=subMonthly(e);});
+  // épargne cumulée fin d'année
+  const yd=ayear(); let cum=(yd.opening||0); for(let k=0;k<12;k++) cum+=effSave(k);
+  const totalementVide = !(S.income||[]).length && !(S.expenses||[]).length && !(S.debts||[]).length
+    && !(S.subs||[]).length && !(S.prov||[]).length && !((S.wealth&&S.wealth.assets)||[]).length;
+  if(totalementVide){
+    $('#dHealth').innerHTML=`<b>Welcome to Havn.</b> Your file is empty and nothing is saved yet. Start with the "1 · This month" tab: you enter your income and your spending, and everything else works itself out. Your numbers stay on this device and are never sent anywhere.`;
+    $('#dGrid').innerHTML=videHTML("Nothing to show yet",
+      "Every tab you fill in shows up here as a summary: debts and debt-to-income ratio, funds to build up, recurring subscriptions, savings for the year and net worth.",
+      `<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button class="btn" onclick="gotoTab('budget')">Enter my budget</button><button class="btn doux" onclick="chargerExemple()">Explore the example</button></div>`);
+    return;
+  }
+  const tile=(t,v,sub,link,warn)=>`<div class="tile${warn?' warn':''}" onclick="gotoTab('${link}')"><div class="tlab">${t}</div><div class="tval">${v}</div><div class="tsub">${sub}</div></div>`;
+  $('#dGrid').innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;">`
+    +tile('Debts',euro(cBal),`${euro(cMens)}/month · DTI ${ratio}%`,'dettes',ratio>35)
+    +tile('Sinking funds',euro(provM)+'/month',`to set aside for what is coming`,'prov',false)
+    +tile('Subscriptions',euro(subM)+'/month',`${euro(subM*12)}/year in recurring bills`,'subs',false)
+    +tile('Savings '+S.annual.cur,euro(cum),`projected total at year end`,'annuel',false)
+    +tile('Net worth',euro(wealthNet().net),`what you own minus what you owe`,'wealth',wealthNet().net<0)
+    +`</div>`;
+  $('#dHealth').innerHTML = left<0
+    ? `<b>This month you are ${euro(-left)} in the red.</b> Start with the Budget tab and get back to even before anything else.`
+    : `You free up <b>${euro(left)}/month</b> and you put <b>${euro(p.sav)}/month</b> aside. ${ratio>35?`<b>Careful:</b> your debt-to-income ratio (${ratio}%) is past the 36% mark.`:`Your debt-to-income ratio is ${ratio}%, in the healthy range.`}`;
+}
+
+/* ---- patrimoine net ---- */
+function creditBalance(){ let b=0; S.debts.filter(d=>(+d.cap||0)>0&&(+d.dur||0)>0).forEach(d=>{const a=amort(d),el=monthsElapsed(d.start);const bal=el<=0?(+d.cap||0):(el>=a.sched.length?0:a.sched[el-1].balance);b+=bal;}); return b; }
+function renderAssets(){
+  const w=$('#assetList');w.innerHTML='';
+  if(!(S.wealth.assets||[]).length){ w.innerHTML=videHTML('',"No assets yet. List what you own: savings, investments, a vehicle, property. No need to be exact to the dollar, an honest estimate is enough. The balance left on your debts is pulled in from the Debts tab, so there is no need to repeat it here."); return; }
+  (S.wealth.assets||[]).forEach((e,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 140px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Asset</span><input placeholder="Savings, investments, car, home…" value="${ech(e.l)}" oninput="S.wealth.assets[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Value ($)</span><input class="num" type="number" placeholder="0" value="${e.v}" oninput="S.wealth.assets[${i}].v=+this.value||0;calcWealth()"></label>
+      ${acts('assets',i)}`;
+    w.appendChild(r);
+  });
+  poserEntete(w);
+}
+$('#addAsset').onclick=()=>{S.wealth.assets.push({l:'',v:0});renderAssets();calcWealth();};
+function renderWdebts(){
+  const w=$('#wdebtList');w.innerHTML='';
+  if(!(S.wealth.debts||[]).length){ w.innerHTML=videHTML('',"No other debts. This list is for what is not an amortizing loan: an overdraft, money owed to family, a tax bill or an invoice spread over time. Your debts from tab 2 are already counted, so there is no need to repeat them here."); return; }
+  (S.wealth.debts||[]).forEach((e,i)=>{
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 140px 122px';
+    r.innerHTML=`<label class="f full"><span class="cap">Debt</span><input placeholder="Overdraft, money owed to family…" value="${ech(e.l)}" oninput="S.wealth.debts[${i}].l=this.value;save()"></label>
+      <label class="f"><span class="cap">Amount ($)</span><input class="num" type="number" placeholder="0" value="${e.v}" oninput="S.wealth.debts[${i}].v=+this.value||0;calcWealth()"></label>
+      ${acts('wdebts',i)}`;
+    w.appendChild(r);
+  });
+  poserEntete(w);
+}
+$('#addWdebt').onclick=()=>{S.wealth.debts.push({l:'',v:0});renderWdebts();calcWealth();};
+function wealthNet(){ const a=(S.wealth.assets||[]).reduce((s,x)=>s+(+x.v||0),0); const md=(S.wealth.debts||[]).reduce((s,x)=>s+(+x.v||0),0); const cb=creditBalance(); return {a,d:cb+md,cb,net:a-(cb+md)}; }
+function calcWealth(){
+  const W=wealthNet();
+  $('#wAssets').textContent=euro(W.a); $('#wDebts').textContent=euro(W.d);
+  const nEl=$('#wNet'); nEl.textContent=euro(W.net); nEl.className='val '+(W.net>=0?'good':'bad');
+  $('#wealthCredits').innerHTML = W.cb>0.5 ? `<div style="display:grid;grid-template-columns:1fr 140px 28px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);color:#5a544b;"><span>Balance left on your debts <span style="color:var(--acc);font-size:12px;cursor:pointer;" onclick="gotoTab('dettes')">↗ Debts</span></span><span class="num"><b>${euro(W.cb)}</b></span><span></span></div>` : '';
+  $('#wNote').innerHTML = `Your net worth is what you own minus what you owe: <b>${euro(W.net)}</b>. `+(W.net>=0?`Every month you save and pay down debt, it climbs.`:`It is negative for now: cutting debt and saving will bring it back up.`)+` Save its value now and then to watch it move.`;
+  const h=S.wealth.history||[];
+  if(h.length>=2){ $('#wealthChart').innerHTML=chartSVG({series:[{data:h.map(x=>x.v),color:'#4E7C5A',fill:'rgba(78,124,90,.12)'}],money:true}); $('#wealthChartTitle').style.display='block'; }
+  else if(h.length===1){ $('#wealthChart').innerHTML=`<div style="color:var(--mut);font-size:13px;">One value saved (${euro(h[0].v)}). Come back later and save more to see the curve.</div>`; $('#wealthChartTitle').style.display='block'; }
+  else { $('#wealthChart').innerHTML=''; $('#wealthChartTitle').style.display='none'; }
+  save();
+}
+function saveWealthSnapshot(){
+  const net=wealthNet().net;
+  const now=new Date(); const t=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  S.wealth.history=S.wealth.history||[];
+  const ex=S.wealth.history.find(x=>x.t===t); if(ex) ex.v=net; else S.wealth.history.push({t,v:net});
+  S.wealth.history.sort((a,b)=>a.t.localeCompare(b.t));
+  calcWealth();
+}
+
+/* ---- export CSV : point-virgule et virgule décimale, pour qu'Excel français
+       ouvre le fichier en colonnes du premier coup, et BOM UTF-8 pour les accents ---- */
+function csvChamp(v){
+  const s=String(v==null?'':v);
+  return /[";\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+const csvNb=n=>String(Math.round((+n||0)*100)/100).replace('.',',');
+function csvAmort(){
+  const creds=selectedCredits();
+  if(!creds.length){ alert('Tick at least one debt.'); return; }
+  const rows=consolidated(creds);
+  const L=[], ligne=(...c)=>L.push(c.map(csvChamp).join(';'));
+  ligne('Havn','schedule for '+new Date().toLocaleDateString('en-US'));
+  ligne('Columns','Year and Month are numbers, so Excel will not turn them into dates.');
+  ligne('Debts included', creds.map(d=>d.l||'(unnamed)').join(' + '));
+  if(creds.length>1) ligne('Note','combined schedule, payments exclude insurance');
+  ligne('');
+  ligne('#','Year','Month','Payment','Interest','Principal paid','Balance left');
+  rows.forEach((r,i)=>ligne(i+1, r.an, r.mois, csvNb(r.pay), csvNb(r.intr), csvNb(r.prin), csvNb(r.bal)));
+  ligne('');
+  ligne('Total paid','','', csvNb(rows.reduce((s,r)=>s+r.pay,0)));
+  ligne("Of which interest",'','', csvNb(rows.reduce((s,r)=>s+r.intr,0)));
+  const blob=new Blob(['\ufeff'+L.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download='Havn-schedule-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+/* ---- impression du budget du mois ---- */
+function imprimerBudget(){
+  if(!(S.income||[]).length && !(S.expenses||[]).length){ alert("Your budget is empty: enter your income and your spending first."); return; }
+  const CAT={need:'Needs',want:'Wants',save:'Savings',debt:'Debts'};
+  const FREQ={week:'week',month:'month',year:'year'};
+  const p=monthlyProj(), reste=p.inc-p.exp;
+  let b='<h1>My budget this month</h1><p>Havn · printed on '+new Date().toLocaleDateString('en-US')+'</p>';
+  b+='<h2>Income</h2><table><thead><tr><th>Source</th><th>Amount</th><th>Per</th><th>Per month</th></tr></thead><tbody>';
+  b+=(S.income||[]).map(x=>'<tr><td>'+(ech(x.l)||'(unnamed)')+'</td><td>'+euro(x.a)+'</td><td>'+(FREQ[x.f||'month'])+'</td><td>'+euro(monAmt(x))+'</td></tr>').join('');
+  b+='<tr class="tot"><td colspan="3">Total income</td><td>'+euro(p.inc)+'</td></tr></tbody></table>';
+  ['need','want','save','debt'].forEach(c=>{
+    const l=(S.expenses||[]).filter(x=>x.c===c); if(!l.length) return;
+    const st=l.reduce((s,x)=>s+monAmt(x),0);
+    b+='<h2>'+CAT[c]+'</h2><table><thead><tr><th>Item</th><th>Amount</th><th>Per</th><th>Per month</th></tr></thead><tbody>';
+    b+=l.map(x=>'<tr><td>'+(ech(x.l)||'(unnamed)')+'</td><td>'+euro(x.a)+'</td><td>'+(FREQ[x.f||'month'])+'</td><td>'+euro(monAmt(x))+'</td></tr>').join('');
+    b+='<tr class="tot"><td colspan="3">Total '+CAT[c].toLowerCase()+'</td><td>'+euro(st)+'</td></tr></tbody></table>';
+  });
+  b+='<h2>Summary</h2><table><tbody>'
+   +'<tr><td>Income</td><td>'+euro(p.inc)+'</td></tr>'
+   +'<tr><td>Spending</td><td>'+euro(p.exp)+'</td></tr>'
+   +'<tr class="tot"><td>Left each month</td><td>'+euro(reste)+'</td></tr>'
+   +'<tr><td>Of which planned savings</td><td>'+euro(p.sav)+'</td></tr>'
+   +'<tr><td>Target rule</td><td>'+ech(S.rule.name)+' ('+S.rule.need+' / '+S.rule.want+' / '+S.rule.save+')</td></tr>'
+   +'</tbody></table>'
+   +'<p class="pied">Amounts converted to a monthly figure. Shown to the dollar, the math keeps the cents. A budgeting aid: these figures do not replace your bank\'s documents.</p>';
+  const w=window.open('','_blank'); if(!w){alert('Allow pop-ups to print.');return;}
+  w.document.write('<html><head><meta charset="utf-8"><title>My budget this month</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222;}h1{font-size:22px;margin:0 0 2px;}h2{font-size:14px;margin:18px 0 6px;color:#C06A4A;text-transform:uppercase;letter-spacing:.5px;}p{color:#555;font-size:12px;margin:2px 0 10px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px;}th,td{border:1px solid #ccc;padding:5px 8px;text-align:right;}th{background:#f0f0f0;}td:first-child,th:first-child{text-align:left;}tr.tot td{font-weight:bold;background:#faf7f1;}p.pied{margin-top:18px;font-size:10.5px;color:#777;}</style></head><body>'+b+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
+  w.document.close();
+}
+
+/* ================= gestion des données ================= */
+/* DÉMO : les deux boutons restent visibles et expliquent ce que fait la version achetée. */
+const MSG_DEMO = "Back up and Restore are switched off in the live demo.\n\nIn the version you buy, Back up downloads a file with all your figures, and Restore loads it again, on this device or on another one. That is how you move from your computer to your phone.\n\nHere, the page starts again from the example on every reload.";
+/* Sauvegarder : dans la version achetée, télécharge une copie de secours */
+function sauvegarder(){ alert(MSG_DEMO); }
+function exportData(){ sauvegarder(); } /* ancien nom, conservé par sécurité */
+function demanderRestauration(){ alert(MSG_DEMO); }
+function importData(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data||typeof data!=='object'||!data.income||!data.expenses){ alert("This file does not look like a Havn backup.\n\nPick the “Havn-backup-....json” file you downloaded with the Back up button."); return; }
+      if(confirm('Replace your current data with this backup?')){
+        S=data;
+        if(!S.wealth) S.wealth={assets:[],debts:[],history:[]};
+        if(!S.payoff || S.payoff.epargne===undefined) S.payoff={epargne:0,seuil:1000,strat:'neige',report:true};
+if(!S.prov) S.prov=[]; if(!S.subs) S.subs=[]; if(!S.debts) S.debts=[];
+        if(!S.rule) S.rule={name:'50/30/20',need:50,want:30,save:20};
+        if(!S.goal) S.goal={amount:0,have:0,months:12,rate:0,dur:12,durUnit:'month'};
+        if(!S.annual||!S.annual.years) S.annual=anneeVide();
+        S.demo=!!S.demo;
+        toutRedessiner();
+      }
+    }catch(err){ alert('File unreadable or corrupted.'); }
+    input.value='';
+  };
+  reader.readAsText(f);
+}
+/* Explorer avec l'exemple : disponible à tout moment, dans les deux sens */
+function chargerExemple(){
+  const dejaRempli=(S.income||[]).length||(S.expenses||[]).length||(S.debts||[]).length||(S.prov||[]).length||(S.subs||[]).length||((S.wealth&&S.wealth.assets)||[]).length;
+  if(dejaRempli && !S.demo){
+    if(!confirm("Loading the example budget will replace your current figures.\n\nTip: click “Back up” first if you want to keep a copy of your budget.")) return;
+  }
+  S=etatExemple(); toutRedessiner(); gotoTab('dash');
+}
+/* Repartir de zéro : vide RÉELLEMENT l'outil, aucune donnée d'exemple ne revient */
+function repartirDeZero(){
+  if(S.demo){
+    if(!confirm("Starting from scratch erases the example budget and leaves you a blank page, ready for your figures.\n\nIf you have already entered your own amounts on top of the example, back them up first.")) return;
+  } else {
+    if(!confirm("Starting from scratch will erase ALL the data saved in this browser: income, spending, debts, subscriptions, sinking funds, savings goal, year view and net worth.")) return;
+    if(!confirm("Last check: erase everything for good?")) return;
+  }
+  /* DÉMO : on ne supprime rien dans le navigateur du visiteur. */
+  S=etatVide(); toutRedessiner(); gotoTab('budget');
+}
+/* bandeau “tu explores l'exemple” */
+function majBandeau(){
+  const b=$('#bandeauDemo'); if(!b) return;
+  if(S.demo){
+    b.style.display='flex';
+    b.innerHTML=`<span style="flex:1 1 320px;"><b>You are exploring the example budget.</b> These numbers are made up, they are here to show you the tool filled in. When you want to enter your own, click "Start from scratch": you get a blank page, and you can come back to the example any time.</span>`
+      +`<span class="actions"><button class="btn" onclick="repartirDeZero()">Start from scratch</button><button class="ferme" title="Hide this message" onclick="masquerBandeau()">&times;</button></span>`;
+  } else { b.style.display='none'; b.innerHTML=''; }
+}
+function masquerBandeau(){ S.demo=false; save(); majBandeau(); }
+
+/* ---- tout redessiner après un changement global d'état ---- */
+function toutRedessiner(){
+  $('#goalAmount').value=S.goal.amount||'';$('#goalHave').value=S.goal.have||'';$('#goalRate').value=(S.goal.rate!=null?S.goal.rate:'');$('#goalDur').value=(S.goal.dur!=null?S.goal.dur:(S.goal.months||''));$('#goalUnit').value=S.goal.durUnit||'month';
+  $('#autofill').checked=!!S.autofill;
+  syncRuleInputs();
+  renderIncome();renderExpense();renderDebt();recalc();calcDebt();renderAnnual();renderProv();calcProv();renderSubs();calcSubs();renderAssets();renderWdebts();calcWealth();renderDashboard();
+  majBandeau();
+  save();
+}
+
+/* ---- init ---- */
+toutRedessiner();
+</script>
+</body>
+</html>
