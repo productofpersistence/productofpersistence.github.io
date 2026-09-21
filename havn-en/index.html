@@ -1310,24 +1310,24 @@ function saveWealthSnapshot(){
   calcWealth();
 }
 
-/* ---- export CSV : point-virgule et virgule décimale, pour qu'Excel français
-       ouvre le fichier en colonnes du premier coup, et BOM UTF-8 pour les accents ---- */
+/* ---- CSV export: comma separator and a period as the decimal mark, the US
+       convention, so Excel opens it in columns on the first try ---- */
 function csvChamp(v){
   const s=String(v==null?'':v);
-  return /[";\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  return /[",\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
 }
-const csvNb=n=>String(Math.round((+n||0)*100)/100).replace('.',',');
+const csvNb=n=>String(Math.round((+n||0)*100)/100);
 function csvAmort(){
   const creds=selectedCredits();
   if(!creds.length){ alert('Tick at least one debt.'); return; }
   const rows=consolidated(creds);
-  const L=[], ligne=(...c)=>L.push(c.map(csvChamp).join(';'));
+  const L=[], ligne=(...c)=>L.push(c.map(csvChamp).join(','));
   ligne('Havn','schedule for '+new Date().toLocaleDateString('en-US'));
   ligne('Columns','Year and Month are numbers, so Excel will not turn them into dates.');
   ligne('Debts included', creds.map(d=>d.l||'(unnamed)').join(' + '));
   if(creds.length>1) ligne('Note','combined schedule, payments exclude insurance');
   ligne('');
-  ligne('#','Year','Month','Payment','Interest','Principal paid','Balance left');
+  ligne('#','Year','Month','Payment ($)','Interest ($)','Principal paid ($)','Balance left ($)');
   rows.forEach((r,i)=>ligne(i+1, r.an, r.mois, csvNb(r.pay), csvNb(r.intr), csvNb(r.prin), csvNb(r.bal)));
   ligne('');
   ligne('Total paid','','', csvNb(rows.reduce((s,r)=>s+r.pay,0)));
