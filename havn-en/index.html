@@ -1322,6 +1322,12 @@ function csvAmort(){
   if(!creds.length){ alert('Tick at least one debt.'); return; }
   const rows=consolidated(creds);
   const L=[], ligne=(...c)=>L.push(c.map(csvChamp).join(','));
+  // sep=, : directive Microsoft, non standard, mais elle force TOUT Excel a
+  // decouper sur la virgule quel que soit son reglage regional. Sans elle, un
+  // Excel francais ou allemand met les 200 lignes dans une seule colonne.
+  // Verifie le 21/09/2026 : Google Sheets affiche “sep=” en premiere ligne
+  // et decoupe correctement le reste ; la notice le dit a l'acheteur.
+  L.push('sep=,');
   ligne('Havn','schedule for '+new Date().toLocaleDateString('en-US'));
   ligne('Columns','Year and Month are numbers, so Excel will not turn them into dates.');
   ligne('Debts included', creds.map(d=>d.l||'(unnamed)').join(' + '));
