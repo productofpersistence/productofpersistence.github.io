@@ -137,6 +137,7 @@
     padding:8px 15px;border-radius:9px;white-space:nowrap;font-size:13px;}
   .demo-haut a:hover{filter:brightness(1.07);}
   @media(max-width:600px){.demo-haut{font-size:12px;padding:10px 12px;}}
+  @media print{ body > *{display:none !important;} body::before{content:"Printing is switched off in the live demo. The version you buy prints your budget and your schedules.";display:block;font:16px Arial,sans-serif;padding:40px;} }
   .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:30px;letter-spacing:1px;}
   @media(max-width:600px){
     .wrap{padding:20px 12px 64px;}
@@ -186,13 +187,26 @@
     .bandeau-demo{font-size:13px;padding:12px 13px;}
     .bandeau-demo .actions{flex:1 1 100%;justify-content:flex-end;}
   }
+
+/* Apercu d'impression et panneau DANS la page (10/10/2026) : sur iPhone, Havn installe
+   sur l'ecran d'accueil n'a pas de bouton retour, et la fenetre a part y ouvrait une page
+   d'ou l'on ne revenait plus (mesure par Logan). */
+#apercuImp{position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch;}
+#apercuImp .barre{position:sticky;top:0;display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));background:#F4EFE7;border-bottom:1px solid #e3dccf;z-index:2;}
+#apercuImp .feuille{max-width:820px;margin:0 auto;}
+#apercuImp .feuille h1,#apercuImp .feuille h2{letter-spacing:normal;font-family:Arial,sans-serif;}
+#panneauHavn{position:fixed;inset:0;z-index:9998;background:rgba(35,32,28,.55);display:flex;align-items:center;justify-content:center;padding:16px;}
+#panneauHavn .carte{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:20px;font-size:15px;line-height:1.5;color:#23201C;}
+#panneauHavn .carte p{margin:0 0 10px;}
+#panneauHavn .boutons{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px;}
+@media print{ body.apercu-ouvert > *:not(#apercuImp){display:none !important;} #apercuImp{position:static;overflow:visible;} #apercuImp .barre{display:none !important;} }
 </style>
 </head>
 <body>
 <div class="demo-haut">
   <span><b>You are trying the live demo.</b> Every feature works, but nothing is saved: reload the page
-  and the example comes back. The version you buy is a file of your own, which keeps your figures on
-  your device, offline.</span>
+  and the example comes back. The version you buy installs from a link, on your
+  phone or your computer, and keeps your figures on your device, even offline.</span>
   <a href="https://www.etsy.com/fr/shop/ProductofPersistence" target="_blank" rel="noopener">See the product</a>
 </div>
 <div class="ruban">HAVN &middot; your budget, private: everything stays on your device, nothing is sent to the internet &middot; amounts are shown to the dollar, the math keeps the cents &middot; a budgeting aid, the figures are indicative and do not replace your bank's documents</div>
@@ -209,7 +223,7 @@
       <button class="btn doux" onclick="demanderRestauration()" title="Load a backup">Restore</button>
       <button class="btn doux" onclick="chargerExemple()" title="Load the example budget and explore a filled-in tool">Explore the example</button>
       <button class="btn discret" onclick="repartirDeZero()" title="Erase everything and start from a blank page">Start from scratch</button>
-      <input type="file" id="fichierImport" accept="application/json" style="display:none" onchange="importData(this)">
+      <input type="file" id="fichierImport" accept="application/json,.json" style="display:none" onchange="importData(this)">
     </div>
   </header>
   <div id="bandeauDemo" class="bandeau-demo" style="display:none;"></div>
@@ -501,7 +515,7 @@
     <button class="btn discret" onclick="repartirDeZero()">Start from scratch</button>
   </div>
   <div style="text-align:center;color:var(--mut);font-size:12.5px;margin-top:10px;max-width:620px;margin-left:auto;margin-right:auto;">Nothing is saved in this demo: change anything you like, try anything you like, the page starts again from the example on reload. In the version you buy, your figures are kept on your device, and the &ldquo;Back up&rdquo; and &ldquo;Restore&rdquo; buttons move them from one device to another. &ldquo;Explore the example&rdquo; and &ldquo;Start from scratch&rdquo; work both ways, as many times as you like.</div>
-  <div class="foot">PRODUCT OF PERSISTENCE · Live demo. The version you buy is a file that works offline and keeps your figures with you.</div>
+  <div class="foot">PRODUCT OF PERSISTENCE · Live demo. The version you buy installs like an app, works offline and keeps your figures with you.</div>
   <div style="text-align:center;color:var(--mut);font-size:11.5px;margin-top:8px;max-width:620px;margin-left:auto;margin-right:auto;line-height:1.5;">Havn is a tool to help you steer your budget. The payments, interest, amortization schedules and projections it shows are indicative: they depend on the figures you enter and they do not replace your loan agreement, your lender's official documents, or professional advice.</div>
 </div>
 
@@ -1047,9 +1061,7 @@ function printAmort(){
   body+='<table><thead><tr><th>Due</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody>';
   body+=rows.map(r=>'<tr><td>'+r.label+'</td><td>'+euro(r.pay)+'</td><td>'+euro(r.intr)+'</td><td>'+euro(r.prin)+'</td><td>'+euro(r.bal)+'</td></tr>').join('');
   body+='</tbody></table>';
-  const w=window.open('','_blank'); if(!w){alert('Allow pop-ups to print.');return;}
-  w.document.write('<html><head><meta charset="utf-8"><title>Amortization schedule</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222;}h1{font-size:22px;margin:0 0 4px;}p{color:#555;font-size:13px;margin:2px 0 10px;}table{width:100%;border-collapse:collapse;font-size:11.5px;}th,td{border:1px solid #ccc;padding:4px 7px;text-align:right;}th{background:#f0f0f0;}td:first-child,th:first-child{text-align:left;}</style></head><body>'+body+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
-  w.document.close();
+  imprimerDoc('<html><head><meta charset="utf-8"><title>Amortization schedule</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222;}h1{font-size:22px;margin:0 0 4px;}p{color:#555;font-size:13px;margin:2px 0 10px;}table{width:100%;border-collapse:collapse;font-size:11.5px;}th,td{border:1px solid #ccc;padding:4px 7px;text-align:right;}th{background:#f0f0f0;}td:first-child,th:first-child{text-align:left;}</style></head><body>'+body+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
 }
 
 /* ---- vue annuelle (multi-années + report de solde) ---- */
@@ -1312,12 +1324,13 @@ function saveWealthSnapshot(){
 
 /* ---- CSV export: comma separator and a period as the decimal mark, the US
        convention, so Excel opens it in columns on the first try ---- */
+const MSG_DEMO_SORTIE = "Printing, PDF and the Excel export are switched off in the live demo.\n\nIn the version you buy, this button prints or saves as PDF your budget and your schedules, and the export opens your schedule in Excel or Google Sheets.\n\nHere, you can try everything on screen.";
 function csvChamp(v){
   const s=String(v==null?'':v);
   return /[",\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
 }
 const csvNb=n=>String(Math.round((+n||0)*100)/100);
-function csvAmort(){
+function csvAmort(){ alert(MSG_DEMO_SORTIE); return;
   const creds=selectedCredits();
   if(!creds.length){ alert('Tick at least one debt.'); return; }
   const rows=consolidated(creds);
@@ -1370,9 +1383,7 @@ function imprimerBudget(){
    +'<tr><td>Target rule</td><td>'+ech(S.rule.name)+' ('+S.rule.need+' / '+S.rule.want+' / '+S.rule.save+')</td></tr>'
    +'</tbody></table>'
    +'<p class="pied">Amounts converted to a monthly figure. Shown to the dollar, the math keeps the cents. A budgeting aid: these figures do not replace your bank\'s documents.</p>';
-  const w=window.open('','_blank'); if(!w){alert('Allow pop-ups to print.');return;}
-  w.document.write('<html><head><meta charset="utf-8"><title>My budget this month</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222;}h1{font-size:22px;margin:0 0 2px;}h2{font-size:14px;margin:18px 0 6px;color:#C06A4A;text-transform:uppercase;letter-spacing:.5px;}p{color:#555;font-size:12px;margin:2px 0 10px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px;}th,td{border:1px solid #ccc;padding:5px 8px;text-align:right;}th{background:#f0f0f0;}td:first-child,th:first-child{text-align:left;}tr.tot td{font-weight:bold;background:#faf7f1;}p.pied{margin-top:18px;font-size:10.5px;color:#777;}</style></head><body>'+b+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
-  w.document.close();
+  imprimerDoc('<html><head><meta charset="utf-8"><title>My budget this month</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222;}h1{font-size:22px;margin:0 0 2px;}h2{font-size:14px;margin:18px 0 6px;color:#C06A4A;text-transform:uppercase;letter-spacing:.5px;}p{color:#555;font-size:12px;margin:2px 0 10px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px;}th,td{border:1px solid #ccc;padding:5px 8px;text-align:right;}th{background:#f0f0f0;}td:first-child,th:first-child{text-align:left;}tr.tot td{font-weight:bold;background:#faf7f1;}p.pied{margin-top:18px;font-size:10.5px;color:#777;}</style></head><body>'+b+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
 }
 
 /* ================= gestion des données ================= */
@@ -1381,6 +1392,119 @@ const MSG_DEMO = "Back up and Restore are switched off in the live demo.\n\nIn t
 /* Sauvegarder : dans la version achetée, télécharge une copie de secours */
 function sauvegarder(){ alert(MSG_DEMO); }
 function exportData(){ sauvegarder(); } /* ancien nom, conservé par sécurité */
+
+/* ---- Impression dans la page (10/10/2026) ----
+   Le document a imprimer est le MEME qu'avant (mise en page et textes inchanges) ;
+   il s'affiche dans un apercu par-dessus Havn, avec un bouton Retour.
+   A l'impression, @media print ne garde que la feuille. */
+function imprimerDoc(html){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const css=Array.from(doc.querySelectorAll('style')).map(s=>s.textContent).join('\n');
+  doc.querySelectorAll('script').forEach(s=>s.remove());
+  const portee=css.split('}').map(r=>{ const i=r.indexOf('{'); if(i<0) return r;
+    const sel=r.slice(0,i).split(',').map(s=>{ s=s.trim(); return '#apercuImp'+' .feuille'+(s==='body'?'':' '+s); }).join(',');
+    return sel+r.slice(i); }).join('}');
+  let z=document.getElementById('apercuImp'); if(z) z.remove();
+  z=document.createElement('div'); z.id='apercuImp';
+  z.innerHTML='<style>'+portee+'</style><div class="barre"><button type="button" class="btn doux" id="apRetour">'+'← Back to Havn'+'</button><button type="button" class="btn" id="apImp">'+'Print / Save as PDF'+'</button></div><div class="feuille">'+doc.body.innerHTML+'</div>';
+  document.body.appendChild(z); document.body.classList.add('apercu-ouvert');
+  z.querySelector('#apRetour').onclick=()=>{ z.remove(); document.body.classList.remove('apercu-ouvert'); };
+  z.querySelector('#apImp').onclick=()=>{ alert(MSG_DEMO_SORTIE); return;
+    if(appInstalleeIOS() && navigator.canShare){ try{
+      const t=(doc.title||'Havn').replace(/[^\w\u00C0-\u017F' -]+/g,'').trim().replace(/[\s']+/g,'-');
+      const f=new File([pdfDepuisFeuille(z.querySelector('.feuille'))],t+'.pdf',{type:'application/pdf'});
+      if(navigator.canShare({files:[f]})){ navigator.share({files:[f]}).catch(()=>{}); return; }
+    }catch(e){} }
+    try{ window.print(); }catch(e){}
+  };
+}
+/* ---- PDF fabriqué dans la page, pour l'iPhone (10/10/2026) ----
+   Mesuré par Logan : dans Havn installé sur l'écran d'accueil de l'iPhone, le
+   bouton Imprimer ne fait rien (iOS ignore l'impression dans une app web
+   installée). Sur iPhone installé seulement, on fabrique donc un vrai PDF de la
+   même feuille et on l'ouvre dans le menu Partager, qui propose Imprimer et
+   Enregistrer dans Fichiers. Partout ailleurs : impression normale, inchangée. */
+function pdfDepuisFeuille(feuille){
+  const W=595.28,H=841.89,M=40,LW=W-2*M;
+  const win=s=>{ let o=''; for(const ch of String(s)){ const c=ch.codePointAt(0);
+      if(c===0x20AC) o+='\x80'; else if(c===0x2019) o+='\x92'; else if(c===0x2018) o+='\x91'; else if(c===0x2014) o+='\x97'; else if(c===0x2013) o+='\x96'; else if(c===0x2026) o+='\x85';
+      else if(c===0x202F||c===0x2009||c===0x200A) o+=' '; else if(c<256) o+=ch; else o+='?'; }
+    return o.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)'); };
+  const larg=(s,t)=>String(s).length*t*0.5;
+  const pages=[]; let c='', y=H-M;
+  const nouvelle=()=>{ if(c) pages.push(c); c=''; y=H-M; };
+  const place=h=>{ if(y-h<M) nouvelle(); };
+  const texte=(x,yy,t,s,gras,coul)=>{ c+=(coul||'0.13 0.13 0.13')+' rg BT /'+(gras?'F2':'F1')+' '+s+' Tf '+x.toFixed(2)+' '+yy.toFixed(2)+' Td ('+win(t)+') Tj ET\n'; };
+  const coupe=(t,maxw,s)=>{ const mots=String(t).split(/\s+/); const l=[]; let cur='';
+    mots.forEach(m=>{ const essai=cur?cur+' '+m:m; if(larg(essai,s)>maxw && cur){ l.push(cur); cur=m; } else cur=essai; }); if(cur) l.push(cur); return l.length?l:['']; };
+  Array.from(feuille.children).forEach(el=>{
+    const tag=el.tagName;
+    if(tag==='H1'){ place(30); y-=22; texte(M,y,el.textContent.trim(),18,true); y-=8; }
+    else if(tag==='H2'){ place(28); y-=20; texte(M,y,el.textContent.trim().toUpperCase(),10.5,true,'0.75 0.42 0.29'); y-=6; }
+    else if(tag==='P'){ const s=el.classList.contains('pied')?8:9; coupe(el.textContent.trim(),LW,s).forEach(l=>{ place(s+4); y-=s+3; texte(M,y,l,s,false,'0.35 0.35 0.35'); }); y-=4; }
+    else if(tag==='TABLE'){
+      Array.from(el.querySelectorAll('tr')).forEach(tr=>{
+        const cells=Array.from(tr.children); if(!cells.length) return;
+        const tete=cells[0].tagName==='TH', tot=tr.classList.contains('tot'), s=8.5;
+        let spans=cells.map(td=>+(td.getAttribute('colspan')||1)); const n=spans.reduce((a,b)=>a+b,0);
+        const w1=n>1?LW*0.4:LW, wr=n>1?(LW-w1)/(n-1):0;
+        const ws=[]; let k=0; spans.forEach(sp=>{ let w=0; for(let j=0;j<sp;j++){ w+=(k===0?w1:wr); k++; } ws.push(w); });
+        const lignes=cells.map((td,i)=>i===0?coupe(td.textContent.trim(),ws[i]-8,s):[td.textContent.trim()]);
+        const h=Math.max(...lignes.map(l=>l.length))*(s+2)+8;
+        place(h); const haut=y;
+        if(tete||tot) c+=(tete?'0.94 0.94 0.94':'0.98 0.97 0.95')+' rg '+M.toFixed(2)+' '+(haut-h).toFixed(2)+' '+LW.toFixed(2)+' '+h.toFixed(2)+' re f\n';
+        let x=M; c+='0.8 0.8 0.8 RG 0.5 w\n';
+        cells.forEach((td,i)=>{ c+=x.toFixed(2)+' '+(haut-h).toFixed(2)+' '+ws[i].toFixed(2)+' '+h.toFixed(2)+' re S\n';
+          lignes[i].forEach((l,j)=>{ const ty=haut-5-(j+1)*(s+1.5); const tx=i===0?x+4:x+ws[i]-4-larg(l,s); texte(tx,ty,l,s,tete||tot); });
+          x+=ws[i]; });
+        y-=h;
+      });
+      y-=6;
+    }
+  });
+  nouvelle();
+  const objs=[]; const add=s=>{ objs.push(s); return objs.length; };
+  add('<< /Type /Catalog /Pages 2 0 R >>'); add('PAGES');
+  const f1=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  const f2=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  const kids=[];
+  pages.forEach(p=>{ const st=add('<< /Length '+p.length+' >>\nstream\n'+p+'endstream');
+    kids.push(add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 '+f1+' 0 R /F2 '+f2+' 0 R >> >> /Contents '+st+' 0 R >>')); });
+  objs[1]='<< /Type /Pages /Kids ['+kids.map(k=>k+' 0 R').join(' ')+'] /Count '+kids.length+' >>';
+  let out='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'; const pos=[];
+  objs.forEach((o,i)=>{ pos.push(out.length); out+=(i+1)+' 0 obj\n'+o+'\nendobj\n'; });
+  const xr=out.length;
+  out+='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n'+pos.map(p=>String(p).padStart(10,'0')+' 00000 n \n').join('');
+  out+='trailer\n<< /Size '+(objs.length+1)+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';
+  const b=new Uint8Array(out.length); for(let i=0;i<out.length;i++) b[i]=out.charCodeAt(i)&255;
+  return b;
+}
+function appInstalleeIOS(){ return estIOS() && (navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); }
+
+
+/* ---- Sauvegarde sur iPhone (10/10/2026) ----
+   Mesure par Logan : dans Havn installe sur l'ecran d'accueil, le telechargement
+   ouvrait le fichier en apercu sans le ranger nulle part, et Restaurer ne le
+   retrouvait pas. Sur iPhone et iPad, on passe par le menu Partager, qui propose
+   Enregistrer dans Fichiers. Android et ordinateur : inchanges (mesure : ok).
+   La demo garde son blocage (MSG_DEMO). */
+function estIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }
+const _sauvegarderFichier=sauvegarder;
+sauvegarder=function(){
+  if(typeof MSG_DEMO!=='undefined' || !estIOS() || !navigator.canShare || !navigator.share) return _sauvegarderFichier();
+  const nom='Havn-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  let f; try{ f=new File([JSON.stringify(S,null,2)],nom,{type:'application/json'}); }catch(e){ return _sauvegarderFichier(); }
+  if(!navigator.canShare({files:[f]})) return _sauvegarderFichier();
+  let p=document.getElementById('panneauHavn'); if(p) p.remove();
+  p=document.createElement('div'); p.id='panneauHavn';
+  p.innerHTML='<div class="carte"><p><b>'+'Save a backup on your iPhone'+'</b></p>'
+    +'<p>'+'In the menu that opens, choose <b>Save to Files</b>, then a folder (for example <b>On My iPhone</b>).'+'</p>'
+    +'<p>'+'To get it back later: tap <b>Restore</b>, then <b>Choose File</b>, and pick this file in the same folder.'+'</p>'
+    +'<div class="boutons"><button type="button" class="btn doux" id="pnAnnuler">'+'Cancel'+'</button><button type="button" class="btn" id="pnOk">'+'Save my backup'+'</button></div></div>';
+  document.body.appendChild(p);
+  p.querySelector('#pnAnnuler').onclick=()=>p.remove();
+  p.querySelector('#pnOk').onclick=()=>{ p.remove(); navigator.share({files:[f]}).catch(()=>{}); };
+};
 function demanderRestauration(){ alert(MSG_DEMO); }
 function importData(input){
   const f=input.files&&input.files[0]; if(!f) return;
