@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvitt, live demo · Product of Persistence</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='21' fill='%232E6B4E'/%3E%3Cpath d='M14 25 l7 7 l13 -15' fill='none' stroke='%23F6F1E8' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!-- Aucune ressource externe, exprès (Logan, 04/10) : sur iPhone, la visionneuse
+     HTML de l'app qui ouvre le fichier bloquait l'appel à Google Fonts et affichait
+     « la page tente d'accéder aux ressources en dehors de l'application ». Le
+     fichier est 100 % autonome : il ne contacte rien, ni en ligne ni hors ligne.
+     Polices système : c'est le rendu qu'on a validé sur toutes les captures. -->
+<style>
+  /* Palette Kvitt : la famille POP (crème, encre) avec SON accent, un vert
+     « soldé », pour qu'on ne le confonde pas avec Havn (terracotta). L'or
+     sert aux étapes franchies, et à rien d'autre. */
+  :root{
+    --bg:#F5F0E7; --ink:#1F2421; --mut:#6F746C; --acc:#2E6B4E; --acc-soft:#E3EEE6; --gold:#C9962E; --gold-soft:#F7EDD6;
+    --red:#A9503C; --card:#FFFFFF; --line:#E4DDCF; --soft:#FAF7F1;
+    --shadow:0 1px 2px rgba(31,36,33,.04),0 18px 40px -26px rgba(31,36,33,.24);
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .ruban{background:var(--ink);color:#D8DED8;font-size:11.5px;text-align:center;padding:7px 14px;letter-spacing:.2px;}
+  .demo-haut{position:sticky;top:0;z-index:50;background:#173D2C;color:#F5F0E7;padding:11px 18px;display:flex;gap:10px 18px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:13px;line-height:1.45;box-shadow:0 6px 18px -12px rgba(0,0,0,.6);}
+  .demo-haut b{color:#F2D38C;}
+  .demo-haut a{background:var(--gold);color:#1F2421;text-decoration:none;font-weight:700;padding:8px 15px;border-radius:9px;white-space:nowrap;}
+  .wrap{max-width:1000px;margin:0 auto;padding:30px 20px 80px;}
+  header.top{text-align:center;}
+  .brand{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--acc);font-weight:700;}
+  h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:44px;margin:6px 0 2px;letter-spacing:6px;padding-left:6px;}
+  .sub{color:var(--mut);font-size:15px;margin:0;}
+  .tabs{display:flex;gap:8px;justify-content:center;margin:22px 0 4px;flex-wrap:wrap;}
+  .tab{padding:9px 18px;border:1px solid var(--line);background:var(--soft);border-radius:999px;cursor:pointer;font:inherit;font-weight:600;font-size:14px;color:var(--mut);}
+  .tab:hover{border-color:var(--acc);color:var(--acc);}
+  .tab.active{background:var(--acc);color:#fff;border-color:var(--acc);}
+  .exemple{background:var(--gold-soft);border:1px solid #E8D3A2;border-radius:12px;padding:10px 14px;margin:16px 0 0;font-size:13.5px;color:#5c5136;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+  .exemple{position:relative;padding-right:44px !important;}
+  .ferme{position:absolute;top:6px;right:6px;border:none;background:none;color:#8a7a52;font-size:17px;line-height:1;cursor:pointer;padding:6px 9px;border-radius:8px;}
+  .ferme:hover{background:rgba(0,0,0,.06);color:var(--ink);}
+  .panneau{margin-top:16px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--soft);}
+  .panneau h3{margin:0 0 4px;font-size:16px;}
+  .panneau textarea{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:8px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;background:#fff;color:var(--ink);resize:vertical;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:16px 0;box-shadow:var(--shadow);}
+  .card h2{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:21px;margin:0 0 4px;}
+  .hint{color:var(--mut);font-size:13.5px;margin:0 0 14px;}
+  .btn{display:inline-block;border:1px solid var(--acc);background:var(--acc);color:#fff;font:inherit;font-weight:600;font-size:14px;padding:9px 16px;border-radius:10px;cursor:pointer;text-decoration:none;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn.ghost{background:#fff;color:var(--acc);}
+  .btn.small{font-size:13px;padding:6px 12px;}
+  .btn.quiet{border-color:var(--line);background:var(--soft);color:var(--ink);}
+  input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:15px;background:#fff;color:var(--ink);}
+  input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(46,107,78,.16);}
+  input[type=number]{text-align:right;}
+  /* ---------- Le héros : la date ---------- */
+  .hero{text-align:center;padding:30px 24px 26px;background:linear-gradient(180deg,#FFFFFF 0%,#F7FBF8 100%);}
+  .hero .lbl{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--acc);font-weight:700;}
+  .hero .date{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:56px;line-height:1.08;margin:6px 0 4px;}
+  .hero .dans{color:var(--mut);font-size:15px;}
+  .barre{height:14px;background:#ECE6DA;border-radius:999px;overflow:hidden;margin:20px auto 8px;max-width:560px;position:relative;}
+  .barre i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),#4C9A72);border-radius:999px;}
+  .barre-txt{font-size:13.5px;color:var(--mut);}
+  .barre-txt b{color:var(--ink);}
+  .vsmin{margin-top:12px;font-size:14px;color:var(--ink);}
+  .immo{background:var(--gold-soft);border:1px solid #E8D3A2;border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;margin:14px 0 0;font-size:13.5px;color:#5c4a1e;text-align:left;}
+  .immo .boutons .btn{margin:0;}
+  .lig.hors{opacity:.55;}
+  .alerte{background:#FBEDE8;border:1px solid #EBC3B6;border-left:4px solid var(--red);border-radius:12px;padding:11px 14px;margin:14px 0 0;font-size:13.5px;color:#5f3b30;}
+  /* ---------- Stratégies ---------- */
+  .strats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .strat{border:1.5px solid var(--line);border-radius:14px;padding:14px 14px 12px;background:var(--soft);display:flex;flex-direction:column;gap:4px;position:relative;}
+  .strat.on{border-color:var(--acc);background:var(--acc-soft);}
+  .strat h3{margin:0;font-size:16px;}
+  .strat .d{font-size:12.5px;color:var(--mut);min-height:38px;}
+  .strat .res{font-family:'Fraunces',Georgia,serif;font-size:22px;font-weight:600;margin-top:4px;}
+  .strat .res2{font-size:13px;color:var(--mut);}
+  .strat .tags{display:flex;gap:6px;flex-wrap:wrap;min-height:22px;}
+  .strat .tags:empty{visibility:hidden;}
+  .tag{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--gold-soft);color:#7a5a17;}
+  .tag.g{background:var(--acc);color:#fff;}
+  .strat .btn{margin-top:8px;align-self:flex-start;}
+  /* ---------- Et si ---------- */
+  input[type=range]{padding:0;border:none;accent-color:var(--acc);height:28px;}
+  input[type=range]:focus{box-shadow:none;}
+  .curseur{display:flex;align-items:center;gap:16px;}
+  .curseur .v{min-width:190px;text-align:right;font-weight:700;font-size:16px;white-space:nowrap;}
+  .wi{margin:10px 0 0;font-size:15px;}
+  .wi b{color:var(--acc);}
+  /* ---------- Ordre ---------- */
+  .ord{display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .ord:last-child{border-bottom:none;}
+  .ord .n{width:26px;height:26px;border-radius:50%;background:var(--acc-soft);color:var(--acc);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:12.5px;}
+  .ord .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ord .nm small{color:var(--mut);margin-left:6px;}
+  .ord .bal{text-align:right;color:var(--mut);white-space:nowrap;}
+  .ord .when{text-align:right;font-weight:600;white-space:nowrap;}
+  .ord.fini{color:var(--mut);}
+  .ord.fini .n{background:var(--acc);color:#fff;}
+  .ord.fini .when{color:var(--acc);}
+  .jalons{display:flex;gap:8px;flex-wrap:wrap;}
+  .jalon{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:600;padding:6px 11px;border-radius:999px;background:var(--gold-soft);color:#6d5113;border:1px solid #E8D3A2;}
+  .jalon.off{background:var(--soft);color:#a5a197;border-color:var(--line);font-weight:500;}
+  /* ---------- Dettes ---------- */
+  .lig{display:grid;grid-template-columns:1.8fr 1.25fr 1fr .8fr 1fr 74px;gap:8px;align-items:center;margin-bottom:8px;}
+  .lig.tete{color:var(--mut);font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+  .lig .cap{display:none;}
+  .lig.solde input{background:#F3F7F4;}
+  .acts{display:flex;gap:0;justify-content:flex-end;}
+  .acts button{border:none;background:none;cursor:pointer;font-size:15px;line-height:1;padding:6px 6px;border-radius:7px;color:#9aa39b;}
+  .acts button:hover{color:var(--acc);background:var(--acc-soft);}
+  .acts button.x:hover{color:var(--red);background:#FBEDE8;}
+  .acts button:disabled{opacity:.3;cursor:default;background:none;}
+  .ligne-budget{display:grid;grid-template-columns:1fr 180px;gap:14px;align-items:center;}
+  .ligne-budget input{font-size:20px;font-weight:700;}
+  .tot{font-size:13.5px;color:var(--mut);margin-top:8px;}
+  .tot b{color:var(--ink);}
+  .devise{display:flex;gap:10px;align-items:center;justify-content:flex-end;font-size:13px;color:var(--mut);margin-top:6px;}
+  .devise select{width:auto;}
+  /* ---------- Point du mois ---------- */
+  .chk{display:grid;grid-template-columns:1fr 120px 150px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .chk .avant{text-align:right;color:var(--mut);white-space:nowrap;}
+  .msg{margin:12px 0 0;padding:10px 13px;border-radius:10px;background:var(--acc-soft);color:#1f4a35;font-size:14px;}
+  table.hist{width:100%;border-collapse:collapse;font-size:14px;}
+  table.hist th{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);text-align:right;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);}
+  table.hist td{padding:8px;text-align:right;border-bottom:1px solid var(--line);}
+  table.hist th:first-child,table.hist td:first-child{text-align:left;}
+  .down{color:var(--acc);font-weight:600;} .upv{color:var(--red);font-weight:600;}
+  /* ---------- Imprimer et aide ---------- */
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .imp{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--soft);display:flex;flex-direction:column;gap:8px;}
+  .imp h3{margin:0;font-size:16px;}
+  .imp p{margin:0;color:var(--mut);font-size:13.5px;flex:1;}
+  .mini{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;width:120px;margin:4px 0;}
+  .mini i{display:block;aspect-ratio:1;border:1px solid #cfc7b6;border-radius:2px;}
+  .mini i.c{background:var(--acc);border-color:var(--acc);}
+  .boutons{display:flex;gap:8px;flex-wrap:wrap;}
+  ol.how{margin:0;padding-left:20px;} ol.how li{margin:4px 0;}
+  .havn{font-size:13.5px;color:var(--mut);}
+  .havn a{color:var(--acc);font-weight:600;}
+  .indic{text-align:center;color:var(--mut);font-size:11.5px;max-width:640px;margin:22px auto 0;line-height:1.5;}
+  .foot{text-align:center;color:#a19b8f;font-size:11px;letter-spacing:1.5px;margin-top:14px;}
+  .cache{display:none !important;}
+  /* unités dans les champs : $ devant, % derrière */
+  .u{position:relative;display:block;}
+  .u i{position:absolute;top:50%;transform:translateY(-50%);font-style:normal;color:var(--mut);font-size:14px;pointer-events:none;}
+  .u.av i{left:10px;} .u.av input{padding-left:30px;}
+  .u.ap i{right:10px;} .u.ap input{padding-right:28px;}
+  .note{font-size:12.5px;color:var(--mut);margin:10px 0 4px;}
+  /* l'équation du budget */
+  .equa{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:14px 0 6px;}
+  .equa .b{flex:1 1 120px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--soft);}
+  .equa .b small{display:block;font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;}
+  .equa .b b{font-size:19px;}
+  .equa .b.x{background:var(--acc-soft);border-color:#B9D3C2;}
+  .equa .op{align-self:center;font-weight:700;color:var(--mut);font-size:18px;}
+  .resume{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--acc);color:#fff;border-radius:14px;padding:14px 18px;margin:16px 0;}
+  .resume b{font-family:'Fraunces',Georgia,serif;font-size:22px;}
+  .resume .btn{background:#fff;color:var(--acc);border-color:#fff;}
+  /* ce mois-ci */
+  .cm{display:grid;grid-template-columns:1fr 110px 110px 120px;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid var(--line);font-size:14px;}
+  .cm.tete{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--line);}
+  .cm div:not(:first-child){text-align:right;white-space:nowrap;}
+  .cm.cible{background:var(--acc-soft);border-radius:10px;border-bottom-color:transparent;}
+  .cm .fl{display:block;font-size:12px;color:var(--acc);font-weight:600;}
+  .cm.tot{font-weight:700;border-bottom:none;}
+  .suite{text-align:center;margin:22px 0 4px;}
+  .etapes{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:13.5px;margin:4px 0 0;}
+  .etapes span b{color:var(--acc);}
+  /* ---------- Téléphone ---------- */
+  @media (max-width:700px){
+    .wrap{padding:22px 14px 70px;}
+    h1{font-size:36px;}
+    .hero{padding:24px 14px 20px;}
+    .hero .date{font-size:42px;}
+    .card{padding:18px 15px;}
+    .strats{grid-template-columns:1fr;}
+    .strat .d{min-height:0;}
+    .strat .tags:empty{display:none;}
+    .duo{grid-template-columns:1fr;}
+    .lig.tete{display:none;}
+    .lig{grid-template-columns:1fr 1fr;gap:6px 10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);margin-bottom:10px;}
+    .lig .cap{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+    .lig .f-nom{grid-column:1 / -1;}
+    .lig .acts{grid-column:1 / -1;justify-content:flex-end;}
+    .ligne-budget{grid-template-columns:1fr;}
+    .chk{grid-template-columns:1fr 1fr;}
+    .chk .nm{grid-column:1 / -1;font-weight:600;}
+    .curseur{flex-direction:column;align-items:stretch;gap:4px;}
+    .curseur .v{text-align:left;}
+    .ord{grid-template-columns:26px 1fr;row-gap:2px;}
+    .ord .bal{display:none;}
+    .ord .nm{white-space:normal;}
+    .ord .when{grid-column:2;text-align:left;font-size:13px;}
+    .tabs{gap:6px;} .tab{padding:8px 12px;font-size:13px;}
+    .cm{grid-template-columns:1fr 96px;}
+    .cm .c-min,.cm .c-ex{display:none;}
+    .cm.tete .c-min,.cm.tete .c-ex{display:none;}
+    .equa .op{display:none;}
+  }
+  #dlg{position:fixed;inset:0;z-index:200;background:rgba(31,36,33,.45);display:flex;align-items:center;justify-content:center;padding:18px;}
+  #dlg.cache{display:none !important;}
+  .dlg-in{background:#fff;border-radius:16px;padding:20px;max-width:440px;width:100%;box-shadow:0 20px 50px -20px rgba(0,0,0,.5);}
+  .dlg-in p{margin:0 0 14px;}
+  #apercu{position:fixed;inset:0;z-index:150;background:#E9E5DC;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 12px 30px;}
+  #apercu.cache{display:none !important;}
+  .apbar{position:sticky;top:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0;background:#E9E5DC;z-index:2;}
+  .apbar span{font-size:12.5px;color:var(--mut);flex:1 1 220px;}
+  .cadre{margin:0 auto;}
+  .feuille{background:#fff;width:200mm;padding:8mm 7mm;box-shadow:0 10px 30px -18px rgba(0,0,0,.4);}
+  body.apercu-ouvert{overflow:hidden;}
+  @media print{
+    .ruban,.demo-haut,.tabs,.exemple{display:none;}
+    body.apercu-ouvert > *:not(#apercu){display:none !important;}
+    body.apercu-ouvert{background:#fff;overflow:visible;}
+    #apercu{position:static;overflow:visible;background:#fff;padding:0;}
+    .apbar{display:none !important;}
+    .cadre{transform:none !important;width:auto !important;height:auto !important;}
+    .feuille{box-shadow:none;padding:0;width:auto;}
+  }
+</style>
+</head>
+<body>
+<!-- Visible SEULEMENT si le JavaScript ne tourne pas : c'est ce que montre l'iPhone
+     quand on touche le fichier dans l'app Fichiers (simple aperçu, aucun script,
+     aucun navigateur ne peut ouvrir un fichier local sur iOS). Au lieu d'une page
+     vide (Logan, 05/10), l'acheteur lit quoi faire, avec l'adresse. -->
+<div id="sansjs" style="max-width:560px;margin:40px auto;padding:24px;font:16px/1.55 -apple-system,system-ui,sans-serif;color:#1F2421;background:#fff;border:1px solid #E4DDCF;border-radius:16px;">
+  <div style="font:700 12px sans-serif;letter-spacing:3px;color:#2E6B4E;">KVITT</div>
+  <h2 style="margin:6px 0 10px;font:600 24px Georgia,serif;">On iPhone or iPad? Open Kvitt at this address.</h2>
+  <p>An iPhone only shows a preview of this file, it cannot run it: Apple does not let any browser open a file stored on the phone. Open the address below in Safari or Chrome, then tap Share, then Add to Home Screen. Kvitt becomes an icon like an app, works offline, and your figures stay on your phone.</p>
+  <p style="font-size:20px;font-weight:700;word-break:break-all;"><a href="https://kvitt-r7q2xw.pages.dev/" style="color:#2E6B4E;">https://kvitt-r7q2xw.pages.dev/</a></p>
+  <p style="color:#6F746C;font-size:14px;">On a computer or an Android phone, open this file in your browser (Chrome, Edge, Firefox or Safari).</p>
+</div>
+<div class="ruban" id="ruban"></div>
+<div class="demo-haut cache" id="demoHaut"><span id="demoTxt"></span><a id="demoLien" href="https://www.etsy.com/shop/ProductofPersistence" target="_blank" rel="noopener"></a></div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand" id="tBrand"></div>
+    <h1>KVITT</h1>
+    <p class="sub" id="tTag"></p>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="exemple cache" id="exemple"><div><span id="exTxt"></span><div class="etapes" id="exEtapes"></div></div><button class="btn small ghost" id="exBtn"></button><button class="ferme" id="exX" aria-label="close">✕</button></div>
+
+  <section id="v-plan"></section>
+  <section id="v-debts" class="cache"></section>
+  <section id="v-check" class="cache"></section>
+  <section id="v-print" class="cache"></section>
+
+  <p class="indic" id="indic"></p>
+  <div class="foot" id="foot"></div>
+</div>
+<input type="file" id="fichier" accept=".json,application/json,text/plain" class="cache">
+<div id="dlg" class="cache"></div>
+<div id="apercu" class="cache"></div>
+<style id="cssPage"></style>
+<script>
+/* =====================================================================
+   KVITT · MOTEUR DE REMBOURSEMENT
+   Écrit le 02/10/2026, porté de Havn/_generateur/moteur-strategie/moteur.js
+   (16/09/2026, 8 contrôles verts).
+
+   CE QUI CHANGE PAR RAPPORT À HAVN, ET POURQUOI
+   Havn part du CONTRAT (capital, taux, durée) : c'est le monde des prêts
+   amortis. L'acheteur de `debt payoff tracker` a surtout des CARTES DE
+   CRÉDIT : il n'a pas de durée, il a un RELEVÉ (solde, taux annuel, paiement
+   minimum). Donc l'entrée devient { solde, apr, min }.
+
+   Et l'effort ne se saisit plus en « extra » : l'acheteur sait ce qu'il peut
+   mettre par mois sur ses dettes, en tout. On simule donc à BUDGET MENSUEL
+   CONSTANT : ce qui reste après les minimums va à la dette cible, et quand une
+   dette tombe, son minimum reste dans le budget, donc il roule sur la
+   suivante. C'est la boule de neige, sans variable « libéré » à tenir à part.
+   Effet de bord voulu : le dernier paiement d'une dette, plus petit que son
+   minimum, ne perd pas le reliquat (Havn le perdait ce mois-là).
+
+   Le paiement minimum est tenu CONSTANT : sur une vraie carte il baisse avec
+   le solde. C'est l'hypothèse de tous les calculateurs, et c'est pour ça que
+   la mention « montants indicatifs » est dans le produit dès la V1.
+   ===================================================================== */
+
+var KV_MAX_MOIS = 600; // 50 ans : garde-fou anti-boucle
+
+/* Ordre d'attaque, figé au départ (comme Havn et comme la méthode).
+   - snowball  : le plus PETIT solde d'abord (à égalité, le taux le plus haut)
+   - avalanche : le TAUX le plus haut d'abord (à égalité, le plus petit solde)
+   - custom    : l'ordre de la liste, tel que l'acheteur l'a rangé */
+function kvOrdonner(dettes, strategie) {
+  var c = dettes.slice();
+  if (strategie === 'snowball') c.sort(function (a, b) { return (a.bal - b.bal) || (b.apr - a.apr); });
+  else if (strategie === 'avalanche') c.sort(function (a, b) { return (b.apr - a.apr) || (a.bal - b.bal); });
+  return c;
+}
+
+/* Simulation mois par mois à budget constant.
+   dettes   : [{ id, name, bal, apr, min }] (seules celles avec bal > 0 comptent)
+   budget   : ce que l'acheteur met sur ses dettes chaque mois, en tout
+   Retour   : { mois, interets, payoffs:[{id,name,mois}], soldes:[total après
+              chaque mois], bloque, manque } ; `manque` = budget sous la somme
+              des minimums (on simule alors les minimums seuls, et on le dit). */
+function kvSimuler(dettesIn, strategie, budget) {
+  var vivantes = dettesIn.filter(function (d) { return (+d.bal || 0) > 0.005; });
+  var dettes = kvOrdonner(vivantes, strategie).map(function (d) {
+    return { id: d.id, name: d.name, bal: +d.bal || 0, apr: +d.apr || 0, min: Math.max(0, +d.min || 0), fini: false };
+  });
+  var sommeMin = dettes.reduce(function (s, d) { return s + d.min; }, 0);
+  var b = +budget || 0;
+  var manque = b + 0.005 < sommeMin;
+  if (manque) b = sommeMin;
+  var mois = 0, interets = 0, payoffs = [], soldes = [];
+  // ce qu'il faut payer CE mois-ci, dette par dette : { id: { min, extra } }.
+  // Né le 03/10 : « ces 175 $ au-dessus des minimums, j'en fais quoi ? » (Logan).
+  var ceMois = {};
+  function reste() { return dettes.some(function (d) { return d.bal > 0.005; }); }
+  while (reste() && mois < KV_MAX_MOIS) {
+    mois++;
+    var depense = 0;
+    // 1. les intérêts du mois, puis le minimum de chaque dette vivante
+    dettes.forEach(function (d) {
+      if (d.bal <= 0.005) return;
+      var int = d.bal * d.apr / 1200;
+      d.bal += int; interets += int;
+      var p = Math.min(d.min, d.bal);
+      d.bal -= p; depense += p;
+      if (mois === 1) ceMois[d.id] = { min: p, extra: 0 };
+    });
+    // 2. tout le reste du budget va à la dette cible, et déborde sur la suivante
+    var libre = Math.max(0, b - depense);
+    for (var k = 0; k < dettes.length && libre > 0.005; k++) {
+      var d = dettes[k];
+      if (d.bal <= 0.005) continue;
+      var v = Math.min(libre, d.bal);
+      d.bal -= v; libre -= v;
+      if (mois === 1 && ceMois[d.id]) ceMois[d.id].extra += v;
+    }
+    // 3. ce qui tombe ce mois-ci
+    var total = 0;
+    dettes.forEach(function (d) {
+      if (d.bal <= 0.005 && !d.fini) { d.fini = true; d.bal = 0; payoffs.push({ id: d.id, name: d.name, mois: mois }); }
+      total += d.bal;
+    });
+    soldes.push(total);
+  }
+  return { mois: mois, interets: interets, payoffs: payoffs, soldes: soldes, bloque: reste(), manque: manque, ceMois: ceMois };
+}
+
+/* Référence « minimums seulement » : chaque dette paie son minimum, rien ne
+   roule. C'est ce que fait l'acheteur aujourd'hui s'il ne change rien, et
+   c'est ce qui rend les chiffres lisibles (« X mois plus tôt »). */
+function kvMinimums(dettesIn) {
+  var dettes = dettesIn.filter(function (d) { return (+d.bal || 0) > 0.005; })
+    .map(function (d) { return { bal: +d.bal, apr: +d.apr || 0, min: +d.min || 0 }; });
+  var mois = 0, interets = 0;
+  while (dettes.some(function (d) { return d.bal > 0.005; }) && mois < KV_MAX_MOIS) {
+    mois++;
+    dettes.forEach(function (d) {
+      if (d.bal <= 0.005) return;
+      var int = d.bal * d.apr / 1200; d.bal += int; interets += int;
+      d.bal -= Math.min(d.min, d.bal);
+    });
+  }
+  return { mois: mois, interets: interets, bloque: dettes.some(function (d) { return d.bal > 0.005; }) };
+}
+
+/* Les trois stratégies au même budget, plus la référence. */
+function kvComparer(dettes, budget) {
+  var out = { reference: kvMinimums(dettes), strategies: {} };
+  ['snowball', 'avalanche', 'custom'].forEach(function (s) { out.strategies[s] = kvSimuler(dettes, s, budget); });
+  var ok = ['snowball', 'avalanche', 'custom'].filter(function (s) { return !out.strategies[s].bloque; });
+  out.moinsCher = ok.length ? ok.reduce(function (a, b) {
+    return out.strategies[b].interets < out.strategies[a].interets - 0.5 ? b : a; }) : null;
+  return out;
+}
+
+/* Le tableau à colorier : 100 cases, chacune = 1 % du total de départ.
+   Pour chaque case, le mois du plan où le cumul remboursé la franchit.
+   `dejaPaye` : ce qui est déjà remboursé depuis le départ (cases déjà gagnées). */
+function kvCases(totalDepart, dejaPaye, sim) {
+  var cases = [];
+  var actuel = totalDepart - dejaPaye;
+  for (var j = 1; j <= 100; j++) {
+    var seuil = totalDepart * j / 100;
+    if (dejaPaye + 0.005 >= seuil) { cases.push({ n: j, fait: true, mois: 0 }); continue; }
+    var m = 0;
+    for (var k = 0; k < sim.soldes.length; k++) {
+      if (dejaPaye + (actuel - sim.soldes[k]) + 0.005 >= seuil) { m = k + 1; break; }
+    }
+    cases.push({ n: j, fait: false, mois: m || sim.mois });
+  }
+  return cases;
+}
+
+if (typeof module !== 'undefined') module.exports = { kvSimuler: kvSimuler, kvMinimums: kvMinimums, kvComparer: kvComparer, kvCases: kvCases, kvOrdonner: kvOrdonner };
+
+/* =====================================================================
+   KVITT · TOUS LES TEXTES AFFICHÉS, EN ANGLAIS ET EN FRANÇAIS
+   Une seule source pour les deux versions : Kvitt.html (vendu, EN) et sa
+   jumelle FR de contrôle, que Logan relit. Règle du 15/09 : chaque
+   correction se fait ICI, donc dans les deux langues à la fois.
+   Les clés sont en anglais ; une clé absente d'une langue fait échouer
+   gen-kvitt.py (contrôle des clés).
+   ===================================================================== */
+var KV_TEXTES = {
+en: {
+  docTitle: 'Kvitt · Debt payoff tracker',
+  brand: 'Product of Persistence',
+  tagline: 'See your debt-free date. Then watch it come closer.',
+  ribbon: 'KVITT · private: everything stays on your device, nothing is sent anywhere · a planning aid: dates, interest and amounts are indicative estimates',
+  tabPlan: '2 · My plan', tabDebts: '1 · My debts', tabCheck: '3 · Monthly check-in', tabPrint: 'Print & help',
+  step1: 'List your debts', step2: 'Read your plan: your date, and what to pay this month', step3: 'Once a month, check in with your new balances',
+  thisMonth: 'This month, pay this', thisMonthHint: 'Pay the minimum on every debt. Everything above the minimums goes to one debt only: the first one in your plan.',
+  cmMin: 'Minimum', cmExtra: 'Extra', cmPay: 'To pay', cmTarget: 'your extra {x} goes here',
+  thisMonthNote: 'Total: {b}, your monthly amount. When this debt is paid off, its payment rolls onto the next one, and this table updates by itself. Paid? Come back next month for your check-in.',
+  nextCheck: 'Next month: 3 · Monthly check-in →', backPlan: '← Back to 2 · My plan', nextPlan: 'See my plan →',
+  minNote: 'Minimum payment: for a card, the amount printed on your statement. For a loan (car, student, personal), your fixed monthly payment.',
+  eqMin: 'Your minimums', eqExtra: 'Extra', eqTotal: 'Paid each month',
+  extraGoes: 'The extra {x} goes to {name} first. When it is paid off, everything rolls onto the next debt in your plan.',
+  eqWhy: 'Your debt-free date depends on what you pay in total each month. Changing a minimum only changes how that total is split.',
+  resumeTxt: 'With these figures, debt-free by',
+  // Plan
+  freeBy: 'Debt-free by', monthsLeft: '{n} months from now', monthLeft: '1 month from now', freeNow: 'You owe nothing. You did it.',
+  noDebts: 'Add your debts to see your debt-free date.', goDebts: 'Add my debts',
+  paidSoFar: '{paid} paid off since {month}', ofTotal: '{pct}% of {total}',
+  strategyTitle: 'Snowball, avalanche or your own order', strategyHint: 'Same monthly amount, three orders of attack. Pick the one you will stick to.',
+  snowball: 'Snowball', avalanche: 'Avalanche', custom: 'My order',
+  snowballSub: 'Smallest balance first: a debt disappears early, and that keeps you going.',
+  avalancheSub: 'Highest rate first: the cheapest in interest.',
+  customSub: 'The order of your list, if you have a reason of your own.',
+  cheapest: 'Cheapest', chosen: 'Your plan', useThis: 'Use this order',
+  totalInterest: 'interest', months: '{n} months', month1: '1 month',
+  vsMin: 'Paying only the minimums would take {n}. Your plan gets you there {m} sooner, with {i} less interest.',
+  immoTitle: 'Your mortgage pushes your date back by {n}.', immoTitle0: 'Your mortgage pushes your date back by years.',
+  immoTxt: 'My advice: leave it out of your plan. It is a long, low-rate loan that would come last anyway, and your chart would barely move for years. Keep paying it as usual, and put your energy into everything else.',
+  immoSans: 'Without it: debt-free by {date}.', immoBtn: 'Leave it out (recommended)', immoKeep: 'Keep it in my plan',
+  close: 'Close', yes: 'Yes', cancel: 'Cancel',
+  printHelp: 'If nothing happens on your phone, use your app\'s Share menu, then Print.',
+  saveTitle: 'Keep a spare copy of your figures', saveHintIOS: 'Tap the button below, then choose Save to Files in the menu that opens. To bring your figures back later, use Restore and pick that file.',
+  saveBtnIOS: 'Save my backup', saveDone: 'Your backup {name} is in your downloads. Keep it somewhere safe: Restore brings your figures back from it, on this device or another one.',
+    confirmRestore: 'Replace the figures on this device with the ones from your backup?',
+  years: '{n} years', year1: 'about a year',
+  horsPlan: 'Left out of the plan: keep paying it as usual. It counts nowhere in Kvitt.', remettre: 'Put it back in',
+  colorUpTo: 'On your coloring chart, color every square up to number {n}.',
+  pcHow1: 'After each monthly check-in, color every square up to the number Kvitt gives you.',
+  pcHow2: 'The month under a square is when your plan expects you to get there. Colored before that month? You are ahead.',
+  pcHow3: 'Some months fill two or three squares, others one: interest shrinks as you go, so more of each payment goes to the debt itself.',
+  vsMinSame: 'Paying only the minimums would take {m}.',
+  whatIf: 'What if you paid a little more?', whatIfHint: 'Move the slider: the date and the interest update as you go.',
+  extraLabel: '+ {x} a month', extraNone: 'Your current amount',
+  whatIfRes: 'Debt-free in {date}: {m} sooner, {i} less interest.', whatIfZero: 'This is your plan as it stands.',
+  keepAmount: 'Make {x} my monthly amount',
+  orderTitle: 'The order your debts fall', orderHint: 'When a debt is paid off, its payment rolls onto the next one. That is what speeds everything up.',
+  paidOffIn: 'paid off in {date}', alreadyPaid: 'paid off',
+  milestones: 'Milestones', msPct: '{p}% paid off', msDebt: '{name} paid off', msFree: 'Debt-free',
+  msNone: 'Your first milestone is 10% paid off. Your next check-in will tell you how close you are.',
+  warnShort: 'Your monthly amount ({b}) is below the sum of your minimum payments ({m}). The plan below uses the minimums.',
+  warnStuck: 'At this pace, at least one debt never gets paid off: its payment does not cover its interest. Raise your monthly amount, or check its minimum payment.',
+  // Debts
+  debtsTitle: 'My debts', debtsHint: 'One line per debt, copied from your latest statement: what you still owe, the rate, and the minimum payment.',
+  colName: 'Debt', colType: 'Type', colBal: 'Balance today', colApr: 'Rate (APR %)', colMin: 'Minimum payment / month',
+  addDebt: '+ Add a debt', delDebt: 'Remove', up: 'Move up', down: 'Move down',
+  budgetTitle: 'How much will you pay toward your debts each month, in total?', budgetHint: 'The amount you decide to pay every month, all debts together, minimums included. Pick an amount you can keep up month after month.',
+  budgetLabel: 'Monthly amount', sumMins: 'Your minimums add up to {m}. Above them: {x} a month to speed things up.',
+  sumMinsShort: 'Your minimums add up to {m}: your monthly amount must be at least that.',
+  currency: 'Currency', maxDebts: 'Up to 20 debts.',
+  types: { card: 'Credit card', store: 'Store card', car: 'Car loan', student: 'Student loan', personal: 'Personal loan', medical: 'Medical bill', mortgage: 'Mortgage', other: 'Other' },
+  newDebt: 'New debt', paidTag: 'Paid off',
+  // Check-in
+  checkTitle: 'This month\'s check-in', checkHint: 'Once a month, after you have paid: open each statement and type the new balance. Kvitt updates your date, your progress and what to pay next month.',
+  checkMonth: 'Month', saveCheck: 'Save this check-in', undoCheck: 'Undo the last check-in',
+  checkSaved: 'Saved. {paid} paid off since your last check-in.', checkSavedUp: 'Saved. Your total went up by {x} this month: it happens, the plan has been recalculated.',
+  historyTitle: 'Your check-ins', histMonth: 'Month', histTotal: 'Total owed', histMove: 'Change',
+  noHistory: 'No check-in yet. Your first one sets the pace.',
+  // Print & help
+  printTitle: 'Print', printChart: 'My debt-free coloring chart', printChartHint: '100 squares, each one worth 1% of your debt, dated with the month your plan reaches it. Color one in each time you pay a square off.',
+  printPlan: 'My plan on one page', printPlanHint: 'The order, the dates and the amounts. Handy to show your partner, or to keep in a binder.',
+  paper: 'Paper', letter: 'US Letter', a4: 'A4', printBtn: 'Print',
+  dataTitle: 'Your data', dataHint: 'Your figures are saved automatically in this browser, on this device, and nowhere else.',
+  backup: 'Back up', restore: 'Restore', example: 'Explore the example', scratch: 'Start from scratch',
+  confirmScratch: 'Start from scratch? Your current figures will be erased from this device (back them up first if you want to keep them).',
+  confirmExample: 'Load the example? Your current figures will be replaced (back them up first if you want to keep them).',
+  restoreBad: 'This file is not a Kvitt backup.',
+  resetStart: 'Restart my progress from today', confirmReset: 'Restart your progress from today\'s balances? Your check-in history is kept, your progress bar and chart start again at 0%.',
+  howTitle: 'How it works', how1: 'List your debts with the figures from your latest statements.', how2: 'Enter the amount you can put toward them each month, in total.',
+  how3: 'Pick snowball, avalanche or your own order. Kvitt gives you the month you will owe nothing.', how4: 'Print your coloring chart and put it where you will see it.',
+  how5: 'Once a month, check in with your new balances. Color your squares.',
+  havn: 'Want your whole budget too, and the month-by-month schedule of each loan? Havn does that, in the same shop.', havnLink: 'See Havn',
+  indicative: 'Kvitt is a planning aid. Dates, interest and payoff amounts are indicative estimates based on the figures you enter, with each minimum payment held steady; they do not replace your lender\'s statements or professional advice.',
+  foot: 'PRODUCT OF PERSISTENCE · Your data stays on your device. Nothing is sent anywhere.',
+  // Demo
+  demoTop: '<b>You are trying the live demo.</b> Everything works, but nothing is saved: reload the page and the example comes back. The version you buy installs from a link, on your phone or your computer, and keeps your figures on your device, even offline.',
+  demoBtn: 'See the product', demoFoot: 'PRODUCT OF PERSISTENCE · Live demo. The version you buy installs like an app, works offline and keeps your figures with you.',
+  demoPrint: 'Printing and PDF are switched off in the live demo.\n\nIn the version you buy, this button prints your payoff chart and your plan, or saves them as a PDF.',
+  demoPrintPage: 'Printing is switched off in the live demo. The version you buy prints your payoff chart and your plan.',
+  demoData: 'Back up and Restore are switched off in the live demo.\n\nIn the version you buy, Back up downloads a file with all your figures, and Restore loads it again, on this device or another one.',
+  exampleBanner: 'You are looking at an example. Kvitt works in 3 steps:',
+  // Print pages
+  pcTitle: 'My road to debt-free', pcSub: 'Each square is worth {x}: 1% of the {total} you owed in {month}.',
+  pcAlready: 'Already paid off: {paid}. Color the first {n} squares now.',
+  pcFree: 'Debt-free', pcLegendDebt: 'a debt is paid off', pcLegendPct: 'milestone', pcMade: 'Made with Kvitt · Product of Persistence',
+  pcPlanLine: '{budget} a month · {strategy} · total interest about {interest}',
+  ppTitle: 'My debt payoff plan', ppMade: 'Printed on {date}', ppOrder: '#', ppPayoff: 'Paid off', ppSummary: 'Debt-free by {date}, in {m}. Interest along the way: about {i}.',
+  ppTotal: 'Total', ppBudget: 'Monthly amount: {b} (minimums {m}, extra {x}).',
+  paid: 'paid'
+},
+fr: {
+  docTitle: 'Kvitt · Suivi de remboursement de dettes',
+  brand: 'Product of Persistence',
+  tagline: 'Vois la date où tu ne devras plus rien. Puis regarde-la se rapprocher.',
+  ribbon: 'KVITT · privé : tout reste sur ton appareil, rien n\'est envoyé nulle part · une aide à la planification : dates, intérêts et montants sont des estimations indicatives',
+  tabPlan: '2 · Mon plan', tabDebts: '1 · Mes dettes', tabCheck: '3 · Le point du mois', tabPrint: 'Imprimer et aide',
+  step1: 'Liste tes dettes', step2: 'Lis ton plan : ta date, et quoi payer ce mois-ci', step3: 'Une fois par mois, fais le point avec tes nouveaux soldes',
+  thisMonth: 'Ce mois-ci, paie ça', thisMonthHint: 'Paie le minimum sur chaque dette. Tout ce qui dépasse les minimums va sur une seule dette : la première de ton plan.',
+  cmMin: 'Minimum', cmExtra: 'En plus', cmPay: 'À payer', cmTarget: 'tes {x} en plus vont ici',
+  thisMonthNote: 'Total : {b}, ton montant mensuel. Quand cette dette est soldée, sa mensualité roule sur la suivante, et ce tableau se met à jour tout seul. C\'est payé ? Reviens le mois prochain pour ton point du mois.',
+  nextCheck: 'Le mois prochain : 3 · Le point du mois →', backPlan: '← Retour à 2 · Mon plan', nextPlan: 'Voir mon plan →',
+  minNote: 'Paiement minimum : pour une carte, le montant écrit sur ton relevé. Pour un prêt (auto, étudiant, personnel), ta mensualité fixe.',
+  eqMin: 'Tes minimums', eqExtra: 'En plus', eqTotal: 'Payé chaque mois',
+  extraGoes: 'Les {x} en plus vont d\'abord sur {name}. Quand elle est soldée, tout roule sur la dette suivante de ton plan.',
+  eqWhy: 'Ta date dépend de ce que tu paies en tout chaque mois. Changer un minimum change seulement la répartition de ce total.',
+  resumeTxt: 'Avec ces chiffres, plus aucune dette en',
+  freeBy: 'Plus aucune dette en', monthsLeft: 'dans {n} mois', monthLeft: 'dans 1 mois', freeNow: 'Tu ne dois plus rien. Tu l\'as fait.',
+  noDebts: 'Ajoute tes dettes pour voir la date où tu ne devras plus rien.', goDebts: 'Ajouter mes dettes',
+  paidSoFar: '{paid} remboursés depuis {month}', ofTotal: '{pct} % de {total}',
+  strategyTitle: 'Boule de neige, avalanche ou ton ordre', strategyHint: 'Le même montant par mois, trois ordres d\'attaque. Choisis celui que tu tiendras.',
+  snowball: 'Boule de neige', avalanche: 'Avalanche', custom: 'Mon ordre',
+  snowballSub: 'Le plus petit solde d\'abord : une dette disparaît vite, et ça fait tenir.',
+  avalancheSub: 'Le taux le plus haut d\'abord : le moins cher en intérêts.',
+  customSub: 'L\'ordre de ta liste, si tu as ta propre raison.',
+  cheapest: 'Le moins cher', chosen: 'Ton plan', useThis: 'Prendre cet ordre',
+  totalInterest: 'd\'intérêts', months: '{n} mois', month1: '1 mois',
+  vsMin: 'En payant seulement les minimums, il te faudrait {n}. Ton plan t\'y amène {m} plus tôt, avec {i} d\'intérêts en moins.',
+  immoTitle: 'Ton prêt immobilier recule ta date de {n}.', immoTitle0: 'Ton prêt immobilier recule ta date de plusieurs années.',
+  immoTxt: 'Mon conseil : laisse-le hors de ton plan. C\'est un prêt long à taux bas, qui passerait de toute façon en dernier, et ton tableau n\'avancerait presque pas pendant des années. Continue de le payer comme d\'habitude, et mets ton énergie sur tout le reste.',
+  immoSans: 'Sans lui : plus aucune dette en {date}.', immoBtn: 'Le laisser de côté (conseillé)', immoKeep: 'Le garder dans mon plan',
+  close: 'Fermer', yes: 'Oui', cancel: 'Annuler',
+  printHelp: 'Si rien ne se passe sur ton téléphone, passe par le menu Partager de ton app, puis Imprimer.',
+  saveTitle: 'Garder une copie de tes chiffres', saveHintIOS: 'Touche le bouton ci-dessous, puis choisis Enregistrer dans Fichiers dans le menu qui s\'ouvre. Pour retrouver tes chiffres plus tard, utilise Restaurer et choisis ce fichier.',
+  saveBtnIOS: 'Enregistrer ma sauvegarde', saveDone: 'Ta sauvegarde {name} est dans tes téléchargements. Range-la en lieu sûr : Restaurer la recharge, sur cet appareil ou sur un autre.',
+    confirmRestore: 'Remplacer les chiffres de cet appareil par ceux de ta sauvegarde ?',
+  years: '{n} ans', year1: 'environ un an',
+  horsPlan: 'Hors du plan : continue de le payer comme d\'habitude. Il ne compte nulle part dans Kvitt.', remettre: 'Le remettre',
+  colorUpTo: 'Sur ton tableau à colorier, colorie toutes les cases jusqu\'au numéro {n}.',
+  pcHow1: 'Après chaque point du mois, colorie toutes les cases jusqu\'au numéro que Kvitt te donne.',
+  pcHow2: 'Le mois sous une case, c\'est quand ton plan prévoit d\'y arriver. Coloriée avant ce mois-là ? Tu es en avance.',
+  pcHow3: 'Certains mois remplissent deux ou trois cases, d\'autres une : les intérêts fondent en route, donc une plus grande part de chaque paiement rembourse la dette elle-même.',
+  vsMinSame: 'Avec les seuls minimums, il faudrait {m}.',
+  whatIf: 'Et si tu mettais un peu plus ?', whatIfHint: 'Bouge le curseur : la date et les intérêts se recalculent à mesure.',
+  extraLabel: '+ {x} par mois', extraNone: 'Ton montant actuel',
+  whatIfRes: 'Plus aucune dette en {date} : {m} plus tôt, {i} d\'intérêts en moins.', whatIfZero: 'C\'est ton plan tel qu\'il est.',
+  keepAmount: 'Passer mon montant mensuel à {x}',
+  orderTitle: 'L\'ordre dans lequel tes dettes tombent', orderHint: 'Quand une dette est soldée, sa mensualité roule sur la suivante. C\'est ce qui accélère tout.',
+  paidOffIn: 'soldée en {date}', alreadyPaid: 'soldée',
+  milestones: 'Étapes franchies', msPct: '{p} % remboursés', msDebt: '{name} soldée', msFree: 'Plus aucune dette',
+  msNone: 'Ta première étape, c\'est 10 % remboursés. Ton prochain point du mois te dira où tu en es.',
+  warnShort: 'Ton montant mensuel ({b}) est sous la somme de tes paiements minimums ({m}). Le plan ci-dessous retient les minimums.',
+  warnStuck: 'À ce rythme, au moins une dette ne se solde jamais : son paiement ne couvre pas ses intérêts. Augmente ton montant mensuel, ou vérifie son paiement minimum.',
+  debtsTitle: 'Mes dettes', debtsHint: 'Une ligne par dette, recopiée depuis ton dernier relevé : ce que tu dois encore, le taux, et le paiement minimum.',
+  colName: 'Dette', colType: 'Type', colBal: 'Solde aujourd\'hui', colApr: 'Taux (TAEG %)', colMin: 'Paiement minimum / mois',
+  addDebt: '+ Ajouter une dette', delDebt: 'Supprimer', up: 'Monter', down: 'Descendre',
+  budgetTitle: 'Combien vas-tu payer sur tes dettes chaque mois, en tout ?', budgetHint: 'Le montant que tu décides de payer chaque mois, toutes dettes confondues, minimums compris. Choisis un montant que tu peux tenir mois après mois.',
+  budgetLabel: 'Montant mensuel', sumMins: 'Tes minimums font {m}. Au-dessus : {x} par mois pour accélérer.',
+  sumMinsShort: 'Tes minimums font {m} : ton montant mensuel doit au moins les couvrir.',
+  currency: 'Devise', maxDebts: 'Jusqu\'à 20 dettes.',
+  types: { card: 'Carte de crédit', store: 'Carte de magasin', car: 'Prêt auto', student: 'Prêt étudiant', personal: 'Prêt personnel', medical: 'Facture médicale', mortgage: 'Prêt immobilier', other: 'Autre' },
+  newDebt: 'Nouvelle dette', paidTag: 'Soldée',
+  checkTitle: 'Le point du mois', checkHint: 'Une fois par mois, après avoir payé : ouvre chaque relevé et tape le nouveau solde. Kvitt met à jour ta date, ta progression et ce qu\'il faudra payer le mois suivant.',
+  checkMonth: 'Mois', saveCheck: 'Enregistrer ce point', undoCheck: 'Annuler le dernier point',
+  checkSaved: 'Enregistré. {paid} remboursés depuis ton dernier point.', checkSavedUp: 'Enregistré. Ton total a monté de {x} ce mois-ci : ça arrive, le plan a été recalculé.',
+  historyTitle: 'Tes points du mois', histMonth: 'Mois', histTotal: 'Total dû', histMove: 'Variation',
+  noHistory: 'Aucun point pour l\'instant. Le premier donne le rythme.',
+  printTitle: 'Imprimer', printChart: 'Mon tableau à colorier', printChartHint: '100 cases, chacune vaut 1 % de ta dette, datées du mois où ton plan l\'atteint. Colorie une case à chaque fois que tu l\'as remboursée.',
+  printPlan: 'Mon plan sur une page', printPlanHint: 'L\'ordre, les dates et les montants. Pratique à montrer à ton conjoint, ou à ranger dans un classeur.',
+  paper: 'Papier', letter: 'US Letter', a4: 'A4', printBtn: 'Imprimer',
+  dataTitle: 'Tes données', dataHint: 'Tes chiffres sont enregistrés automatiquement dans ce navigateur, sur cet appareil, et nulle part ailleurs.',
+  backup: 'Sauvegarder', restore: 'Restaurer', example: 'Voir l\'exemple', scratch: 'Partir de zéro',
+  confirmScratch: 'Partir de zéro ? Tes chiffres actuels seront effacés de cet appareil (sauvegarde-les d\'abord si tu veux les garder).',
+  confirmExample: 'Charger l\'exemple ? Tes chiffres actuels seront remplacés (sauvegarde-les d\'abord si tu veux les garder).',
+  restoreBad: 'Ce fichier n\'est pas une sauvegarde Kvitt.',
+  resetStart: 'Repartir de zéro dans ma progression', confirmReset: 'Faire repartir ta progression des soldes d\'aujourd\'hui ? L\'historique des points est gardé, ta barre et ton tableau repartent à 0 %.',
+  howTitle: 'Comment ça marche', how1: 'Liste tes dettes avec les chiffres de tes derniers relevés.', how2: 'Indique ce que tu peux mettre dessus chaque mois, en tout.',
+  how3: 'Choisis boule de neige, avalanche ou ton ordre. Kvitt te donne le mois où tu ne devras plus rien.', how4: 'Imprime ton tableau à colorier et mets-le là où tu le verras.',
+  how5: 'Une fois par mois, fais le point avec tes nouveaux soldes. Colorie tes cases.',
+  havn: 'Tu veux aussi tout ton budget, et l\'échéancier mois par mois de chaque prêt ? Havn fait ça, dans la même boutique.', havnLink: 'Voir Havn',
+  indicative: 'Kvitt est une aide à la planification. Les dates, intérêts et montants sont des estimations indicatives, calculées sur les chiffres que tu saisis, chaque paiement minimum étant supposé constant ; ils ne remplacent ni les relevés de ton prêteur ni un conseil professionnel.',
+  foot: 'PRODUCT OF PERSISTENCE · Tes données restent sur ton appareil. Rien n\'est envoyé nulle part.',
+  demoTop: '<b>Tu essaies la démo en ligne.</b> Tout fonctionne, mais rien n\'est enregistré : recharge la page et l\'exemple revient. La version achetée s\'installe depuis un lien, sur ton téléphone ou ton ordinateur, et garde tes chiffres sur ton appareil, même hors ligne.',
+  demoBtn: 'Voir le produit', demoFoot: 'PRODUCT OF PERSISTENCE · Démo en ligne. La version achetée s\'installe comme une application, marche hors ligne et garde tes chiffres avec toi.',
+  demoPrint: 'L\'impression et le PDF sont coupés dans la démo en ligne.\n\nDans la version achetée, ce bouton imprime ton graphique de remboursement et ton plan, ou les enregistre en PDF.',
+  demoPrintPage: 'Impression coupée dans la démo en ligne. La version achetée imprime ton graphique et ton plan.',
+  demoData: 'Sauvegarder et Restaurer sont coupés dans la démo en ligne.\n\nDans la version achetée, Sauvegarder télécharge un fichier avec tous tes chiffres, et Restaurer le recharge, sur cet appareil ou un autre.',
+  exampleBanner: 'Tu regardes un exemple. Kvitt marche en 3 étapes :',
+  pcTitle: 'Ma route vers zéro dette', pcSub: 'Chaque case vaut {x} : 1 % des {total} que tu devais en {month}.',
+  pcAlready: 'Déjà remboursé : {paid}. Colorie dès maintenant les {n} premières cases.',
+  pcFree: 'Libre', pcLegendDebt: 'une dette est soldée', pcLegendPct: 'étape', pcMade: 'Fait avec Kvitt · Product of Persistence',
+  pcPlanLine: '{budget} par mois · {strategy} · intérêts totaux environ {interest}',
+  ppTitle: 'Mon plan de remboursement', ppMade: 'Imprimé le {date}', ppOrder: 'N°', ppPayoff: 'Soldée', ppSummary: 'Plus aucune dette en {date}, dans {m}. Intérêts en route : environ {i}.',
+  ppTotal: 'Total', ppBudget: 'Montant mensuel : {b} (minimums {m}, en plus {x}).',
+  paid: 'payé'
+}
+};
+if (typeof module !== 'undefined') module.exports = KV_TEXTES;
+
+var LANG = 'en';
+var DEMO = true;
+var CLE = 'kvitt-v1';
+var LIEN_HAVN = 'https://www.etsy.com/listing/4579594313';
+var T = KV_TEXTES[LANG];
+var LOC = LANG === 'fr' ? 'fr-FR' : 'en-US';
+
+/* ---------- Petits outils ---------- */
+function t(k, v) { var s = T[k]; if (s === undefined) return k; if (v) for (var p in v) s = s.split('{' + p + '}').join(v[p]); return s; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function $(id) { return document.getElementById(id); }
+function nb(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+function argent(n) {
+  try { return new Intl.NumberFormat(LOC, { style: 'currency', currency: S.cur || 'USD', maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(Math.round(n)); }
+  catch (e) { return Math.round(n) + ' ' + S.cur; }
+}
+function moisCle(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+function cleVersDate(k) { var p = String(k || '').split('-'); return new Date(+p[0] || 2026, (+p[1] || 1) - 1, 1); }
+function ceMois() { return moisCle(new Date()); }
+function plusMois(n) { var d = new Date(); return new Date(d.getFullYear(), d.getMonth() + n, 1); }
+function moisLong(d) { var s = new Intl.DateTimeFormat(LOC, { month: 'long', year: 'numeric' }).format(d); return s.charAt(0).toUpperCase() + s.slice(1); }
+function moisCourt(d) { return new Intl.DateTimeFormat(LOC, { month: 'short' }).format(d).replace('.', '') + ' ' + String(d.getFullYear()).slice(2); }
+function moisMilieu(d) { var s = moisLong(d); return LANG === 'fr' ? s.toLowerCase() : s; }
+function duree(m) { return m === 1 ? t('month1') : t('months', { n: m }); }
+function nid() { return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+/* ---------- L'exemple ----------
+   Six dettes américaines ordinaires, chiffres de relevé plausibles, trois
+   points du mois déjà faits pour que la barre, les étapes et le tableau à
+   colorier aient quelque chose à montrer. Les mois sont RELATIFS à aujourd'hui :
+   la démo ne vieillit pas. */
+function etatExemple() {
+  /* Taux vérifiés le 03/10/2026 : cartes de crédit 22,15 % en moyenne (Fed G.19,
+     mai 2026), cartes de magasin 30,14 % (Bankrate, 2025), auto 6,35 % neuf et
+     11,19 % occasion (Experian T2 2026), prêt étudiant fédéral 6,52 % (2026-27).
+     Minimums de cartes : ~1 % du solde + les intérêts du mois, plancher 25-35 $.
+     « Travel credit card » est retiré : Logan l'a lu comme un crédit pris pour un
+     voyage, alors que c'est une carte à points. Des noms qui ne prêtent à rien. */
+  var nomsEN = ['Main credit card', 'Second credit card', 'Store card', 'Car loan', 'Student loan', 'Hospital payment plan'];
+  var nomsFR = ['Carte de crédit principale', 'Deuxième carte de crédit', 'Carte de magasin', 'Prêt auto', 'Prêt étudiant', 'Échéancier d\'hôpital'];
+  var noms = LANG === 'fr' ? nomsFR : nomsEN;
+  var base = [
+    ['card', 4850, 24.49, 145, 5900], ['card', 2310, 21.99, 70, 2900], ['store', 640, 28.99, 35, 1480],
+    ['car', 11400, 8.9, 315, 12600], ['student', 18200, 6.5, 210, 18950], ['medical', 1150, 0, 50, 1600]];
+  var debts = base.map(function (b, i) { return { id: 'ex' + i, name: noms[i], type: b[0], bal: b[1], apr: b[2], min: b[3], orig: b[4], lock: true }; });
+  var origT = debts.reduce(function (s, d) { return s + d.orig; }, 0), nowT = debts.reduce(function (s, d) { return s + d.bal; }, 0);
+  var checkins = [];
+  for (var k = 3; k >= 1; k--) {
+    var tot = Math.round(nowT + (origT - nowT) * (k - 1) / 3);
+    checkins.push({ month: moisCle(plusMois(-k + 1 - 1)), total: tot, prev: null });
+  }
+  return { v: 1, cur: 'USD', budget: 1000, strat: 'avalanche', paper: LANG === 'fr' ? 'a4' : 'letter', debts: debts,
+    startMonth: moisCle(plusMois(-4)), checkins: checkins, example: true };
+}
+function etatVide() {
+  return { v: 1, cur: 'USD', budget: 0, strat: 'snowball', paper: LANG === 'fr' ? 'a4' : 'letter', debts: [], startMonth: ceMois(), checkins: [], example: false };
+}
+function valide(d) { return d && typeof d === 'object' && Array.isArray(d.debts) && d.v === 1; }
+
+/* DÉMO : on part toujours de l'exemple et on n'écrit jamais rien dans le
+   navigateur du visiteur. C'est la bride (doctrine du 16/09, comme Havn EN). */
+var S = (function () {
+  if (DEMO) return etatExemple();
+  try { var d = JSON.parse(localStorage.getItem(CLE)); if (valide(d)) return d; } catch (e) {}
+  return etatExemple();
+})();
+function save() { if (DEMO) return; try { localStorage.setItem(CLE, JSON.stringify(S)); } catch (e) {} }
+
+/* ---------- Calculs partagés ---------- */
+/* `out` : dette laissée HORS du plan (le prêt immobilier, d'abord). Elle reste
+   dans la liste, grisée, et ne compte nulle part : ni date, ni barre, ni tableau.
+   Né le 03/10 : 250 000 $ sur 25 ans repoussent la date à 17 ans et demi et le
+   tableau n'avance plus (une case tous les 3-4 mois). Logan : « pas motivant,
+   il faut le déconseiller ». */
+function dansPlan(d) { return !d.out; }
+function actives() { return S.debts.filter(function (d) { return dansPlan(d) && nb(d.bal) > 0.005; }); }
+function totalDepart() { return S.debts.reduce(function (s, d) { return dansPlan(d) ? s + Math.max(nb(d.orig), nb(d.bal)) : s; }, 0); }
+function totalActuel() { return S.debts.reduce(function (s, d) { return dansPlan(d) ? s + Math.max(0, nb(d.bal)) : s; }, 0); }
+function immos() { return actives().filter(function (d) { return d.type === 'mortgage'; }); }
+/* Le message ne parle QUE quand il a raison de parler (Logan, 04/10) :
+   - il se tait si le prêt recule la date de moins de 2 ans (un prêt immobilier
+     à qui il reste peu de temps se justifie dans le plan) ;
+   - il se tait pour toujours sur un prêt que l'acheteur a choisi de garder
+     (`keep`) : on conseille une fois, on n'insiste pas. */
+var IMMO_SEUIL = 24;
+function cacherImmo() { immos().forEach(function (d) { d.keep = true; }); S.example = false; save(); rendre(); }
+function enAnnees(m) { var a = Math.round(m / 12); return a <= 1 ? t('year1') : t('years', { n: a }); }
+/* Sortir le prêt immobilier : sa mensualité sort AUSSI du montant mensuel, car
+   elle continue d'être payée à part. Sinon elle deviendrait de l'argent « en
+   plus » fictif et la date serait fausse. */
+function sortirImmo() {
+  immos().forEach(function (d) { d.out = true; S.budget = Math.max(0, nb(S.budget) - nb(d.min)); });
+  S.example = false; save(); rendre();
+}
+function remettre(i) {
+  var d = S.debts[i]; if (!d || !d.out) return;
+  d.out = false; S.budget = nb(S.budget) + nb(d.min); save(); rendre();
+}
+function alerteImmo() {
+  var im = immos().filter(function (d) { return !d.keep; }); if (!im.length) return '';
+  var avec = kvSimuler(entree(), S.strat, nb(S.budget));
+  var sans = entree().filter(function (d) { return !im.some(function (x) { return x.id === d.id; }); });
+  var mins = im.reduce(function (a, d) { return a + nb(d.min); }, 0);
+  var r = sans.length ? kvSimuler(sans, S.strat, Math.max(0, nb(S.budget) - mins)) : null;
+  var recul = r && !r.bloque && !avec.bloque ? avec.mois - r.mois : null;
+  if (recul !== null && recul < IMMO_SEUIL) return '';
+  var h = '<div class="immo"><b>' + esc(recul !== null ? t('immoTitle', { n: enAnnees(recul) }) : t('immoTitle0')) + '</b> ' + esc(t('immoTxt')) +
+    (recul !== null ? ' ' + esc(t('immoSans', { date: moisMilieu(plusMois(r.mois)) })) : '') +
+    '<div class="boutons" style="margin-top:8px"><button class="btn small" onclick="sortirImmo()">' + esc(t('immoBtn')) + '</button><button class="btn small quiet" onclick="cacherImmo()">' + esc(t('immoKeep')) + '</button></div></div>';
+  return h;
+}
+function sommeMins() { return actives().reduce(function (s, d) { return s + Math.max(0, nb(d.min)); }, 0); }
+function entree() { return actives().map(function (d) { return { id: d.id, name: d.name || t('newDebt'), bal: nb(d.bal), apr: nb(d.apr), min: nb(d.min) }; }); }
+var extraWI = 0;
+
+/* ---------- Onglets ---------- */
+/* Onglets NUMÉROTÉS dans l'ordre où on s'en sert (Logan, 03/10 : « il y a des
+   liens entre les onglets, mais on ne le saisit pas aux premiers essais »). */
+var VUES = [['debts', 'tabDebts'], ['plan', 'tabPlan'], ['check', 'tabCheck'], ['print', 'tabPrint']];
+var vue = 'plan';
+function poserOnglets() {
+  $('tabs').innerHTML = VUES.map(function (v) { return '<button class="tab' + (v[0] === vue ? ' active' : '') + '" data-v="' + v[0] + '">' + esc(t(v[1])) + '</button>'; }).join('');
+  Array.prototype.forEach.call($('tabs').children, function (b) { b.onclick = function () { aller(b.getAttribute('data-v')); }; });
+}
+function aller(v) {
+  vue = v; poserOnglets();
+  VUES.forEach(function (x) { $('v-' + x[0]).classList.toggle('cache', x[0] !== v); });
+  rendre(); window.scrollTo(0, 0);
+}
+function rendre() {
+  $('exemple').classList.toggle('cache', !S.example || DEMO || !!S.exHidden);
+  if (vue === 'plan') rendrePlan(); else if (vue === 'debts') rendreDettes(); else if (vue === 'check') rendrePoint(); else rendreImprimer();
+}
+
+/* ---------- MON PLAN ---------- */
+function rendrePlan() {
+  var el = $('v-plan'), act = actives();
+  if (!S.debts.length) {
+    el.innerHTML = '<div class="card hero"><div class="lbl">' + esc(t('freeBy')) + '</div><p class="hint" style="margin:14px 0">' + esc(t('noDebts')) + '</p><button class="btn" onclick="aller(\'debts\')">' + esc(t('goDebts')) + '</button></div>';
+    return;
+  }
+  var dep = totalDepart(), cur = totalActuel(), paye = Math.max(0, dep - cur), pct = dep > 0 ? Math.min(100, paye / dep * 100) : 0;
+  var barre = '<div class="barre"><i style="width:' + pct.toFixed(1) + '%"></i></div><div class="barre-txt"><b>' + esc(t('paidSoFar', { paid: argent(paye), month: moisMilieu(cleVersDate(S.startMonth)) })) + '</b> · ' + esc(t('ofTotal', { pct: Math.floor(pct), total: argent(dep) })) + '</div>';
+  if (!act.length) {
+    el.innerHTML = '<div class="card hero"><div class="lbl">' + esc(t('msFree')) + '</div><div class="date">' + esc(t('freeNow')) + '</div>' + barre + '</div>' + carteJalons();
+    return;
+  }
+  var cmp = kvComparer(entree(), nb(S.budget)), sim = cmp.strategies[S.strat] || cmp.strategies.avalanche;
+  var h = '<div class="card hero"><div class="lbl">' + esc(t('freeBy')) + '</div>';
+  if (sim.bloque) h += '<div class="date">–</div>';
+  else h += '<div class="date" id="laDate">' + esc(moisLong(plusMois(sim.mois))) + '</div><div class="dans">' + esc(sim.mois === 1 ? t('monthLeft') : t('monthsLeft', { n: sim.mois })) + '</div>';
+  h += barre;
+  var ref = cmp.reference;
+  /* Une seule phrase. Le 03/10 on l'avait décomposée en deux lignes (roulement /
+     extra) : Logan l'a jugé trop complexe pour un premier écran. On compare au
+     « minimums seulement », et c'est tout. */
+  if (!sim.bloque && !ref.bloque && ref.mois > sim.mois)
+    h += '<div class="vsmin">' + esc(t('vsMin', { n: duree(ref.mois), m: duree(ref.mois - sim.mois), i: argent(ref.interets - sim.interets) })) + '</div>';
+  h += alerteImmo();
+  if (sim.manque) h += '<div class="alerte">' + esc(t('warnShort', { b: argent(nb(S.budget)), m: argent(sommeMins()) })) + '</div>';
+  if (sim.bloque) h += '<div class="alerte">' + esc(t('warnStuck')) + '</div>';
+  h += '</div>';
+  if (!sim.bloque) h += carteCeMois(sim);
+  // Stratégies
+  h += '<div class="card"><h2>' + esc(t('strategyTitle')) + '</h2><p class="hint">' + esc(t('strategyHint')) + '</p><div class="strats">';
+  ['snowball', 'avalanche', 'custom'].forEach(function (s) {
+    var r = cmp.strategies[s], on = s === S.strat;
+    h += '<div class="strat' + (on ? ' on' : '') + '"><div class="tags">' + (on ? '<span class="tag g">' + esc(t('chosen')) + '</span>' : '') + (cmp.moinsCher === s ? '<span class="tag">' + esc(t('cheapest')) + '</span>' : '') + '</div>' +
+      '<h3>' + esc(t(s)) + '</h3><div class="d">' + esc(t(s + 'Sub')) + '</div>' +
+      (r.bloque ? '<div class="res">–</div>' : '<div class="res">' + esc(moisLong(plusMois(r.mois))) + '</div><div class="res2">' + esc(duree(r.mois)) + ' · ' + esc(argent(r.interets)) + ' ' + esc(t('totalInterest')) + '</div>') +
+      (on ? '' : '<button class="btn small ghost" data-s="' + s + '">' + esc(t('useThis')) + '</button>') + '</div>';
+  });
+  h += '</div></div>';
+  // Et si
+  var max = Math.min(3000, Math.max(200, Math.ceil(nb(S.budget) * 0.5 / 100) * 100));
+  if (extraWI > max) extraWI = max;
+  h += '<div class="card"><h2>' + esc(t('whatIf')) + '</h2><p class="hint">' + esc(t('whatIfHint')) + '</p>' +
+    '<div class="curseur"><input type="range" id="wi" min="0" max="' + max + '" step="' + (max > 1000 ? 25 : 10) + '" value="' + extraWI + '"><div class="v" id="wiV"></div></div><div class="wi" id="wiR"></div><div id="wiB" style="margin-top:10px"></div></div>';
+  // Ordre
+  h += '<div class="card"><h2>' + esc(t('orderTitle')) + '</h2><p class="hint">' + esc(t('orderHint')) + '</p><div>';
+  var quand = {}; sim.payoffs.forEach(function (p) { quand[p.id] = p.mois; });
+  var ordre = parChute(entree(), sim);
+  ordre.forEach(function (d, i) {
+    var src = S.debts.filter(function (x) { return x.id === d.id; })[0] || {};
+    h += '<div class="ord"><div class="n">' + (i + 1) + '</div><div class="nm">' + esc(d.name) + '<small>' + esc(T.types[src.type] || '') + '</small></div><div class="bal">' + esc(argent(d.bal)) + '</div><div class="when">' + (quand[d.id] ? esc(t('paidOffIn', { date: moisLong(plusMois(quand[d.id])) })) : '–') + '</div></div>';
+  });
+  S.debts.filter(function (d) { return dansPlan(d) && nb(d.bal) <= 0.005 && nb(d.orig) > 0; }).forEach(function (d) {
+    h += '<div class="ord fini"><div class="n">✓</div><div class="nm">' + esc(d.name) + '</div><div class="bal"></div><div class="when">' + esc(t('alreadyPaid')) + '</div></div>';
+  });
+  h += '</div></div>' + carteJalons();
+  h += '<div class="suite"><button class="btn" onclick="aller(\'check\')">' + esc(t('nextCheck')) + '</button></div>';
+  el.innerHTML = h;
+  Array.prototype.forEach.call(el.querySelectorAll('[data-s]'), function (b) { b.onclick = function () { S.strat = b.getAttribute('data-s'); save(); rendrePlan(); }; });
+  var wi = $('wi'); wi.oninput = function () { extraWI = +wi.value; majEtSi(sim); }; majEtSi(sim);
+}
+/* L'ordre où les dettes TOMBENT, pas l'ordre d'attaque : une dette à petit
+   minimum peut se solder seule avant la cible (vu le 02/10 sur l'exemple :
+   la facture d'hôpital à 0 % tombait avant le prêt auto, liste illisible). */
+/* CE MOIS-CI : ce qu'il faut payer, dette par dette. C'est le lien qui
+   manquait entre « 175 $ au-dessus des minimums » et le plan (Logan, 03/10). */
+function carteCeMois(sim) {
+  var lignes = kvOrdonner(entree(), S.strat), b = Math.max(nb(S.budget), sommeMins());
+  var cible = null; lignes.forEach(function (d) { var c = sim.ceMois[d.id]; if (!cible && c && c.extra > 0.5) cible = d; });
+  var h = '<div class="card"><h2>' + esc(t('thisMonth')) + '</h2><p class="hint">' + esc(t('thisMonthHint')) + '</p>';
+  h += '<div class="cm tete"><div>' + esc(t('colName')) + '</div><div class="c-min">' + esc(t('cmMin')) + '</div><div class="c-ex">' + esc(t('cmExtra')) + '</div><div>' + esc(t('cmPay')) + '</div></div>';
+  var tot = 0;
+  lignes.forEach(function (d) {
+    var c = sim.ceMois[d.id] || { min: 0, extra: 0 }, pay = c.min + c.extra; tot += pay;
+    var est = cible && cible.id === d.id;
+    h += '<div class="cm' + (est ? ' cible' : '') + '"><div>' + esc(d.name) + (est ? '<span class="fl">' + esc(t('cmTarget', { x: argent(c.extra) })) + '</span>' : '') + '</div><div class="c-min">' + esc(argent(c.min)) + '</div><div class="c-ex">' + (c.extra > 0.5 ? '+ ' + esc(argent(c.extra)) : '') + '</div><div><b>' + esc(argent(pay)) + '</b></div></div>';
+  });
+  h += '<div class="cm tot"><div>' + esc(t('ppTotal')) + '</div><div class="c-min"></div><div class="c-ex"></div><div>' + esc(argent(tot)) + '</div></div>';
+  h += '<p class="note">' + esc(t('thisMonthNote', { b: argent(b) })) + '</p></div>';
+  return h;
+}
+function parChute(dettes, sim) {
+  var q = {}; sim.payoffs.forEach(function (p) { q[p.id] = p.mois; });
+  return kvOrdonner(dettes, S.strat).map(function (d, i) { return { d: d, i: i }; })
+    .sort(function (a, b) { return ((q[a.d.id] || 1e9) - (q[b.d.id] || 1e9)) || (a.i - b.i); })
+    .map(function (x) { return x.d; });
+}
+function majEtSi(base) {
+  var x = extraWI;
+  $('wiV').textContent = x ? t('extraLabel', { x: argent(x) }) : t('extraNone');
+  if (!x || base.bloque) { $('wiR').textContent = base.bloque ? '' : t('whatIfZero'); $('wiB').innerHTML = ''; return; }
+  var r = kvSimuler(entree(), S.strat, Math.max(nb(S.budget), sommeMins()) + x);
+  if (r.bloque) { $('wiR').textContent = t('warnStuck'); $('wiB').innerHTML = ''; return; }
+  $('wiR').innerHTML = esc(t('whatIfRes', { date: moisLong(plusMois(r.mois)), m: duree(Math.max(0, base.mois - r.mois)), i: argent(Math.max(0, base.interets - r.interets)) })).replace(moisLong(plusMois(r.mois)), '<b>' + esc(moisLong(plusMois(r.mois))) + '</b>');
+  var nouveau = Math.max(nb(S.budget), sommeMins()) + x;
+  $('wiB').innerHTML = '<button class="btn small" id="wiK">' + esc(t('keepAmount', { x: argent(nouveau) })) + '</button>';
+  $('wiK').onclick = function () { S.budget = nouveau; extraWI = 0; save(); rendrePlan(); };
+}
+function jalonsAtteints() {
+  var dep = totalDepart(), pct = dep > 0 ? (dep - totalActuel()) / dep * 100 : 0, out = [];
+  [10, 25, 50, 75].forEach(function (p) { out.push({ txt: t('msPct', { p: p }), ok: pct + 1e-9 >= p }); });
+  S.debts.forEach(function (d) { if (dansPlan(d) && nb(d.orig) > 0 && nb(d.bal) <= 0.005) out.push({ txt: t('msDebt', { name: d.name }), ok: true }); });
+  out.push({ txt: t('msFree'), ok: S.debts.length > 0 && !actives().length });
+  return out;
+}
+function carteJalons() {
+  var j = jalonsAtteints(), n = j.filter(function (x) { return x.ok; }).length;
+  return '<div class="card"><h2>' + esc(t('milestones')) + '</h2>' + (n ? '' : '<p class="hint">' + esc(t('msNone')) + '</p>') + '<div class="jalons">' +
+    j.map(function (x) { return '<span class="jalon' + (x.ok ? '' : ' off') + '">' + (x.ok ? '★ ' : '') + esc(x.txt) + '</span>'; }).join('') + '</div></div>';
+}
+
+/* ---------- MES DETTES ---------- */
+function rendreDettes() {
+  var el = $('v-debts');
+  var h = '<div class="card"><h2>' + esc(t('debtsTitle')) + '</h2><p class="hint">' + esc(t('debtsHint')) + ' ' + esc(t('maxDebts')) + '</p>';
+  h += '<div class="lig tete"><div>' + esc(t('colName')) + '</div><div>' + esc(t('colType')) + '</div><div style="text-align:right">' + esc(t('colBal')) + '</div><div style="text-align:right">' + esc(t('colApr')) + '</div><div style="text-align:right">' + esc(t('colMin')) + '</div><div></div></div>';
+  S.debts.forEach(function (d, i) {
+    var opts = Object.keys(T.types).map(function (k) { return '<option value="' + k + '"' + (d.type === k ? ' selected' : '') + '>' + esc(T.types[k]) + '</option>'; }).join('');
+    if (d.out) { h += '<div class="lig hors" data-o="' + i + '"><div class="f-nom">' + esc(d.name) + '</div><div>' + esc(T.types[d.type] || '') + '</div><div style="text-align:right">' + esc(argent(nb(d.bal))) + '</div><div></div><div></div><div class="acts"></div></div><p class="note" style="margin:-4px 0 10px">' + esc(t('horsPlan')) + ' <button class="btn small quiet" onclick="remettre(' + i + ')">' + esc(t('remettre')) + '</button></p>'; return; }
+    h += '<div class="lig' + (nb(d.bal) <= 0.005 && nb(d.orig) > 0 ? ' solde' : '') + '" data-i="' + i + '">' +
+      '<div class="f-nom"><span class="cap">' + esc(t('colName')) + '</span><input data-k="name" value="' + esc(d.name) + '" placeholder="' + esc(t('newDebt')) + '" maxlength="40"></div>' +
+      '<div><span class="cap">' + esc(t('colType')) + '</span><select data-k="type">' + opts + '</select></div>' +
+      '<div><span class="cap">' + esc(t('colBal')) + '</span><span class="u av"><i>' + esc(symbole()) + '</i><input type="number" inputmode="decimal" min="0" step="any" data-k="bal" value="' + (d.bal === '' ? '' : nb(d.bal)) + '"></span></div>' +
+      '<div><span class="cap">' + esc(t('colApr')) + '</span><span class="u ap"><i>%</i><input type="number" inputmode="decimal" min="0" max="100" step="any" data-k="apr" value="' + nb(d.apr) + '"></span></div>' +
+      '<div><span class="cap">' + esc(t('colMin')) + '</span><span class="u av"><i>' + esc(symbole()) + '</i><input type="number" inputmode="decimal" min="0" step="any" data-k="min" value="' + nb(d.min) + '"></span></div>' +
+      '<div class="acts"><button data-a="up" title="' + esc(t('up')) + '"' + (i === 0 ? ' disabled' : '') + '>↑</button><button data-a="down" title="' + esc(t('down')) + '"' + (i === S.debts.length - 1 ? ' disabled' : '') + '>↓</button><button class="x" data-a="del" title="' + esc(t('delDebt')) + '">✕</button></div></div>';
+  });
+  h += '<p class="note">' + esc(t('minNote')) + '</p>';
+  /* Prêt immobilier : sur 25 ans, le tableau avance d'une case tous les 3 à 4
+     mois au début (mesuré le 03/10, 250 000 $ à 6,5 %). On le dit, sans
+     interdire : c'est à l'acheteur de choisir. */
+  h += '<div id="immoD"></div>'; // rempli par majTotMin à chaque frappe (Logan, 04/10 : l'encadré n'apparaissait qu'après une autre action)
+  h += '<button class="btn ghost small" id="ajout"' + (S.debts.length >= 20 ? ' disabled' : '') + '>' + esc(t('addDebt')) + '</button>';
+  var curs = ['USD', 'CAD', 'AUD', 'GBP', 'EUR'];
+  h += '<div class="devise">' + esc(t('currency')) + ' <select id="dev">' + curs.map(function (c) { return '<option' + (S.cur === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></div></div>';
+  h += '<div class="card"><h2>' + esc(t('budgetTitle')) + '</h2><p class="hint">' + esc(t('budgetHint')) + '</p><div class="ligne-budget"><label for="bud"><b>' + esc(t('budgetLabel')) + '</b></label><span class="u av"><i>' + esc(symbole()) + '</i><input type="number" inputmode="decimal" min="0" step="any" id="bud" value="' + nb(S.budget) + '"></span></div><div id="totMin"></div></div><div id="resume"></div>';
+  el.innerHTML = h;
+  majTotMin();
+  Array.prototype.forEach.call(el.querySelectorAll('.lig[data-i]'), function (row) {
+    var i = +row.getAttribute('data-i');
+    Array.prototype.forEach.call(row.querySelectorAll('[data-k]'), function (inp) {
+      var ev = inp.tagName === 'SELECT' ? 'change' : 'input';
+      inp.addEventListener(ev, function () {
+        var d = S.debts[i], k = inp.getAttribute('data-k');
+        d[k] = (k === 'name' || k === 'type') ? inp.value : (inp.value === '' ? 0 : nb(inp.value));
+        if (k === 'bal' && !d.lock) d.orig = nb(d.bal); // avant le 1er point du mois, le solde saisi EST le départ
+        S.example = false; save(); majTotMin();
+        if (k === 'type') rendreDettes(); // l'encadré prêt immobilier doit apparaître tout de suite
+      });
+    });
+    Array.prototype.forEach.call(row.querySelectorAll('[data-a]'), function (b) {
+      b.onclick = function () {
+        var a = b.getAttribute('data-a');
+        if (a === 'del') S.debts.splice(i, 1);
+        else { var j = a === 'up' ? i - 1 : i + 1; var x = S.debts[i]; S.debts[i] = S.debts[j]; S.debts[j] = x; }
+        S.example = false; save(); rendreDettes();
+      };
+    });
+  });
+  $('ajout').onclick = function () {
+    if (S.debts.length >= 20) return;
+    S.debts.push({ id: nid(), name: '', type: 'card', bal: 0, apr: 0, min: 0, orig: 0, lock: false });
+    if (!S.checkins.length) S.startMonth = ceMois();
+    S.example = false; save(); rendreDettes();
+    var ins = $('v-debts').querySelectorAll('.lig[data-i] input[data-k=name]'); if (ins.length) ins[ins.length - 1].focus();
+  };
+  $('dev').onchange = function () { S.cur = this.value; save(); rendreDettes(); };
+  $('bud').oninput = function () { S.budget = nb(this.value); S.example = false; save(); majTotMin(); };
+}
+function symbole() {
+  try { var p = new Intl.NumberFormat(LOC, { style: 'currency', currency: S.cur || 'USD' }).formatToParts(1); for (var i = 0; i < p.length; i++) if (p[i].type === 'currency') return p[i].value; } catch (e) {}
+  return '$';
+}
+/* L'équation, écrite en toutes lettres : minimums + en plus = montant mensuel,
+   puis À QUI va le « en plus », puis la date que ça donne, en direct.
+   Né le 03/10 : Logan modifiait des minimums et ne voyait rien bouger. C'est
+   juste (le total ne change pas, seule la répartition change), mais il faut
+   le DIRE au moment où il le fait, pas le laisser deviner. */
+function majTotMin() {
+  var iz = $('immoD'); if (iz) iz.innerHTML = alerteImmo();
+  var m = sommeMins(), b = nb(S.budget), el = $('totMin'); if (!el) return;
+  var h = '<div class="equa"><div class="b"><small>' + esc(t('eqMin')) + '</small><b>' + esc(argent(m)) + '</b></div><div class="op">+</div>' +
+    '<div class="b x"><small>' + esc(t('eqExtra')) + '</small><b>' + esc(argent(Math.max(0, b - m))) + '</b></div><div class="op">=</div>' +
+    '<div class="b"><small>' + esc(t('eqTotal')) + '</small><b>' + esc(argent(b)) + '</b></div></div>';
+  var act = actives(), r = act.length ? kvSimuler(entree(), S.strat, b) : null, cible = null;
+  if (r) kvOrdonner(entree(), S.strat).forEach(function (d) { var c = r.ceMois[d.id]; if (!cible && c && c.extra > 0.5) cible = d; });
+  if (b + 0.005 < m) h += '<p class="upv" style="margin:6px 0 0">' + esc(t('sumMinsShort', { m: argent(m) })) + '</p>';
+  else if (cible) h += '<p class="tot" style="margin:6px 0 0">' + esc(t('extraGoes', { x: argent(b - m), name: cible.name || t('newDebt') })) + '</p>';
+  h += '<p class="note">' + esc(t('eqWhy')) + '</p>';
+  el.innerHTML = h;
+  var rs = $('resume'); if (!rs) return;
+  if (!r || r.bloque) { rs.innerHTML = ''; return; }
+  rs.innerHTML = '<div class="resume"><span>' + esc(t('resumeTxt')) + ' <b>' + esc(moisLong(plusMois(r.mois))) + '</b></span><button class="btn" onclick="aller(\'plan\')">' + esc(t('nextPlan')) + '</button></div>';
+}
+
+/* ---------- LE POINT DU MOIS ---------- */
+var dernierMsg = '';
+function rendrePoint() {
+  var el = $('v-check'), act = actives();
+  var h = '<div class="card"><h2>' + esc(t('checkTitle')) + '</h2><p class="hint">' + esc(t('checkHint')) + '</p>';
+  h += '<div style="max-width:220px;margin-bottom:10px"><label class="hint" style="margin:0">' + esc(t('checkMonth')) + '</label><input type="month" id="chkM" value="' + ceMois() + '"></div>';
+  act.forEach(function (d) {
+    h += '<div class="chk"><div class="nm">' + esc(d.name || t('newDebt')) + '</div><div class="avant">' + esc(argent(nb(d.bal))) + ' →</div><input type="number" inputmode="decimal" min="0" step="any" data-id="' + esc(d.id) + '" value="' + nb(d.bal) + '"></div>';
+  });
+  h += '<div class="boutons" style="margin-top:14px"><button class="btn" id="chkS"' + (act.length ? '' : ' disabled') + '>' + esc(t('saveCheck')) + '</button>' +
+    (S.checkins.length && S.checkins[S.checkins.length - 1].prev ? '<button class="btn quiet" id="chkU">' + esc(t('undoCheck')) + '</button>' : '') + '</div>';
+  if (dernierMsg) h += '<div class="msg">' + esc(dernierMsg) + '</div>';
+  h += '</div><div class="card"><h2>' + esc(t('historyTitle')) + '</h2>';
+  if (!S.checkins.length) h += '<p class="hint">' + esc(t('noHistory')) + '</p>';
+  else {
+    h += '<table class="hist"><tr><th>' + esc(t('histMonth')) + '</th><th>' + esc(t('histTotal')) + '</th><th>' + esc(t('histMove')) + '</th></tr>';
+    var prec = totalDepart();
+    S.checkins.forEach(function (c) {
+      var dv = c.total - prec;
+      h += '<tr><td>' + esc(moisLong(cleVersDate(c.month))) + '</td><td>' + esc(argent(c.total)) + '</td><td class="' + (dv <= 0 ? 'down' : 'upv') + '">' + (dv <= 0 ? '−' : '+') + esc(argent(Math.abs(dv))) + '</td></tr>';
+      prec = c.total;
+    });
+    h += '</table>';
+  }
+  h += '</div>' + carteJalons();
+  h += '<div class="suite"><button class="btn ghost" onclick="aller(\'plan\')">' + esc(t('backPlan')) + '</button></div>';
+  el.innerHTML = h;
+  dernierMsg = '';
+  if ($('chkS')) $('chkS').onclick = function () {
+    var prev = {}, avant = totalActuel();
+    S.debts.forEach(function (d) { prev[d.id] = nb(d.bal); d.lock = true; if (!(nb(d.orig) > 0)) d.orig = nb(d.bal); });
+    Array.prototype.forEach.call(el.querySelectorAll('input[data-id]'), function (inp) {
+      var d = S.debts.filter(function (x) { return x.id === inp.getAttribute('data-id'); })[0]; if (d) d.bal = Math.max(0, nb(inp.value));
+    });
+    var apres = totalActuel();
+    S.checkins.push({ month: $('chkM').value || ceMois(), total: Math.round(apres), prev: prev });
+    S.example = false; save();
+    dernierMsg = apres <= avant ? t('checkSaved', { paid: argent(avant - apres) }) : t('checkSavedUp', { x: argent(apres - avant) });
+    var dep = totalDepart(), nCases = dep > 0 ? Math.floor((dep - apres) / dep * 100 + 1e-9) : 0;
+    if (nCases > 0) dernierMsg += ' ' + t('colorUpTo', { n: nCases });
+    rendrePoint();
+  };
+  if ($('chkU')) $('chkU').onclick = function () {
+    var c = S.checkins.pop();
+    S.debts.forEach(function (d) { if (c.prev && c.prev[d.id] !== undefined) d.bal = c.prev[d.id]; });
+    save(); rendrePoint();
+  };
+}
+
+/* ---------- IMPRIMER ET AIDE ---------- */
+function rendreImprimer() {
+  var el = $('v-print');
+  var mini = ''; for (var i = 0; i < 100; i++) mini += '<i' + (i < 30 ? ' class="c"' : '') + '></i>';
+  var h = '<div class="card"><h2>' + esc(t('printTitle')) + '</h2>' +
+    '<div class="devise" style="justify-content:flex-start;margin:0 0 12px">' + esc(t('paper')) + ' <select id="pap"><option value="letter"' + (S.paper === 'letter' ? ' selected' : '') + '>' + esc(t('letter')) + '</option><option value="a4"' + (S.paper === 'a4' ? ' selected' : '') + '>' + esc(t('a4')) + '</option></select></div>' +
+    '<div class="duo"><div class="imp"><h3>' + esc(t('printChart')) + '</h3><div class="mini">' + mini + '</div><p>' + esc(t('printChartHint')) + '</p><button class="btn" id="pC"' + (actives().length ? '' : ' disabled') + '>' + esc(t('printBtn')) + '</button></div>' +
+    '<div class="imp"><h3>' + esc(t('printPlan')) + '</h3><p>' + esc(t('printPlanHint')) + '</p><button class="btn" id="pP"' + (actives().length ? '' : ' disabled') + '>' + esc(t('printBtn')) + '</button></div></div></div>';
+  h += '<div class="card"><h2>' + esc(t('howTitle')) + '</h2><ol class="how"><li>' + esc(t('how1')) + '</li><li>' + esc(t('how2')) + '</li><li>' + esc(t('how3')) + '</li><li>' + esc(t('how4')) + '</li><li>' + esc(t('how5')) + '</li></ol>' +
+    '<p class="havn" style="margin-top:14px">' + esc(t('havn')) + ' <a href="' + LIEN_HAVN + '" target="_blank" rel="noopener">' + esc(t('havnLink')) + ' →</a></p></div>';
+  h += '<div class="card"><h2>' + esc(t('dataTitle')) + '</h2><p class="hint">' + esc(t('dataHint')) + '</p><div class="boutons">' +
+    '<button class="btn quiet" id="bS">' + esc(t('backup')) + '</button><button class="btn quiet" id="bR">' + esc(t('restore')) + '</button>' +
+    '<button class="btn quiet" id="bE">' + esc(t('example')) + '</button><button class="btn quiet" id="bZ">' + esc(t('scratch')) + '</button>' +
+    '<button class="btn quiet" id="bD">' + esc(t('resetStart')) + '</button></div><div id="zoneData"></div></div>';
+  el.innerHTML = h;
+  $('pap').onchange = function () { S.paper = this.value; save(); };
+  if ($('pC')) $('pC').onclick = imprimerTableau;
+  if ($('pP')) $('pP').onclick = imprimerPlan;
+  $('bS').onclick = panneauSauver; $('bR').onclick = panneauRestaurer;
+  $('bE').onclick = function () { var go = function () { S = etatExemple(); extraWI = 0; save(); aller('plan'); }; if (!S.example && S.debts.length) demander(t('confirmExample'), go); else go(); };
+  $('bZ').onclick = partirDeZero;
+  $('bD').onclick = function () {
+    demander(t('confirmReset'), function () {
+      S.debts = S.debts.filter(function (d) { return nb(d.bal) > 0.005; });
+      S.debts.forEach(function (d) { d.orig = nb(d.bal); d.lock = true; });
+      S.startMonth = ceMois(); S.example = false; save(); aller('plan');
+    });
+  };
+}
+/* AUCUN alert() / confirm() / window.open() dans Kvitt (Logan, 04/10, iPhone) :
+   la visionneuse de l'app Documents (Readdle), qui est le chemin iPhone de la
+   boutique, ne les affiche pas toujours. Un confirm() qui ne s'affiche pas
+   renvoie « non » : la restauration par code ne faisait donc rien, et les deux
+   impressions (window.open) ne s'ouvraient pas. Tout passe désormais par des
+   panneaux dessinés DANS la page. */
+function boite(msg, boutons) {
+  var d = $('dlg');
+  d.innerHTML = '<div class="dlg-in"><p>' + esc(msg).replace(/\n/g, '<br>') + '</p><div class="boutons">' +
+    boutons.map(function (b, i) { return '<button class="btn' + (b.quiet ? ' quiet' : '') + '" data-b="' + i + '">' + esc(b.txt) + '</button>'; }).join('') + '</div></div>';
+  d.classList.remove('cache');
+  Array.prototype.forEach.call(d.querySelectorAll('[data-b]'), function (el) {
+    el.onclick = function () { d.classList.add('cache'); d.innerHTML = ''; var f = boutons[+el.getAttribute('data-b')].fn; if (f) f(); };
+  });
+}
+function demander(msg, oui) { boite(msg, [{ txt: t('yes'), fn: oui }, { txt: t('cancel'), quiet: true }]); }
+function info(msg) { boite(msg, [{ txt: 'OK' }]); }
+function partirDeZero() {
+  var go = function () { S = etatVide(); extraWI = 0; save(); aller('debts'); };
+  if (S.debts.length && !S.example) demander(t('confirmScratch'), go); else go();
+}
+/* SAUVEGARDE (11/10/2026). Le code à copier-coller du 04/10 est retiré : il servait
+   à contourner la visionneuse de l'app Documents, et Logan l'a mesuré inutile sur
+   iPhone. Kvitt se livre maintenant par un lien : sur ordinateur et Android, le
+   fichier se télécharge ; sur iPhone et iPad, il passe par Partager, Enregistrer
+   dans Fichiers (comme Havn, mesuré le 10/10). lireCode accepte encore l'ancien
+   format « KVITT1: » pour qui l'aurait gardé. */
+function lireCode(txt) {
+  var s = String(txt || '').trim(); if (s.indexOf('KVITT1:') === 0) s = s.slice(7);
+  var d = JSON.parse(s); if (!valide(d)) throw 0; return d;
+}
+function nomSauvegarde() { return 'Kvitt-backup-' + new Date().toISOString().slice(0, 10) + '.json'; }
+function panneauSauver() {
+  if (DEMO) { info(t('demoData')); return; }
+  var z = $('zoneData');
+  if (estIOS() && navigator.canShare && navigator.share) {
+    z.innerHTML = '<div class="panneau"><h3>' + esc(t('saveTitle')) + '</h3><p class="hint">' + esc(t('saveHintIOS')) + '</p>' +
+      '<div class="boutons"><button class="btn" id="svI">' + esc(t('saveBtnIOS')) + '</button></div></div>';
+    $('svI').onclick = function () { if (!partagerFichier(JSON.stringify(S, null, 2), nomSauvegarde(), 'application/json')) sauvegarder(); };
+    return;
+  }
+  sauvegarder();
+  z.innerHTML = '<div class="panneau"><p class="hint">' + esc(t('saveDone', { name: nomSauvegarde() })) + '</p></div>';
+}
+function panneauRestaurer() {
+  if (DEMO) { info(t('demoData')); return; }
+  $('zoneData').innerHTML = '';
+  $('fichier').value = ''; $('fichier').click();
+}
+function sauvegarder() {
+  if (DEMO) { info(t('demoData')); return; }
+  var blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = nomSauvegarde();
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+$('fichier').onchange = function () {
+  var f = this.files && this.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function () { try { var d = lireCode(r.result); S = d; save(); aller('plan'); } catch (e) { info(t('restoreBad')); } };
+  r.readAsText(f);
+};
+
+/* ---------- LES DEUX IMPRESSIONS ----------
+   Une fenêtre à part, comme Havn (testé sur Android et iPhone par Logan pour
+   Havn). Dimensions en mm, calculées pour tenir sur Letter ET sur A4 : zone
+   utile commune 190 x 250 mm, la grille fait 150 mm de côté. */
+/* L'aperçu s'affiche DANS la page (plus de window.open, bloqué sur iPhone), avec
+   un bouton Imprimer. À l'impression, @media print ne garde que la feuille.
+   Sur l'écran d'un téléphone, la feuille est réduite pour tenir en largeur. */
+function portee(css) {
+  return css.split('}').map(function (r) {
+    var i = r.indexOf('{'); if (i < 0) return r;
+    var sel = r.slice(0, i).split(',').map(function (x) { x = x.trim(); return x === 'body' ? '#apercu .feuille' : '#apercu .feuille ' + x; }).join(',');
+    return sel + r.slice(i);
+  }).join('}');
+}
+function fenetre(titre, corps, css, pdf, nomPdf) {
+  var size = S.paper === 'a4' ? 'A4' : 'letter';
+  $('cssPage').textContent = '@page{size:' + size + ';margin:12mm;}' + portee('body{font-family:Georgia,"Times New Roman",serif;color:#1F2421;line-height:1.3;font-size:12pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}h1{letter-spacing:0;padding-left:0;}.tot{font-size:inherit;color:inherit;margin:0;}' + css);
+  var a = $('apercu');
+  a.innerHTML = '<div class="apbar"><button class="btn" id="apP">' + esc(t('printBtn')) + '</button><button class="btn quiet" id="apX">' + esc(t('close')) + '</button><span>' + esc(t('printHelp')) + '</span></div><div class="cadre"><div class="feuille">' + corps + '</div></div>';
+  a.classList.remove('cache'); document.body.classList.add('apercu-ouvert'); a.scrollTop = 0;
+  var f = a.querySelector('.feuille'), k = Math.min(1, (a.clientWidth - 24) / f.offsetWidth);
+  a.querySelector('.cadre').style.cssText = k < 1 ? 'transform:scale(' + k + ');transform-origin:top left;width:' + f.offsetWidth + 'px;height:' + (f.offsetHeight * k) + 'px;' : '';
+  $('apP').onclick = function () {
+    if (DEMO) { info(t('demoPrint')); return; }
+    if (pdf && appInstalleeIOS()) { var o = null; try { o = pdf(); } catch (e) {} if (o && partagerFichier(o, nomPdf, 'application/pdf')) return; }
+    try { window.print(); } catch (e) {}
+  };
+  $('apX').onclick = function () { a.classList.add('cache'); a.innerHTML = ''; document.body.classList.remove('apercu-ouvert'); };
+}
+/* ---------- iPHONE ET iPAD : PDF ET SAUVEGARDE PAR LE MENU PARTAGER (11/10/2026) ----------
+   Repris de Havn, mesuré par Logan le 10/10 : dans l'appli installée sur l'écran
+   d'accueil d'un iPhone, iOS ignore window.print, et un téléchargement s'ouvre en
+   aperçu sans être rangé. On dessine donc la feuille en PDF dans la page, et on
+   envoie PDF ou sauvegarde au menu Partager (Imprimer, Enregistrer dans Fichiers).
+   Ordinateur et Android : inchangés. */
+function estIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function appInstalleeIOS() { return estIOS() && (navigator.standalone === true || !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches)); }
+function partagerFichier(contenu, nom, type) {
+  try {
+    var f = new File([contenu], nom, { type: type });
+    if (navigator.canShare && navigator.share && navigator.canShare({ files: [f] })) { navigator.share({ files: [f] }).catch(function () {}); return true; }
+  } catch (e) {}
+  return false;
+}
+var PDF_MM = 72 / 25.4;
+function pdfDoc(a4) {
+  var W = a4 ? 595.28 : 612, H = a4 ? 841.89 : 792, pages = [], c = '';
+  function win(s) {
+    var o = '';
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charAt(i), k = s.charCodeAt(i);
+      if (k === 0x20AC) o += '\x80'; else if (k === 0x2019) o += '\x92'; else if (k === 0x2018) o += '\x91';
+      else if (k === 0x2013) o += '\x96'; else if (k === 0x2026) o += '\x85';
+      else if (k === 0x202F || k === 0x2009 || k === 0x200A || k === 0xA0) o += ' ';
+      else if (k < 256) o += ch; else o += '?';
+    }
+    return o.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+  }
+  function larg(s, t, f) {
+    var w = 0, gras = f === 'F2' || f === 'F3';
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charAt(i);
+      if (ch === ' ') w += 0.278;
+      else if ('il.,:;|!\'Ij·'.indexOf(ch) >= 0) w += 0.27;
+      else if ('ftr()-'.indexOf(ch) >= 0) w += 0.34;
+      else if ('mwMW'.indexOf(ch) >= 0) w += 0.86;
+      else if (/[0-9$%€]/.test(ch)) w += 0.556;
+      else if (/[A-ZÀ-Þ]/.test(ch)) w += gras ? 0.72 : 0.68;
+      else w += gras ? 0.58 : 0.53;
+    }
+    return w * t;
+  }
+  function rgb(hex) { var n = parseInt(hex.slice(1), 16); return ((n >> 16 & 255) / 255).toFixed(3) + ' ' + ((n >> 8 & 255) / 255).toFixed(3) + ' ' + ((n & 255) / 255).toFixed(3); }
+  function px(mm) { return (mm * PDF_MM).toFixed(2); }
+  function py(mm) { return (H - mm * PDF_MM).toFixed(2); }
+  var P = {
+    W: W / PDF_MM, H: H / PDF_MM,
+    larg: function (s, t, f) { return larg(String(s), t, f) / PDF_MM; },
+    coupe: function (s, max, t, f) {
+      var mots = String(s).split(/[ \t\n]+/), l = [], cur = '';
+      mots.forEach(function (m) { var e = cur ? cur + ' ' + m : m; if (P.larg(e, t, f) > max && cur) { l.push(cur); cur = m; } else cur = e; });
+      if (cur) l.push(cur); return l.length ? l : [''];
+    },
+    text: function (x, y, s, t, f, coul, align, esp) {
+      s = String(s); f = f || 'F1'; esp = esp || 0;
+      var w = larg(s, t, f) + esp * s.length, xx = x * PDF_MM - (align === 'c' ? w / 2 : align === 'r' ? w : 0);
+      c += rgb(coul || '#1F2421') + ' rg BT /' + f + ' ' + t + ' Tf ' + (esp ? esp.toFixed(2) + ' Tc ' : '') + xx.toFixed(2) + ' ' + py(y) + ' Td (' + win(s) + ') Tj ' + (esp ? '0 Tc ' : '') + 'ET\n';
+    },
+    rect: function (x, y, w, h, fond, bord, ep) {
+      var r = px(x) + ' ' + py(y + h) + ' ' + px(w) + ' ' + px(h) + ' re ';
+      if (fond) c += rgb(fond) + ' rg ' + r + 'f\n';
+      if (bord) c += rgb(bord) + ' RG ' + ((ep || 0.3) * PDF_MM).toFixed(2) + ' w ' + r + 'S\n';
+    },
+    rrect: function (x, y, w, h, r, fond, bord, ep) {
+      var l = x * PDF_MM, d = (x + w) * PDF_MM, hh = H - y * PDF_MM, b = H - (y + h) * PDF_MM, R = r * PDF_MM, k = 0.5523 * R;
+      var f2 = function (v) { return v.toFixed(2); };
+      var p = f2(l + R) + ' ' + f2(b) + ' m ' + f2(d - R) + ' ' + f2(b) + ' l ' + f2(d - R + k) + ' ' + f2(b) + ' ' + f2(d) + ' ' + f2(b + R - k) + ' ' + f2(d) + ' ' + f2(b + R) + ' c ' +
+        f2(d) + ' ' + f2(hh - R) + ' l ' + f2(d) + ' ' + f2(hh - R + k) + ' ' + f2(d - R + k) + ' ' + f2(hh) + ' ' + f2(d - R) + ' ' + f2(hh) + ' c ' +
+        f2(l + R) + ' ' + f2(hh) + ' l ' + f2(l + R - k) + ' ' + f2(hh) + ' ' + f2(l) + ' ' + f2(hh - R + k) + ' ' + f2(l) + ' ' + f2(hh - R) + ' c ' +
+        f2(l) + ' ' + f2(b + R) + ' l ' + f2(l) + ' ' + f2(b + R - k) + ' ' + f2(l + R - k) + ' ' + f2(b) + ' ' + f2(l + R) + ' ' + f2(b) + ' c h ';
+      c += (fond ? rgb(fond) + ' rg ' : '') + (bord ? rgb(bord) + ' RG ' + (ep * PDF_MM).toFixed(2) + ' w ' : '') + p + (fond && bord ? 'B' : fond ? 'f' : 'S') + '\n';
+    },
+    // étoile et coche dessinées (une police de symboles n'est pas garantie partout)
+    etoile: function (x, y, r, coul) {
+      var p = '';
+      for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.42 : r; p += ((x + rr * Math.cos(a)) * PDF_MM).toFixed(2) + ' ' + (H - (y + rr * Math.sin(a)) * PDF_MM).toFixed(2) + (i ? ' l ' : ' m '); }
+      c += rgb(coul) + ' rg ' + p + 'h f\n';
+    },
+    coche: function (x, y, t, coul) {
+      var q = function (dx, dy) { return ((x + dx * t) * PDF_MM).toFixed(2) + ' ' + (H - (y + dy * t) * PDF_MM).toFixed(2); };
+      c += rgb(coul) + ' RG ' + (t * 0.2 * PDF_MM).toFixed(2) + ' w 1 J 1 j ' + q(-0.4, 0) + ' m ' + q(-0.12, 0.3) + ' l ' + q(0.42, -0.36) + ' l S 0 J 0 j\n';
+    },
+    page: function () { pages.push(c); c = ''; },
+    octets: function () {
+      if (c) P.page();
+      var objs = [], add = function (s) { objs.push(s); return objs.length; };
+      add('<< /Type /Catalog /Pages 2 0 R >>'); add('PAGES');
+      var f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+      var f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+      var f3 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold /Encoding /WinAnsiEncoding >>');
+      var kids = [];
+      pages.forEach(function (p) {
+        var st = add('<< /Length ' + p.length + ' >>\nstream\n' + p + 'endstream');
+        kids.push(add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R /F3 ' + f3 + ' 0 R >> >> /Contents ' + st + ' 0 R >>'));
+      });
+      objs[1] = '<< /Type /Pages /Kids [' + kids.map(function (k) { return k + ' 0 R'; }).join(' ') + '] /Count ' + kids.length + ' >>';
+      var out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n', pos = [];
+      objs.forEach(function (o, i) { pos.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
+      var xr = out.length;
+      out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + pos.map(function (p) { return ('0000000000' + p).slice(-10) + ' 00000 n \n'; }).join('');
+      out += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xr + '\n%%EOF';
+      var b = new Uint8Array(out.length); for (var i = 0; i < out.length; i++) b[i] = out.charCodeAt(i) & 255;
+      return b;
+    }
+  };
+  return P;
+}
+/* Le tableau à colorier, mêmes dimensions que l'aperçu (cases de 14 mm). Étoile et
+   coche dessinées : Helvetica n'en a pas. */
+function pdfTableau(D, etoiles, faites) {
+  var sim = D.sim, P = pdfDoc(S.paper === 'a4'), cx = P.W / 2, y = 15, V = '#2E6B4E';
+  P.text(cx, y, 'KVITT', 9, 'F2', V, 'c', 3); y += 10;
+  P.text(cx, y, t('pcTitle'), 22, 'F3', '#1F2421', 'c'); y += 6.5;
+  P.coupe(t('pcSub', { x: argent(D.dep / 100), total: argent(D.dep), month: moisMilieu(cleVersDate(S.startMonth)) }), 186, 10.5, 'F1').forEach(function (l) { P.text(cx, y, l, 10.5, 'F1', '#444444', 'c'); y += 4.6; });
+  y += 1;
+  [t('pcHow1'), t('pcHow2'), t('pcHow3')].forEach(function (s, i) {
+    P.coupe(s, 140, 8.5, 'F1').forEach(function (l, j) { P.text(cx - 72 + (j ? 5 : 0), y, (j ? '' : (i + 1) + '.  ') + l, 8.5, 'F1', '#444444', 'l'); y += 3.8; });
+  });
+  if (faites) { y += 0.6; P.text(cx, y, t('pcAlready', { paid: argent(D.paye), n: faites }), 9.5, 'F2', V, 'c'); y += 3.8; }
+  var g0 = y + 1.5, pas = 15.2, cote = 14, x0 = cx - (9 * pas + cote) / 2;
+  D.cases.forEach(function (c, i) {
+    var x = x0 + (i % 10) * pas, yy = g0 + Math.floor(i / 10) * pas;
+    var pc = [10, 25, 50, 75].indexOf(c.n) >= 0, der = c.n === 100, nEt = etoiles[i] ? etoiles[i].length : 0;
+    P.rrect(x, yy, cote, cote, 1.6, der ? '#F7EDD6' : (c.fait ? '#E3EEE6' : null), der ? '#1F2421' : (pc ? '#C9962E' : (nEt ? V : '#8D9A90')), der ? 0.9 : (pc || nEt ? 0.7 : 0.35));
+    P.text(x + 1, yy + 2.5, String(c.n), 5.2, 'F1', '#A3A39B', 'l');
+    var haut = der ? t('pcFree') : (pc ? c.n + (LANG === 'fr' ? ' %' : '%') : '');
+    var th = der ? 7.5 : (nEt && !pc ? 8.5 : 7), coul = der ? '#1F2421' : (pc ? '#9A6F14' : V);
+    var re_ = th * 0.16, wt = haut ? P.larg(haut, th, 'F2') : 0, we = nEt * 2.3 * re_, esp = haut && nEt ? 0.8 : 0;
+    var xl = x + cote / 2 - (wt + esp + we) / 2, yl = yy + 3.4 + th * 0.3;
+    if (haut) P.text(xl, yl, haut, th, 'F2', coul, 'l');
+    for (var k = 0; k < nEt; k++) P.etoile(xl + wt + esp + re_ * 1.15 + k * 2.3 * re_, yl - th * 0.13, re_, coul);
+    if (c.fait) P.coche(x + cote / 2, yy + cote - 2.6, 2.6, V);
+    else P.text(x + cote / 2, yy + cote - 1.6, moisCourt(plusMois(c.mois)), 6.3, 'F1', '#6B6B6B', 'c');
+  });
+  y = g0 + 9 * pas + cote + 5;
+  P.text(cx, y, t('freeBy').toUpperCase(), 8.5, 'F2', V, 'c', 2); y += 8;
+  P.text(cx, y, moisLong(plusMois(sim.mois)), 22, 'F3', '#1F2421', 'c'); y += 6;
+  var leg = sim.payoffs, nc = leg.length > 12 ? 3 : 2, lc = 150 / nc, nl = Math.ceil(leg.length / nc);
+  leg.forEach(function (p, i) {
+    var col = Math.floor(i / nl), xx = cx - 75 + col * lc, yy = y + (i % nl) * 3.9;
+    P.etoile(xx + 1.3, yy - 1.1, 1.35, V);
+    P.text(xx + 4, yy, P.coupe(p.name + ' · ' + moisLong(plusMois(p.mois)), lc - 6, 8.5, 'F1')[0], 8.5, 'F1', '#1F2421', 'l');
+  });
+  y += nl * 3.9 + 1.5;
+  P.coupe(t('pcPlanLine', { budget: argent(Math.max(nb(S.budget), sommeMins())), strategy: t(S.strat), interest: argent(sim.interets) }), 186, 8.5, 'F1').forEach(function (l) { P.text(cx, y, l, 8.5, 'F1', '#444444', 'c'); y += 3.8; });
+  y += 1;
+  P.coupe(t('indicative'), 160, 6.8, 'F1').forEach(function (l) { P.text(cx, y, l, 6.8, 'F1', '#777777', 'c'); y += 3; });
+  P.text(cx, y + 1.5, t('pcMade'), 7, 'F1', '#999999', 'c', 1);
+  return P.octets();
+}
+/* La page « mon plan » : mêmes lignes que l'aperçu. */
+function pdfPlan(info) {
+  var P = pdfDoc(S.paper === 'a4'), m = 15, L = P.W - 2 * m, y = 20, V = '#2E6B4E';
+  P.text(m, y, 'KVITT', 9, 'F2', V, 'l', 3); y += 9;
+  P.text(m, y, t('ppTitle'), 22, 'F3', '#1F2421', 'l'); y += 6;
+  P.coupe(info.made, L, 10, 'F1').forEach(function (l) { P.text(m, y, l, 10, 'F1', '#555555', 'l'); y += 4.4; });
+  y += 4;
+  P.coupe(info.r, L, 13, 'F2').forEach(function (l) { P.text(m, y, l, 13, 'F2', V, 'l'); y += 5.6; });
+  P.coupe(info.budget, L, 10, 'F1').forEach(function (l) { P.text(m, y, l, 10, 'F1', '#555555', 'l'); y += 4.4; });
+  y += 4;
+  var ws = [9, 0, 30, 18, 26, 38]; ws[1] = L - 121;
+  function ligne(cells, tete, tot) {
+    var h = 7.5;
+    if (y + h > P.H - 15) { P.page(); y = 20; }
+    if (tete || tot) P.rect(m, y, L, h, tete ? '#EEF3EF' : '#FAF7F1', null);
+    var x = m;
+    cells.forEach(function (s, i) {
+      P.rect(x, y, ws[i], h, null, '#CCCCCC', 0.3);
+      var tt = tete ? 8 : 10, f = tete || tot ? 'F2' : 'F1'; s = String(s); if (tete) s = s.toUpperCase();
+      s = P.coupe(s, ws[i] - 4, tt, f)[0];
+      var al = i === 0 ? 'c' : (i === 1 ? 'l' : 'r');
+      P.text(al === 'c' ? x + ws[i] / 2 : (al === 'l' ? x + 2.5 : x + ws[i] - 2.5), y + h / 2 + tt * 0.13, s, tt, f, '#1F2421', al);
+      x += ws[i];
+    });
+    y += h;
+  }
+  ligne(info.tete, true); info.lignes.forEach(function (l) { ligne(l); }); ligne(info.tot, false, true);
+  y += 8;
+  P.coupe(t('indicative'), L, 7.5, 'F1').forEach(function (l) { P.text(m, y, l, 7.5, 'F1', '#777777', 'l'); y += 3.4; });
+  P.text(m, y + 1.5, t('pcMade'), 7.5, 'F1', '#999999', 'l', 1);
+  return P.octets();
+}
+function donneesImpression() {
+  var cmp = kvComparer(entree(), nb(S.budget)), sim = cmp.strategies[S.strat] || cmp.strategies.avalanche;
+  var dep = totalDepart(), paye = Math.max(0, dep - totalActuel());
+  return { sim: sim, dep: dep, paye: paye, cases: kvCases(dep, paye, sim) };
+}
+function imprimerTableau() {
+  var D = donneesImpression(), sim = D.sim;
+  if (sim.bloque) { info(t('warnStuck')); return; }
+  // case où tombe chaque dette : la première case datée du mois de son solde ou après
+  var etoiles = {};
+  sim.payoffs.forEach(function (p) {
+    for (var i = 0; i < 100; i++) { var c = D.cases[i]; if (!c.fait && c.mois >= p.mois) { (etoiles[i] = etoiles[i] || []).push(p); break; } }
+  });
+  var faites = D.cases.filter(function (c) { return c.fait; }).length;
+  var g = '';
+  D.cases.forEach(function (c, i) {
+    var cls = 'sq' + (c.fait ? ' fait' : '') + ([10, 25, 50, 75].indexOf(c.n) >= 0 ? ' pc' : '') + (c.n === 100 ? ' der' : '') + (etoiles[i] ? ' et' : '');
+    // étape ET dette soldée sur la même case : on garde les deux (vu le 03/10 sur la case 50)
+    var et = etoiles[i] ? new Array(etoiles[i].length + 1).join('★') : '';
+    var haut = c.n === 100 ? t('pcFree') : ([10, 25, 50, 75].indexOf(c.n) >= 0 ? c.n + (LANG === 'fr' ? ' %' : '%') + (et ? ' ' + et : '') : et);
+    var bas = c.fait ? '✓' : moisCourt(plusMois(c.mois));
+    g += '<div class="' + cls + '"><i class="num">' + c.n + '</i><span class="h">' + esc(haut) + '</span><span class="b">' + esc(bas) + '</span></div>';
+  });
+  var legende = sim.payoffs.map(function (p) { return '<li><b>★</b> ' + esc(p.name) + ' · ' + esc(moisLong(plusMois(p.mois))) + '</li>'; }).join('');
+  var corps = '<div class="page"><div class="tete"><div class="kv">KVITT</div><h1>' + esc(t('pcTitle')) + '</h1>' +
+    '<p class="s">' + esc(t('pcSub', { x: argent(D.dep / 100), total: argent(D.dep), month: moisMilieu(cleVersDate(S.startMonth)) })) + '</p>' +
+    '<ol class="mode"><li>' + esc(t('pcHow1')) + '</li><li>' + esc(t('pcHow2')) + '</li><li>' + esc(t('pcHow3')) + '</li></ol>' +
+    (faites ? '<p class="s2">' + esc(t('pcAlready', { paid: argent(D.paye), n: faites })) + '</p>' : '') + '</div>' +
+    '<div class="grille">' + g + '</div>' +
+    '<div class="pied"><div class="libre"><span>' + esc(t('freeBy')) + '</span><b>' + esc(moisLong(plusMois(sim.mois))) + '</b></div>' +
+    '<ul class="leg">' + legende + '</ul>' +
+    '<p class="ligne">' + esc(t('pcPlanLine', { budget: argent(Math.max(nb(S.budget), sommeMins())), strategy: t(S.strat), interest: argent(sim.interets) })) + '</p>' +
+    '<p class="indic">' + esc(t('indicative')) + '</p><p class="made">' + esc(t('pcMade')) + '</p></div></div>';
+  var css = '.page{width:186mm;margin:0 auto;}.tete{text-align:center;}.kv{font:700 9pt Arial,sans-serif;letter-spacing:4pt;color:#2E6B4E;}' +
+    'h1{font-size:24pt;margin:1mm 0 1mm;font-weight:600;}.s{font:10.5pt Arial,sans-serif;margin:0;color:#444;}.s2{font:9.5pt Arial,sans-serif;margin:1mm 0 0;color:#2E6B4E;font-weight:700;}' +
+    '.grille{display:grid;grid-template-columns:repeat(10,14mm);grid-auto-rows:14mm;gap:1.2mm;justify-content:center;margin:4mm 0 3mm;}' +
+    '.sq{position:relative;border:.35mm solid #8d9a90;border-radius:1.6mm;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:3.4mm 0 .8mm;font-family:Arial,sans-serif;}' +
+    '.sq .num{position:absolute;top:.6mm;left:1mm;font-style:normal;font-size:5.2pt;color:#a3a39b;}.mode{font:8.5pt Arial,sans-serif;color:#444;text-align:left;width:150mm;margin:2mm auto 0;padding-left:5mm;line-height:1.4;}.mode li{margin:.3mm 0;}' +
+    '.sq .h{font-size:7pt;font-weight:700;color:#2E6B4E;line-height:1;min-height:7pt;}.sq .b{font-size:6.3pt;color:#6b6b6b;line-height:1;}' +
+    '.sq.pc{border:.7mm solid #C9962E;}.sq.pc .h{color:#9a6f14;}.sq.et{border:.7mm solid #2E6B4E;}.sq.et .h{font-size:8.5pt;}.sq.pc.et{border-color:#C9962E;}' +
+    '.sq.der{border:.9mm solid #1F2421;background:#F7EDD6;}.sq.der .h{color:#1F2421;font-size:7.5pt;}.sq.fait{background:#E3EEE6;}.sq.fait .b{color:#2E6B4E;font-weight:700;font-size:8pt;}' +
+    '.pied{font-family:Arial,sans-serif;text-align:center;}.libre span{display:block;font-size:8.5pt;letter-spacing:2pt;text-transform:uppercase;color:#2E6B4E;font-weight:700;}' +
+    '.libre b{font-family:Georgia,serif;font-size:22pt;}.leg{list-style:none;padding:0;margin:2mm 0;columns:2;font-size:8.5pt;text-align:left;width:150mm;margin-left:auto;margin-right:auto;}.leg li{margin:.6mm 0;}.leg b{color:#2E6B4E;}' +
+    '.ligne{font-size:8.5pt;color:#444;margin:1mm 0;}.indic{font-size:6.8pt;color:#777;margin:2mm auto 0;width:160mm;line-height:1.35;}.made{font-size:7pt;color:#999;letter-spacing:1pt;margin:1mm 0 0;}';
+  fenetre(t('pcTitle'), corps, css, function () { return pdfTableau(D, etoiles, faites); }, LANG === 'fr' ? 'Kvitt-tableau-a-colorier.pdf' : 'Kvitt-coloring-chart.pdf');
+}
+function imprimerPlan() {
+  var D = donneesImpression(), sim = D.sim;
+  var quand = {}; sim.payoffs.forEach(function (p) { quand[p.id] = p.mois; });
+  var lignes = parChute(entree(), sim).map(function (d, i) {
+    return '<tr><td>' + (i + 1) + '</td><td class="g">' + esc(d.name) + '</td><td>' + esc(argent(d.bal)) + '</td><td>' + d.apr + ' %</td><td>' + esc(argent(d.min)) + '</td><td>' + (quand[d.id] ? esc(moisLong(plusMois(quand[d.id]))) : '–') + '</td></tr>';
+  }).join('');
+  var b = Math.max(nb(S.budget), sommeMins()), m = sommeMins();
+  var corps = '<div class="kv">KVITT</div><h1>' + esc(t('ppTitle')) + '</h1><p class="d">' + esc(t('ppMade', { date: new Intl.DateTimeFormat(LOC, { dateStyle: 'long' }).format(new Date()) })) + ' · ' + esc(t(S.strat)) + '</p>' +
+    (sim.bloque ? '<p class="r">' + esc(t('warnStuck')) + '</p>' : '<p class="r">' + esc(t('ppSummary', { date: moisLong(plusMois(sim.mois)), m: duree(sim.mois), i: argent(sim.interets) })) + '</p>') +
+    '<p class="d">' + esc(t('ppBudget', { b: argent(b), m: argent(m), x: argent(b - m) })) + '</p>' +
+    '<table><tr><th>' + esc(t('ppOrder')) + '</th><th class="g">' + esc(t('colName')) + '</th><th>' + esc(t('colBal')) + '</th><th>' + esc(t('colApr')) + '</th><th>' + esc(t('colMin')) + '</th><th>' + esc(t('ppPayoff')) + '</th></tr>' + lignes +
+    '<tr class="tot"><td></td><td class="g">' + esc(t('ppTotal')) + '</td><td>' + esc(argent(totalActuel())) + '</td><td></td><td>' + esc(argent(m)) + '</td><td></td></tr></table>' +
+    '<p class="indic">' + esc(t('indicative')) + '</p><p class="made">' + esc(t('pcMade')) + '</p>';
+  var css = 'body{font-family:Arial,sans-serif;}.kv{font-weight:700;font-size:9pt;letter-spacing:4pt;color:#2E6B4E;}h1{font-family:Georgia,serif;font-size:22pt;margin:1mm 0;font-weight:600;}' +
+    '.d{font-size:10pt;color:#555;margin:1mm 0;}.r{font-size:13pt;margin:4mm 0 2mm;font-weight:700;color:#2E6B4E;}table{width:100%;border-collapse:collapse;font-size:10pt;margin-top:5mm;}' +
+    'th,td{border:.3mm solid #ccc;padding:2mm 2.5mm;text-align:right;}th{background:#EEF3EF;font-size:8.5pt;text-transform:uppercase;}td:first-child,th:first-child{text-align:center;width:9mm;}.g{text-align:left !important;}' +
+    'tr.tot td{font-weight:700;background:#FAF7F1;}.indic{font-size:7.5pt;color:#777;margin-top:8mm;line-height:1.4;}.made{font-size:7.5pt;color:#999;letter-spacing:1pt;}';
+  fenetre(t('ppTitle'), corps, css, function () {
+    return pdfPlan({
+      made: t('ppMade', { date: new Intl.DateTimeFormat(LOC, { dateStyle: 'long' }).format(new Date()) }) + ' \u00b7 ' + t(S.strat),
+      r: sim.bloque ? t('warnStuck') : t('ppSummary', { date: moisLong(plusMois(sim.mois)), m: duree(sim.mois), i: argent(sim.interets) }),
+      budget: t('ppBudget', { b: argent(b), m: argent(m), x: argent(b - m) }),
+      tete: [t('ppOrder'), t('colName'), t('colBal'), t('colApr'), t('colMin'), t('ppPayoff')],
+      lignes: parChute(entree(), sim).map(function (d, i) { return [i + 1, d.name, argent(d.bal), d.apr + ' %', argent(d.min), quand[d.id] ? moisLong(plusMois(quand[d.id])) : '\u2013']; }),
+      tot: ['', t('ppTotal'), argent(totalActuel()), '', argent(m), '']
+    });
+  }, 'Kvitt-plan.pdf');
+}
+
+/* ---------- Démarrage ---------- */
+document.title = t('docTitle') + (DEMO ? ' · demo' : '');
+$('ruban').textContent = t('ribbon');
+$('tBrand').textContent = t('brand');
+$('tTag').textContent = t('tagline');
+$('indic').textContent = t('indicative');
+$('foot').textContent = DEMO ? t('demoFoot') : t('foot');
+$('exTxt').textContent = t('exampleBanner');
+$('exBtn').textContent = t('scratch');
+$('exEtapes').innerHTML = '<span><b>1</b> ' + esc(t('step1')) + '</span><span><b>2</b> ' + esc(t('step2')) + '</span><span><b>3</b> ' + esc(t('step3')) + '</span>';
+$('exBtn').onclick = partirDeZero;
+$('exX').title = t('close');
+$('exX').onclick = function () { S.exHidden = true; save(); rendre(); };
+if (DEMO) { var _st = document.createElement('style'); _st.textContent = '@media print{body>*{display:none !important;}body::before{content:"' + t('demoPrintPage') + '";display:block;font:16px Arial,sans-serif;padding:40px;}}'; document.head.appendChild(_st); }
+if (DEMO) { $('demoHaut').classList.remove('cache'); $('demoTxt').innerHTML = t('demoTop'); $('demoLien').textContent = t('demoBtn'); }
+var sj = document.getElementById('sansjs'); if (sj) sj.parentNode.removeChild(sj);
+poserOnglets(); aller('plan');
+</script>
+</body>
+</html>
