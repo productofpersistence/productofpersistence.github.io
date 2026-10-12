@@ -167,6 +167,14 @@
   .suite{text-align:center;margin:22px 0 4px;}
   .etapes{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:13.5px;margin:4px 0 0;}
   .etapes span b{color:var(--acc);}
+  /* ---------- Tablette debout : la liste des dettes passe en fiches (le tableau coupait les chiffres entre 700 et 900 px) ---------- */
+  @media (max-width:900px){
+    .lig.tete{display:none;}
+    .lig{grid-template-columns:1fr 1fr;gap:6px 10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);margin-bottom:10px;}
+    .lig .cap{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+    .lig .f-nom{grid-column:1 / -1;}
+    .lig .acts{grid-column:1 / -1;justify-content:flex-end;}
+  }
   /* ---------- Téléphone ---------- */
   @media (max-width:700px){
     .wrap{padding:22px 14px 70px;}
