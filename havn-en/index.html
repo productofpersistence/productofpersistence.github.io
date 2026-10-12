@@ -139,6 +139,21 @@
   @media(max-width:600px){.demo-haut{font-size:12px;padding:10px 12px;}}
   @media print{ body > *{display:none !important;} body::before{content:"Printing is switched off in the live demo. The version you buy prints your budget and your schedules.";display:block;font:16px Arial,sans-serif;padding:40px;} }
   .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:30px;letter-spacing:1px;}
+  /* Tablette debout (601 à 900 px) : les listes passent en fiches, comme sur téléphone.
+     En tableau, les noms se réduisaient à 1-3 lettres sur iPad (contrôle du 12/10/2026). */
+  @media(min-width:601px) and (max-width:900px){
+    .row.head{display:none !important;}
+    .row{display:flex !important;flex-wrap:wrap;gap:9px 10px;grid-template-columns:none !important;align-items:flex-end;padding:13px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);margin-bottom:10px;}
+    .row .f{display:flex;flex-direction:column;gap:3px;flex:1 1 calc(50% - 5px);}
+    .row .f.full{flex:1 1 100%;}
+    .row .cap{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--mut);}
+    .row .num{text-align:left;}
+    .row .grip{display:none;}
+    .row .del{flex:0 0 auto;margin-left:auto;align-self:center;font-size:20px;}
+    .row .acts{flex:1 1 100%;justify-content:flex-end;gap:2px;margin-top:5px;padding-top:9px;border-top:1px dashed var(--line);}
+    .row .amonth{flex:1 1 100%;font-weight:700;font-size:15px;text-transform:capitalize;}
+    .row .areset{flex:0 0 auto;margin-left:auto;}
+  }
   @media(max-width:600px){
     .wrap{padding:20px 12px 64px;}
     h1{font-size:33px;}
@@ -165,7 +180,7 @@
     .kpi .box{flex:1 1 calc(50% - 5px);min-width:0;}
     .kpi .val{font-size:23px;}
     .guide{grid-template-columns:1fr;}.gcompare{grid-column:1;}
-    .row.head{display:none;}
+    .row.head{display:none !important;}
     .row{display:flex !important;flex-wrap:wrap;gap:9px 10px;grid-template-columns:none !important;align-items:flex-end;padding:13px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);margin-bottom:10px;}
     .row .f{display:flex;flex-direction:column;gap:3px;flex:1 1 calc(50% - 5px);}
     .row .f.full{flex:1 1 100%;}
@@ -692,7 +707,7 @@ function renderExpense(){
   if(!S.expenses.length){ w.innerHTML=videHTML('',"No spending yet. The easiest way is to take last month's bank statement and list everything, from the rent down to the small stuff. Sort each item into Need, Want, Savings or Debt: that is what feeds your 50/30/20 rule."); return; }
   S.expenses.forEach((it,i)=>{
     const r=document.createElement('div');r.className='row';
-    r.style.gridTemplateColumns='1fr 96px 84px 116px 122px';
+    r.style.gridTemplateColumns='1fr 96px 84px 174px 122px';
     r.innerHTML=`<label class="f full"><span class="cap">Item</span><input placeholder="Expense name" value="${ech(it.l)}" oninput="S.expenses[${i}].l=this.value;save()"></label>
       <label class="f"><span class="cap">Amount ($)</span><input class="num" type="number" placeholder="0" value="${it.a}" oninput="S.expenses[${i}].a=+this.value||0;recalc()"></label>
       <label class="f"><span class="cap">Frequency</span><select class="freq" onchange="S.expenses[${i}].f=this.value;recalc()">${freqOpts(it.f)}</select></label>
@@ -1197,7 +1212,7 @@ function renderSubs(){
   const w=$('#subsList');w.innerHTML='';
   if(!S.subs.length){ w.innerHTML=videHTML('',"No subscriptions or bills yet. List everything that leaves on a schedule: phone, internet, streaming, gym, insurance, power. It is almost always the fastest line to trim, and the easiest one to forget."); return; }
   S.subs.forEach((e,i)=>{
-    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 100px 108px 128px 92px 122px';
+    const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr 100px 108px 142px 92px 122px';
     r.innerHTML=`<label class="f full"><span class="cap">Name</span><input placeholder="Netflix, phone, power…" value="${ech(e.l)}" oninput="S.subs[${i}].l=this.value;save()"></label>
       <label class="f"><span class="cap">Amount ($)</span><input class="num" type="number" placeholder="0" value="${e.amount}" oninput="S.subs[${i}].amount=+this.value||0;calcSubs()"></label>
       <label class="f"><span class="cap">Frequency</span><select onchange="S.subs[${i}].freq=this.value;calcSubs()">${SUBFREQ(e.freq)}</select></label>
